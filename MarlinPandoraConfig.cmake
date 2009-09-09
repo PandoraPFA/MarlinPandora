@@ -10,7 +10,7 @@ MARK_AS_ADVANCED( MarlinPandora_FOUND )
 SET( MarlinPandora_INCLUDE_DIR MarlinPandora_INCLUDE_DIR-NOTFOUND )
 
 FIND_PATH( MarlinPandora_INCLUDE_DIR
-	NAMES Pandora.h
+	NAMES PandoraPFANewProcessor.h
 	PATHS /usera/marshall/ilcsoft/MarlinPandora
 	PATH_SUFFIXES include
 	NO_DEFAULT_PATH
