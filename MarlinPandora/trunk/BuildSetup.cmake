@@ -1,5 +1,5 @@
 #############################################################################
-# cmake build setup for PandoraPFA
+# cmake build setup for MarlinPandora
 #
 # For building PandoraPFA with cmake type:
 # (1) $ mkdir build
@@ -16,7 +16,7 @@
 #############################################################################
 
 # ILC_HOME
-SET( ILC_HOME "path_to_ilcsoft"
+SET( ILC_HOME "/usera/marshall/ilcsoft"
     CACHE PATH "Path to ILC Software" FORCE )
 
 # Path to PandoraPFANew
