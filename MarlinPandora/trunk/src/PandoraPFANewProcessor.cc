@@ -223,9 +223,20 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
             for (int i = 0; i < pTrackCollection->getNumberOfElements(); ++i)
             {
                 Track* pTrack = dynamic_cast<Track*>(pTrackCollection->getElementAt(i));
-                
+
                 PandoraApi::Track::Parameters trackParameters;
-                trackParameters.m_momentum = 10;
+                trackParameters.m_d0 = 1;
+                trackParameters.m_z0 = 2;
+                trackParameters.m_momentum = pandora::CartesianVector(1, 2, 3);
+
+                trackParameters.m_startTrackState = pandora::TrackState(1, 2, 3, 4, 5, 6);
+                trackParameters.m_endTrackState = pandora::TrackState(1, 2, 3, 4, 5, 6);
+                trackParameters.m_eCalTrackState = pandora::TrackState(1, 2, 3, 4, 5, 6);
+
+                trackParameters.m_calorimeterProjections.push_back(pandora::TrackState(1, 2, 3, 4, 5, 6));
+                trackParameters.m_calorimeterProjections.push_back(pandora::TrackState(7, 8, 9, 10, 11, 12));
+
+                trackParameters.m_reachesECal = true;
                 trackParameters.m_pParentAddress = pTrack;
 
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(m_pandora, trackParameters));
