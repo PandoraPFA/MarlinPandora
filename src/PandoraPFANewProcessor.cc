@@ -275,9 +275,25 @@ StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
                 CalorimeterHit* pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
 
                 PandoraApi::CaloHit::Parameters caloHitParameters;
+                caloHitParameters.m_position = pandora::CartesianVector(1, 2, 3);
+                caloHitParameters.m_normalVector = pandora::CartesianVector(4, 5, 6);
+
+                caloHitParameters.m_du = 1;
+                caloHitParameters.m_dv = 2;
+                caloHitParameters.m_dz = 3;
+
+                caloHitParameters.m_nRadiationLengths = 4;
+                caloHitParameters.m_nInteractionLengths = 5;
+
                 caloHitParameters.m_energy = pCaloHit->getEnergy();
-                caloHitParameters.m_pParentAddress = pCaloHit;
+                caloHitParameters.m_time = 7;
+
+                caloHitParameters.m_isDigital = false;
+                caloHitParameters.m_hitType = pandora::ECAL;
+                caloHitParameters.m_detectorRegion = pandora::BARREL;
+
                 caloHitParameters.m_layer = cellIdDecoder(pCaloHit)["K-1"];
+                caloHitParameters.m_pParentAddress = pCaloHit;
 
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(m_pandora, caloHitParameters));
             }
