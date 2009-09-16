@@ -10,7 +10,7 @@
 
 #include "marlin/Processor.h"
 
-#include "Pandora.h"
+#include "Pandora/Pandora.h"
 
 /**
  *  @brief  PandoraPFANewProcessor class
