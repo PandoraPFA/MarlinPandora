@@ -227,11 +227,11 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
                 PandoraApi::Track::Parameters trackParameters;
                 trackParameters.m_d0 = 1;
                 trackParameters.m_z0 = 2;
-                trackParameters.m_momentum = pandora::CartesianVector(1, 2, 3);
+                trackParameters.m_momentumAtDca = pandora::CartesianVector(1, 2, 3);
 
-                trackParameters.m_startTrackState = pandora::TrackState(1, 2, 3, 4, 5, 6);
-                trackParameters.m_endTrackState = pandora::TrackState(1, 2, 3, 4, 5, 6);
-                trackParameters.m_eCalTrackState = pandora::TrackState(1, 2, 3, 4, 5, 6);
+                trackParameters.m_trackStateAtStart = pandora::TrackState(1, 2, 3, 4, 5, 6);
+                trackParameters.m_trackStateAtEnd = pandora::TrackState(1, 2, 3, 4, 5, 6);
+                trackParameters.m_trackStateAtECal = pandora::TrackState(1, 2, 3, 4, 5, 6);
 
                 trackParameters.m_calorimeterProjections.push_back(pandora::TrackState(1, 2, 3, 4, 5, 6));
                 trackParameters.m_calorimeterProjections.push_back(pandora::TrackState(7, 8, 9, 10, 11, 12));
@@ -275,12 +275,12 @@ StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
                 CalorimeterHit* pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
 
                 PandoraApi::CaloHit::Parameters caloHitParameters;
-                caloHitParameters.m_position = pandora::CartesianVector(1, 2, 3);
+                caloHitParameters.m_positionVector = pandora::CartesianVector(1, 2, 3);
                 caloHitParameters.m_normalVector = pandora::CartesianVector(4, 5, 6);
 
-                caloHitParameters.m_du = 1;
-                caloHitParameters.m_dv = 2;
-                caloHitParameters.m_dz = 3;
+                caloHitParameters.m_cellSizeU = 1;
+                caloHitParameters.m_cellSizeV = 2;
+                caloHitParameters.m_cellSizeZ = 3;
 
                 caloHitParameters.m_nRadiationLengths = 4;
                 caloHitParameters.m_nInteractionLengths = 5;
