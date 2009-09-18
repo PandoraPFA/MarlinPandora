@@ -130,10 +130,8 @@ StatusCode PandoraPFANewProcessor::RegisterUserAlgorithmFactories()
     return STATUS_CODE_SUCCESS;
 }
 
-
-
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEvent)
 {
 
@@ -209,7 +207,7 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 {
     // Insert user code here ...
@@ -361,4 +359,3 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_settings.m_hCalCollections,
                             StringVector(1, std::string("HCAL")));
 }
-
