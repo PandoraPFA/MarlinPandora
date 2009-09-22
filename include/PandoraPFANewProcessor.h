@@ -30,9 +30,8 @@ public:
 
         StringVector    m_trackCollections;             ///< The reconstructed track collections
         StringVector    m_v0VertexCollections;          ///< The v0 vertex collections
-        StringVector    m_hCalCollections;              ///< The hcal calorimeter hit collections
-        StringVector    m_eCalCollections;              ///< The ecal calorimeter hit collections    
-        StringVector    m_mcParticleCollections;        ///< The mc particle collections    
+        StringVector    m_caloHitCollections;           ///< The calorimeter hit collections
+        StringVector    m_mcParticleCollections;        ///< The mc particle collections
     };
 
     /**
