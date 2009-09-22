@@ -136,7 +136,7 @@ StatusCode PandoraPFANewProcessor::CreateGeometry()
     geometryParameters.m_eCalBarrelParameters.m_outerDistanceFromIp = 4;
     geometryParameters.m_eCalBarrelParameters.m_outerSymmetry       = 5;
     geometryParameters.m_eCalBarrelParameters.m_outerAngle          = 6;
-    geometryParameters.m_eCalBarrelParameters.m_nLayers             = 7;
+    geometryParameters.m_eCalBarrelParameters.m_nLayers             = 1;
     geometryParameters.m_eCalBarrelParameters.m_layerParametersList.push_back(layerParameters);
 
     geometryParameters.m_hCalBarrelParameters.m_innerDistanceFromIp = 1;
@@ -145,7 +145,7 @@ StatusCode PandoraPFANewProcessor::CreateGeometry()
     geometryParameters.m_hCalBarrelParameters.m_outerDistanceFromIp = 4;
     geometryParameters.m_hCalBarrelParameters.m_outerSymmetry       = 5;
     geometryParameters.m_hCalBarrelParameters.m_outerAngle          = 6;
-    geometryParameters.m_hCalBarrelParameters.m_nLayers             = 7;
+    geometryParameters.m_hCalBarrelParameters.m_nLayers             = 1;
     geometryParameters.m_hCalBarrelParameters.m_layerParametersList.push_back(layerParameters);
 
     geometryParameters.m_eCalEndCapParameters.m_innerDistanceFromIp = 1;
@@ -154,7 +154,7 @@ StatusCode PandoraPFANewProcessor::CreateGeometry()
     geometryParameters.m_eCalEndCapParameters.m_outerDistanceFromIp = 4;
     geometryParameters.m_eCalEndCapParameters.m_outerSymmetry       = 5;
     geometryParameters.m_eCalEndCapParameters.m_outerAngle          = 6;
-    geometryParameters.m_eCalEndCapParameters.m_nLayers             = 7;
+    geometryParameters.m_eCalEndCapParameters.m_nLayers             = 1;
     geometryParameters.m_eCalEndCapParameters.m_layerParametersList.push_back(layerParameters);
 
     geometryParameters.m_hCalEndCapParameters.m_innerDistanceFromIp = 1;
@@ -163,7 +163,7 @@ StatusCode PandoraPFANewProcessor::CreateGeometry()
     geometryParameters.m_hCalEndCapParameters.m_outerDistanceFromIp = 4;
     geometryParameters.m_hCalEndCapParameters.m_outerSymmetry       = 5;
     geometryParameters.m_hCalEndCapParameters.m_outerAngle          = 6;
-    geometryParameters.m_hCalEndCapParameters.m_nLayers             = 7;
+    geometryParameters.m_hCalEndCapParameters.m_nLayers             = 1;
     geometryParameters.m_hCalEndCapParameters.m_layerParametersList.push_back(layerParameters);
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::Create(m_pandora, geometryParameters));
