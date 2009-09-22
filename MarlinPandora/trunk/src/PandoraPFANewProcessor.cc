@@ -6,14 +6,14 @@
  *  $Log: $
  */
 
-#include <math.h>
-
 #include "EVENT/CalorimeterHit.h"
 #include "EVENT/LCCollection.h"
 #include "EVENT/Track.h"
 #include "EVENT/MCParticle.h"
 
 #include "UTIL/CellIDDecoder.h"
+
+#include <cmath>
 
 // User algorithm includes here
 
@@ -75,8 +75,8 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
     try
     {
         std::cout << "Run " << m_nRun << ", Event " << ++m_nEvent << std::endl;
-        
-        //PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateMCParticles(pLCEvent));
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateMCParticles(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateTracks(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateCaloHits(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(m_pandora));
@@ -115,7 +115,57 @@ StatusCode PandoraPFANewProcessor::CreateGeometry()
 {
     // Insert user code here ...
     PandoraApi::Geometry::Parameters geometryParameters;
-    geometryParameters.m_tpcInnerRadius = 10;
+
+    geometryParameters.m_mainTrackerInnerRadius = 1;
+    geometryParameters.m_mainTrackerOuterRadius = 2;
+    geometryParameters.m_mainTrackerZExtent     = 3;
+
+    geometryParameters.m_nRadLengthsInZGap      = 4;
+    geometryParameters.m_nIntLengthsInZGap      = 5;
+    geometryParameters.m_nRadLengthsInRadialGap = 6;
+    geometryParameters.m_nIntLengthsInRadialGap = 7;
+
+    PandoraApi::Geometry::Parameters::LayerParameters layerParameters;
+    layerParameters.m_distanceFromIp        = 1;
+    layerParameters.m_nRadiationLengths     = 2;
+    layerParameters.m_nInteractionLengths   = 3;
+
+    geometryParameters.m_eCalBarrelParameters.m_innerDistanceFromIp = 1;
+    geometryParameters.m_eCalBarrelParameters.m_innerSymmetry       = 2;
+    geometryParameters.m_eCalBarrelParameters.m_innerAngle          = 3;
+    geometryParameters.m_eCalBarrelParameters.m_outerDistanceFromIp = 4;
+    geometryParameters.m_eCalBarrelParameters.m_outerSymmetry       = 5;
+    geometryParameters.m_eCalBarrelParameters.m_outerAngle          = 6;
+    geometryParameters.m_eCalBarrelParameters.m_nLayers             = 7;
+    geometryParameters.m_eCalBarrelParameters.m_layerParametersList.push_back(layerParameters);
+
+    geometryParameters.m_hCalBarrelParameters.m_innerDistanceFromIp = 1;
+    geometryParameters.m_hCalBarrelParameters.m_innerSymmetry       = 2;
+    geometryParameters.m_hCalBarrelParameters.m_innerAngle          = 3;
+    geometryParameters.m_hCalBarrelParameters.m_outerDistanceFromIp = 4;
+    geometryParameters.m_hCalBarrelParameters.m_outerSymmetry       = 5;
+    geometryParameters.m_hCalBarrelParameters.m_outerAngle          = 6;
+    geometryParameters.m_hCalBarrelParameters.m_nLayers             = 7;
+    geometryParameters.m_hCalBarrelParameters.m_layerParametersList.push_back(layerParameters);
+
+    geometryParameters.m_eCalEndCapParameters.m_innerDistanceFromIp = 1;
+    geometryParameters.m_eCalEndCapParameters.m_innerSymmetry       = 2;
+    geometryParameters.m_eCalEndCapParameters.m_innerAngle          = 3;
+    geometryParameters.m_eCalEndCapParameters.m_outerDistanceFromIp = 4;
+    geometryParameters.m_eCalEndCapParameters.m_outerSymmetry       = 5;
+    geometryParameters.m_eCalEndCapParameters.m_outerAngle          = 6;
+    geometryParameters.m_eCalEndCapParameters.m_nLayers             = 7;
+    geometryParameters.m_eCalEndCapParameters.m_layerParametersList.push_back(layerParameters);
+
+    geometryParameters.m_hCalEndCapParameters.m_innerDistanceFromIp = 1;
+    geometryParameters.m_hCalEndCapParameters.m_innerSymmetry       = 2;
+    geometryParameters.m_hCalEndCapParameters.m_innerAngle          = 3;
+    geometryParameters.m_hCalEndCapParameters.m_outerDistanceFromIp = 4;
+    geometryParameters.m_hCalEndCapParameters.m_outerSymmetry       = 5;
+    geometryParameters.m_hCalEndCapParameters.m_outerAngle          = 6;
+    geometryParameters.m_hCalEndCapParameters.m_nLayers             = 7;
+    geometryParameters.m_hCalEndCapParameters.m_layerParametersList.push_back(layerParameters);
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::Create(m_pandora, geometryParameters));
 
     return STATUS_CODE_SUCCESS;
@@ -134,64 +184,52 @@ StatusCode PandoraPFANewProcessor::RegisterUserAlgorithmFactories()
 
 StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEvent)
 {
-
     // Insert user code here ...
-    for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), 
-             iterEnd = m_settings.m_trackCollections.end(); iter != iterEnd; ++iter)
+    for (StringVector::const_iterator iter = m_settings.m_mcParticleCollections.begin(), iterEnd = m_settings.m_mcParticleCollections.end();
+        iter != iterEnd; ++iter)
     {
         try
         {
             const LCCollection *pMCParticleCollection = pLCEvent->getCollection(*iter);
 
-            double innerRadius = 0.0;
-            double outerRadius = 0.0;
-            double momentum    = 0.0;
+            const int numberMCParticles = pMCParticleCollection->getNumberOfElements();
 
-            int numberMCParticles;
-            if( pMCParticleCollection != 0 ) {
-                numberMCParticles = pMCParticleCollection->getNumberOfElements()  ;
-                for(int i=0; i< numberMCParticles ; i++) {
-                    MCParticle* pMcParticle = dynamic_cast<MCParticle*>( pMCParticleCollection->getElementAt( i ) ) ;
+            for(int i = 0; i < numberMCParticles; ++i)
+            {
+                MCParticle* pMcParticle = dynamic_cast<MCParticle*>(pMCParticleCollection->getElementAt(i));
 
-                    innerRadius = 0.0;
-                    outerRadius = 0.0;
-                    momentum = 0.0;
+                double innerRadius = 0.;
+                double outerRadius = 0.;
+                double momentum    = 0.;
 
-                    for( int i=0; i<3; i++ ){
-                        innerRadius += pow(pMcParticle->getVertex()[i],2);
-                        outerRadius += pow(pMcParticle->getEndpoint()[i],2);
-                        momentum    += pow(pMcParticle->getMomentum()[i],2);
-                    }
-                    innerRadius = sqrt( innerRadius );
-                    outerRadius = sqrt( outerRadius );
-                    momentum    = sqrt( momentum );
-     
-//             std::cout << "p " << p << " energy: " << pMcParticle->getEnergy() << " momentum: " << momentum 
-//                       << " end: " << pMcParticle->getEndpoint()[0]  << "  " << pMcParticle->getEndpoint()[1]  << "  " << pMcParticle->getEndpoint()[2] 
-//                       << " vertex: " << pMcParticle->getVertex()[0]  << "  " << pMcParticle->getVertex()[1]  << "  " << pMcParticle->getVertex()[2]
-//                       << " inner " << innerRadius << " outer " << outerRadius << std::endl;
-         
-                    PandoraApi::MCParticle::Parameters mcParticleParameters;
-                    mcParticleParameters.m_energy = pMcParticle->getEnergy();
-                    mcParticleParameters.m_momentum = momentum;
-                    mcParticleParameters.m_innerRadius = innerRadius;
-                    mcParticleParameters.m_outerRadius = outerRadius;
-                    mcParticleParameters.m_pParentAddress = (void*)pMcParticle;
-
-
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(m_pandora, mcParticleParameters));
-
-                    // create parent-daughter relationships
-                    MCParticleVec daughters = pMcParticle->getDaughters();
-                    for( MCParticleVec::iterator itDaughter = daughters.begin(), itDaughterEnd = daughters.end(); itDaughter != itDaughterEnd; itDaughter++ ){
-//                std::cout << "   daughter: " << (*itDaughter) << std::endl;
-                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetMCParentDaughterRelationship(m_pandora, 
-                                                                                                                     (void*)pMcParticle,
-                                                                                                                     (void*)(*itDaughter) ));
-                    }
-
+                for(int i = 0; i < 3; ++i)
+                {
+                    innerRadius += pow(pMcParticle->getVertex()[i], 2);
+                    outerRadius += pow(pMcParticle->getEndpoint()[i], 2);
+                    momentum    += pow(pMcParticle->getMomentum()[i], 2);
                 }
-            }// Col MC condition
+
+                innerRadius = std::sqrt(innerRadius);
+                outerRadius = std::sqrt(outerRadius);
+                momentum    = std::sqrt(momentum);
+     
+                PandoraApi::MCParticle::Parameters mcParticleParameters;
+                mcParticleParameters.m_energy = pMcParticle->getEnergy();
+                mcParticleParameters.m_momentum = momentum;
+                mcParticleParameters.m_innerRadius = innerRadius;
+                mcParticleParameters.m_outerRadius = outerRadius;
+                mcParticleParameters.m_pParentAddress = pMcParticle;
+
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(m_pandora, mcParticleParameters));
+
+                // Create parent-daughter relationships
+                for(MCParticleVec::const_iterator itDaughter = pMcParticle->getDaughters().begin(),
+                    itDaughterEnd = pMcParticle->getDaughters().end(); itDaughter != itDaughterEnd; ++itDaughter)
+                {
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetMCParentDaughterRelationship(m_pandora, pMcParticle,
+                        *itDaughter));
+                }
+            }
         }
         catch (StatusCodeException &statusCodeException)
         {
@@ -258,8 +296,8 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
 {
     // Insert user code here ...
-    for (StringVector::const_iterator iter = m_settings.m_hCalCollections.begin(), 
-        iterEnd = m_settings.m_hCalCollections.end(); iter != iterEnd; ++iter)
+    for (StringVector::const_iterator iter = m_settings.m_caloHitCollections.begin(), 
+        iterEnd = m_settings.m_caloHitCollections.end(); iter != iterEnd; ++iter)
     {
         try
         {
@@ -345,17 +383,23 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "TrackCollections", 
                             "Names of the Track collections used for clustering",
                             m_settings.m_trackCollections,
-                            StringVector(1, std::string("LDCTracks")));
+                            StringVector());
 
     registerInputCollections(LCIO::VERTEX,
                             "V0VertexCollections", 
                             "Name of external V0 Vertex collections",
                             m_settings.m_v0VertexCollections,
-                            StringVector(1, std::string("V0Vertices")));
+                            StringVector());
 
     registerInputCollections(LCIO::CALORIMETERHIT,
                             "CaloHitcollections", 
                             "Name of the HCAL collection used to form clusters",
-                            m_settings.m_hCalCollections,
-                            StringVector(1, std::string("HCAL")));
+                            m_settings.m_caloHitCollections,
+                            StringVector());
+
+    registerInputCollections(LCIO::MCPARTICLE,
+                            "MCParticleCollections", 
+                            "Name of mc particle collections",
+                            m_settings.m_mcParticleCollections,
+                            StringVector());
 }
