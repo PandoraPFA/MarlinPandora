@@ -32,6 +32,9 @@ public:
         StringVector    m_v0VertexCollections;          ///< The v0 vertex collections
         StringVector    m_caloHitCollections;           ///< The calorimeter hit collections
         StringVector    m_mcParticleCollections;        ///< The mc particle collections
+
+        float           m_absorberRadiationLength;      ///< The absorber radation length
+        float           m_absorberInteractionLength;    ///< The absorber interaction length
     };
 
     /**
@@ -79,48 +82,50 @@ private:
     /**
      *  @brief  Create geometry, insert user code here
      */
-    StatusCode CreateGeometry();
+    StatusCode CreateGeometry() const;
+
+    /**
+     *  @brief  Set sub detector parameters to their gear default values
+     * 
+     *  @param  inputParameters input parameters, from gear
+     *  @param  subDetectorParameters the sub detector parameters
+     */
+    void SetDefaultSubDetectorParameters(const gear::CalorimeterParameters &inputParameters,
+        PandoraApi::GeometryParameters::SubDetectorParameters &subDetectorParameters) const;
 
     /**
      *  @brief  Register user algorithm factories, insert user code here
      */
-    StatusCode RegisterUserAlgorithmFactories();
+    StatusCode RegisterUserAlgorithmFactories() const;
 
     /**
      *  @brief  Create tracks, insert user code here
      * 
      *  @param  pLCEvent the lcio event
      */    
-    StatusCode CreateTracks(const LCEvent *const pLCEvent);
+    StatusCode CreateTracks(const LCEvent *const pLCEvent) const;
 
     /**
      *  @brief  Create MCParticles, insert user code here
      * 
      *  @param  pLCEvent the lcio event
      */    
-    StatusCode CreateMCParticles(const LCEvent *const pLCEvent);
-    
+    StatusCode CreateMCParticles(const LCEvent *const pLCEvent) const;
+
     /**
      *  @brief  Create calo hits, insert user code here
      * 
      *  @param  pLCEvent the lcio event
      */    
-    StatusCode CreateCaloHits(const LCEvent *const pLCEvent);
-    
-    /**
-     *  @brief  Create MC trees from MC particles and their relationships, insert user code here
-     * 
-     *  @param  pLCEvent the lcio event
-     */    
-    StatusCode CreateMCTrees(const LCEvent *const pLCEvent);
-    
+    StatusCode CreateCaloHits(const LCEvent *const pLCEvent) const;
+
     /**
      *  @brief  Process particle flow objects, insert user code here
      * 
      *  @param  pLCEvent the lcio event
      */    
-    StatusCode ProcessParticleFlowObjects(const LCEvent *const pLCEvent);
-    
+    StatusCode ProcessParticleFlowObjects(const LCEvent *const pLCEvent) const;
+
       /**
      *  @brief  Process steering file parameters, insert user code here
      */
