@@ -13,6 +13,16 @@
 
 #include "UTIL/CellIDDecoder.h"
 
+#include "marlin/Global.h"
+
+#include "gear/GEAR.h"
+#include "gear/GearParameters.h"
+#include "gear/BField.h"
+#include "gear/CalorimeterParameters.h"
+#include "gear/TPCParameters.h"
+#include "gear/PadRowLayout2D.h"
+#include "gear/LayerLayout.h"
+
 #include <cmath>
 
 // User algorithm includes here
@@ -111,69 +121,82 @@ void PandoraPFANewProcessor::end()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PandoraPFANewProcessor::CreateGeometry()
+StatusCode PandoraPFANewProcessor::CreateGeometry() const
 {
-    // Insert user code here ...
-    PandoraApi::Geometry::Parameters geometryParameters;
+    try
+    {
+        // Insert user code here ...
+        PandoraApi::Geometry::Parameters geometryParameters;
 
-    geometryParameters.m_mainTrackerInnerRadius = 1;
-    geometryParameters.m_mainTrackerOuterRadius = 2;
-    geometryParameters.m_mainTrackerZExtent     = 3;
+        const gear::TPCParameters& tpcParameters    = marlin::Global::GEAR->getTPCParameters();
+        const gear::PadRowLayout2D& tpcPadLayout    = tpcParameters.getPadLayout();
+        geometryParameters.m_mainTrackerInnerRadius = tpcPadLayout.getPlaneExtent()[0];
+        geometryParameters.m_mainTrackerOuterRadius = tpcPadLayout.getPlaneExtent()[1];
+        geometryParameters.m_mainTrackerZExtent     = tpcParameters.getMaxDriftLength();
 
-    geometryParameters.m_nRadLengthsInZGap      = 4;
-    geometryParameters.m_nIntLengthsInZGap      = 5;
-    geometryParameters.m_nRadLengthsInRadialGap = 6;
-    geometryParameters.m_nIntLengthsInRadialGap = 7;
+        geometryParameters.m_nRadLengthsInZGap      = 0;
+        geometryParameters.m_nIntLengthsInZGap      = 0;
+        geometryParameters.m_nRadLengthsInRadialGap = 0;
+        geometryParameters.m_nIntLengthsInRadialGap = 0;
 
-    PandoraApi::Geometry::Parameters::LayerParameters layerParameters;
-    layerParameters.m_distanceFromIp        = 1;
-    layerParameters.m_nRadiationLengths     = 2;
-    layerParameters.m_nInteractionLengths   = 3;
+        const gear::CalorimeterParameters &eCalBarrelParameters = marlin::Global::GEAR->getEcalBarrelParameters();
+        const gear::CalorimeterParameters &eCalEndCapParameters = marlin::Global::GEAR->getEcalEndcapParameters();
+        const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
+        const gear::CalorimeterParameters &hCalEndCapParameters = marlin::Global::GEAR->getHcalEndcapParameters();
 
-    geometryParameters.m_eCalBarrelParameters.m_innerDistanceFromIp = 1;
-    geometryParameters.m_eCalBarrelParameters.m_innerSymmetry       = 2;
-    geometryParameters.m_eCalBarrelParameters.m_innerAngle          = 3;
-    geometryParameters.m_eCalBarrelParameters.m_outerDistanceFromIp = 4;
-    geometryParameters.m_eCalBarrelParameters.m_outerSymmetry       = 5;
-    geometryParameters.m_eCalBarrelParameters.m_outerAngle          = 6;
-    geometryParameters.m_eCalBarrelParameters.m_nLayers             = 1;
-    geometryParameters.m_eCalBarrelParameters.m_layerParametersList.push_back(layerParameters);
+        // Initialize settings to gear defaults
+        SetDefaultSubDetectorParameters(eCalBarrelParameters, geometryParameters.m_eCalBarrelParameters);
+        SetDefaultSubDetectorParameters(eCalEndCapParameters, geometryParameters.m_eCalEndCapParameters);
+        SetDefaultSubDetectorParameters(hCalBarrelParameters, geometryParameters.m_hCalBarrelParameters);
+        SetDefaultSubDetectorParameters(hCalEndCapParameters, geometryParameters.m_hCalEndCapParameters);
 
-    geometryParameters.m_hCalBarrelParameters.m_innerDistanceFromIp = 1;
-    geometryParameters.m_hCalBarrelParameters.m_innerSymmetry       = 2;
-    geometryParameters.m_hCalBarrelParameters.m_innerAngle          = 3;
-    geometryParameters.m_hCalBarrelParameters.m_outerDistanceFromIp = 4;
-    geometryParameters.m_hCalBarrelParameters.m_outerSymmetry       = 5;
-    geometryParameters.m_hCalBarrelParameters.m_outerAngle          = 6;
-    geometryParameters.m_hCalBarrelParameters.m_nLayers             = 1;
-    geometryParameters.m_hCalBarrelParameters.m_layerParametersList.push_back(layerParameters);
+        // Non-default values ...
+        geometryParameters.m_hCalBarrelParameters.m_outerPhiCoordinate = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
+        geometryParameters.m_hCalBarrelParameters.m_outerSymmetryOrder = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
 
-    geometryParameters.m_eCalEndCapParameters.m_innerDistanceFromIp = 1;
-    geometryParameters.m_eCalEndCapParameters.m_innerSymmetry       = 2;
-    geometryParameters.m_eCalEndCapParameters.m_innerAngle          = 3;
-    geometryParameters.m_eCalEndCapParameters.m_outerDistanceFromIp = 4;
-    geometryParameters.m_eCalEndCapParameters.m_outerSymmetry       = 5;
-    geometryParameters.m_eCalEndCapParameters.m_outerAngle          = 6;
-    geometryParameters.m_eCalEndCapParameters.m_nLayers             = 1;
-    geometryParameters.m_eCalEndCapParameters.m_layerParametersList.push_back(layerParameters);
+        // Addition subdetectors here ...
 
-    geometryParameters.m_hCalEndCapParameters.m_innerDistanceFromIp = 1;
-    geometryParameters.m_hCalEndCapParameters.m_innerSymmetry       = 2;
-    geometryParameters.m_hCalEndCapParameters.m_innerAngle          = 3;
-    geometryParameters.m_hCalEndCapParameters.m_outerDistanceFromIp = 4;
-    geometryParameters.m_hCalEndCapParameters.m_outerSymmetry       = 5;
-    geometryParameters.m_hCalEndCapParameters.m_outerAngle          = 6;
-    geometryParameters.m_hCalEndCapParameters.m_nLayers             = 1;
-    geometryParameters.m_hCalEndCapParameters.m_layerParametersList.push_back(layerParameters);
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::Create(m_pandora, geometryParameters));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::Create(m_pandora, geometryParameters));
+    }
+    catch (gear::UnknownParameterException &e)
+    {
+        std::cout << "Failed to extract geometry information from gear." << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PandoraPFANewProcessor::RegisterUserAlgorithmFactories()
+void PandoraPFANewProcessor::SetDefaultSubDetectorParameters(const gear::CalorimeterParameters &inputParameters,
+    PandoraApi::GeometryParameters::SubDetectorParameters &subDetectorParameters) const
+{
+    const gear::LayerLayout &layerLayout = inputParameters.getLayerLayout();
+
+    subDetectorParameters.m_innerRCoordinate    = inputParameters.getExtent()[0];
+    subDetectorParameters.m_innerZCoordinate    = inputParameters.getExtent()[2];
+    subDetectorParameters.m_innerPhiCoordinate  = inputParameters.getPhi0();
+    subDetectorParameters.m_innerSymmetryOrder  = inputParameters.getSymmetryOrder();
+    subDetectorParameters.m_outerRCoordinate    = inputParameters.getExtent()[1];
+    subDetectorParameters.m_outerZCoordinate    = inputParameters.getExtent()[3];
+    subDetectorParameters.m_outerPhiCoordinate  = inputParameters.getPhi0();
+    subDetectorParameters.m_outerSymmetryOrder  = inputParameters.getSymmetryOrder();
+    subDetectorParameters.m_nLayers             = layerLayout.getNLayers();
+
+    for(int i = 0; i < layerLayout.getNLayers(); ++i)
+    {
+        PandoraApi::Geometry::Parameters::LayerParameters layerParameters;
+        layerParameters.m_closestDistanceToIp   = layerLayout.getDistance(i);
+        layerParameters.m_nRadiationLengths     = m_settings.m_absorberRadiationLength * layerLayout.getAbsorberThickness(i);
+        layerParameters.m_nInteractionLengths   = m_settings.m_absorberInteractionLength * layerLayout.getAbsorberThickness(i);
+        subDetectorParameters.m_layerParametersList.push_back(layerParameters);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode PandoraPFANewProcessor::RegisterUserAlgorithmFactories() const
 {
     // Insert user code here ...
 
@@ -182,7 +205,7 @@ StatusCode PandoraPFANewProcessor::RegisterUserAlgorithmFactories()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEvent)
+StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEvent) const
 {
     // Insert user code here ...
     for (StringVector::const_iterator iter = m_settings.m_mcParticleCollections.begin(), iterEnd = m_settings.m_mcParticleCollections.end();
@@ -246,7 +269,7 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
+StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent) const
 {
     // Insert user code here ...
     for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), 
@@ -293,7 +316,7 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
+StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent) const
 {
     // Insert user code here ...
     for (StringVector::const_iterator iter = m_settings.m_caloHitCollections.begin(), 
@@ -349,21 +372,12 @@ StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PandoraPFANewProcessor::ProcessParticleFlowObjects(const LCEvent *const pLCEvent)
+StatusCode PandoraPFANewProcessor::ProcessParticleFlowObjects(const LCEvent *const pLCEvent) const
 {
     // Insert user code here ...
     PandoraApi::ParticleFlowObjectList particleFlowObjectList;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=,
         PandoraApi::GetParticleFlowObjects(m_pandora, particleFlowObjectList));
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-    
-StatusCode PandoraPFANewProcessor::CreateMCTrees(const LCEvent *const pLCEvent)
-{
-    // Insert user code here ...
 
     return STATUS_CODE_SUCCESS;
 }
@@ -402,4 +416,14 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "Name of mc particle collections",
                             m_settings.m_mcParticleCollections,
                             StringVector());
+
+    registerProcessorParameter("AbsorberRadiationLength",
+                            "The absorber radation length",
+                            m_settings.m_absorberRadiationLength,
+                            float(1.));
+
+    registerProcessorParameter("AbsorberInteractionLength",
+                            "The absorber interaction length",
+                            m_settings.m_absorberInteractionLength,
+                            float(1.));
 }
