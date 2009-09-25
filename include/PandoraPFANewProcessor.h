@@ -94,6 +94,13 @@ private:
         PandoraApi::GeometryParameters::SubDetectorParameters &subDetectorParameters) const;
 
     /**
+     *  @brief  Set additional sub detector parameters
+     * 
+     *  @param  geometryParameters the pandora geometry parameters
+     */
+    void SetAdditionalSubDetectorParameters(PandoraApi::GeometryParameters &geometryParameters) const;
+
+    /**
      *  @brief  Register user algorithm factories, insert user code here
      */
     StatusCode RegisterUserAlgorithmFactories() const;
