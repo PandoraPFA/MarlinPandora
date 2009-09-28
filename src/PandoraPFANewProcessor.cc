@@ -128,11 +128,16 @@ StatusCode PandoraPFANewProcessor::CreateGeometry() const
         // Insert user code here ...
         PandoraApi::Geometry::Parameters geometryParameters;
 
-        const gear::TPCParameters& tpcParameters    = marlin::Global::GEAR->getTPCParameters();
-        const gear::PadRowLayout2D& tpcPadLayout    = tpcParameters.getPadLayout();
+        const gear::TPCParameters &tpcParameters    = marlin::Global::GEAR->getTPCParameters();
+        const gear::PadRowLayout2D &tpcPadLayout    = tpcParameters.getPadLayout();
         geometryParameters.m_mainTrackerInnerRadius = tpcPadLayout.getPlaneExtent()[0];
         geometryParameters.m_mainTrackerOuterRadius = tpcPadLayout.getPlaneExtent()[1];
         geometryParameters.m_mainTrackerZExtent     = tpcParameters.getMaxDriftLength();
+
+        const gear::GearParameters &coilParameters  = marlin::Global::GEAR->getGearParameters("CoilParameters");
+        geometryParameters.m_coilInnerRadius        = coilParameters.getDoubleVal("Coil_cryostat_inner_radius");
+        geometryParameters.m_coilOuterRadius        = coilParameters.getDoubleVal("Coil_cryostat_outer_radius");
+        geometryParameters.m_coilZExtent            = coilParameters.getDoubleVal("Coil_cryostat_half_z");
 
         geometryParameters.m_nRadLengthsInZGap      = 0;
         geometryParameters.m_nIntLengthsInZGap      = 0;
@@ -151,6 +156,7 @@ StatusCode PandoraPFANewProcessor::CreateGeometry() const
         SetDefaultSubDetectorParameters(hCalEndCapParameters, geometryParameters.m_hCalEndCapParameters);
 
         // Non-default values ...
+        geometryParameters.m_eCalEndCapParameters.m_innerSymmetryOrder = 4;
         geometryParameters.m_hCalBarrelParameters.m_outerPhiCoordinate = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
         geometryParameters.m_hCalBarrelParameters.m_outerSymmetryOrder = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
 
@@ -228,11 +234,6 @@ void PandoraPFANewProcessor::SetAdditionalSubDetectorParameters(PandoraApi::Geom
     const gear::CalorimeterParameters &lHCalInputParameters = marlin::Global::GEAR->getLHcalParameters();
     SetDefaultSubDetectorParameters(lHCalInputParameters, lHCalParameters);
     geometryParameters.m_additionalSubDetectors.push_back(lHCalParameters);
-
-    PandoraApi::Geometry::Parameters::SubDetectorParameters beamCalParameters;
-    const gear::CalorimeterParameters &beamCalInputParameters = marlin::Global::GEAR->getBeamCalParameters();
-    SetDefaultSubDetectorParameters(beamCalInputParameters, beamCalParameters);
-    geometryParameters.m_additionalSubDetectors.push_back(beamCalParameters);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -375,7 +376,9 @@ StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
                 CalorimeterHit* pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
 
                 PandoraApi::CaloHit::Parameters caloHitParameters;
-                caloHitParameters.m_positionVector = pandora::CartesianVector(1, 2, 3);
+
+                const float *pCaloHitPosition(pCaloHit->getPosition());
+                caloHitParameters.m_positionVector = pandora::CartesianVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
                 caloHitParameters.m_normalVector = pandora::CartesianVector(4, 5, 6);
 
                 caloHitParameters.m_cellSizeU = 1;
