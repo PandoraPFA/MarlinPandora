@@ -54,7 +54,7 @@ void PandoraPFANewProcessor::init()
     {
         std::cout << "PandoraPFANewProcessor - Init" << std::endl;
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateGeometry());
+//        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateGeometry());
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RegisterUserAlgorithmFactories());
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ReadSettings(m_pandora, m_settings.m_pandoraSettingsXmlFile));
     }
@@ -274,12 +274,14 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
                     momentum    += pow(pMcParticle->getMomentum()[i], 2);
                 }
 
+
                 innerRadius = std::sqrt(innerRadius);
                 outerRadius = std::sqrt(outerRadius);
                 momentum    = std::sqrt(momentum);
      
                 PandoraApi::MCParticle::Parameters mcParticleParameters;
                 mcParticleParameters.m_energy = pMcParticle->getEnergy();
+                mcParticleParameters.m_particleId = pMcParticle->getPDG();
                 mcParticleParameters.m_momentum = momentum;
                 mcParticleParameters.m_innerRadius = innerRadius;
                 mcParticleParameters.m_outerRadius = outerRadius;
