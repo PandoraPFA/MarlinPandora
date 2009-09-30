@@ -133,7 +133,7 @@ private:
      */    
     StatusCode ProcessParticleFlowObjects(const LCEvent *const pLCEvent) const;
 
-      /**
+    /**
      *  @brief  Process steering file parameters, insert user code here
      */
     void ProcessSteeringFile();
