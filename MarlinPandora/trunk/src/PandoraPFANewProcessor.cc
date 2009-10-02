@@ -10,6 +10,11 @@
 #include "EVENT/LCCollection.h"
 #include "EVENT/Track.h"
 #include "EVENT/MCParticle.h"
+#include "EVENT/SimCalorimeterHit.h"
+
+#include <IMPL/LCRelationImpl.h>
+#include <UTIL/LCTOOLS.h>
+#include <UTIL/LCRelationNavigator.h>
 
 #include "UTIL/CellIDDecoder.h"
 
@@ -363,6 +368,10 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent) c
 StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent) const
 {
     // Insert user code here ...
+    typedef std::vector<std::pair<MCParticle*,double> > MCParticleWithWeights;
+    MCParticleWithWeights pMcParticles;
+    typedef MCParticleWithWeights::iterator MCParticlesWithWeightsIterator;
+
     for (StringVector::const_iterator iter = m_settings.m_caloHitCollections.begin(), 
         iterEnd = m_settings.m_caloHitCollections.end(); iter != iterEnd; ++iter)
     {
@@ -401,6 +410,24 @@ StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
                 caloHitParameters.m_pParentAddress = pCaloHit;
 
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(m_pandora, caloHitParameters));
+                
+                // get mc particle for CaloHit
+                pMcParticles.clear();
+                GetCaloHitMCParticles( pLCEvent, pCaloHit, pMcParticles );
+                
+                if( !pMcParticles.empty() )
+                {
+                    for( MCParticlesWithWeightsIterator itMc = pMcParticles.begin(), itMcEnd = pMcParticles.end(); itMc != itMcEnd; ++itMc )
+                    {
+                        MCParticle* mcParticle = (*itMc).first;
+                        double      mcParticleEnergyContribution = (*itMc).second;
+                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetCaloHitToMCParticleRelationship(m_pandora,
+                                                                                                                        pCaloHit, 
+                                                                                                                        mcParticle, 
+                                                                                                                        mcParticleEnergyContribution ) );
+                    }
+                }
+                
             }
         }
         catch (StatusCodeException &statusCodeException)
@@ -463,6 +490,12 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_settings.m_mcParticleCollections,
                             StringVector());
 
+    registerInputCollections( LCIO::LCRELATION, 
+			    "RelCollections",
+			    "SimCaloHit to CaloHit Relations Collection Name",
+			    m_settings.m_lcRelationCollections,
+                            StringVector());
+
     registerProcessorParameter("AbsorberRadiationLength",
                             "The absorber radation length",
                             m_settings.m_absorberRadiationLength,
@@ -473,3 +506,57 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_settings.m_absorberInteractionLength,
                             float(1.));
 }
+
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PandoraPFANewProcessor::GetCaloHitMCParticles(  const LCEvent *const pLCEvent,
+                                                     CalorimeterHit* pCaloHit, 
+                                                    std::vector<std::pair<MCParticle*,double> >& pMcParticles ) const
+{
+
+    typedef std::map<MCParticle*,double>  McParticleMap ; 
+    McParticleMap mcpMap;
+
+    for (StringVector::const_iterator iter = m_settings.m_lcRelationCollections.begin(), iterEnd = m_settings.m_lcRelationCollections.end();
+         iter != iterEnd; ++iter)
+    {
+        try {
+            const LCCollection *pMCRelationCollection = pLCEvent->getCollection(*iter);
+
+            LCRelationNavigator navigate(pMCRelationCollection); 
+
+            const LCObjectVec& objectVec = navigate.getRelatedToObjects(pCaloHit);
+            for( LCObjectVec::const_iterator itRel = objectVec.begin(), itRelEnd = objectVec.end(); itRel != itRelEnd; itRel++ ) 
+            {
+                SimCalorimeterHit * simHit=dynamic_cast<SimCalorimeterHit*>( (*itRel) ); // look at one relation
+                if( simHit == NULL )
+                {
+                    std::cout << "simHit == 0" << std::endl;
+                    continue;
+                }
+
+                for( int iCont=0, iEnd = simHit->getNMCContributions() ;iCont< iEnd ; ++iCont){
+                    mcpMap[  simHit->getParticleCont(iCont) ] += simHit->getEnergyCont(iCont) ;   
+                }
+            }	
+        }
+        catch(...)
+        {
+            std::cout << "Failed to search for MCParticle of CalorimeterHit " << pCaloHit << " in LCRelation collection '" << (*iter) << "'." << std::endl;
+        }  
+    }
+
+    pMcParticles.assign( mcpMap.begin(), mcpMap.end() ); // put the elements of the map into a vector
+//    sort( pMcParticles.begin(), pMcParticles.end(), less_than_second<MCParticle*,double> );
+
+    if( pMcParticles.empty() )
+    {
+//        std::cout << "no MC particles for CalorimeterHit " << pCaloHit << std::endl;
+        std::cout << "no MC particles"  << std::endl;
+        return;
+    }
+//    std::cout << "front " << pMcParticles.front().second << " back " << pMcParticles.back().second << std::endl;
+}
+
