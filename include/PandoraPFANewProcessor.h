@@ -8,11 +8,6 @@
 #ifndef PANDORA_PFA_NEW_PROCESSOR_H
 #define PANDORA_PFA_NEW_PROCESSOR_H 1
 
-#include "IMPL/LCRelationImpl.h"
-#include "UTIL/LCTOOLS.h"
-#include "UTIL/LCRelationNavigator.h"
-#include "EVENT/LCCollection.h"
-
 #include "marlin/Processor.h"
 
 #include "Pandora/Pandora.h"
@@ -133,11 +128,11 @@ private:
     StatusCode CreateCaloHits(const LCEvent *const pLCEvent);
 
     /**
-     *  @brief  Set calo hit to mc particle relationships
+     *  @brief  Create calo hit to mc particle relationships
      *
      *  @param  pLCEvent the lcio event
      */
-    StatusCode SetCaloHitToMCParticleRelationships(const LCEvent *const pLCEvent) const;
+    StatusCode CreateCaloHitToMCParticleRelationships(const LCEvent *const pLCEvent) const;
 
     /**
      *  @brief  Process particle flow objects, insert user code here
