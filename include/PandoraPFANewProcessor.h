@@ -8,9 +8,29 @@
 #ifndef PANDORA_PFA_NEW_PROCESSOR_H
 #define PANDORA_PFA_NEW_PROCESSOR_H 1
 
+#include <IMPL/LCRelationImpl.h>
+#include <UTIL/LCTOOLS.h>
+#include <UTIL/LCRelationNavigator.h>
+#include "EVENT/LCCollection.h"
+
+#include <algorithm>
+
 #include "marlin/Processor.h"
 
 #include "Pandora/Pandora.h"
+
+#include "Test/TestMCManager.h"
+
+
+
+/* // for sorting a vector of pairs with an algorithm by "second" */
+/*
+/* template< typename T1, typename T2 > */
+/*    inline bool less_than_second( const std::pair<T1,T2>& b1, const std::pair<T1,T2>& b2 ){ */
+/*    return b1.second < b2.second; */
+/* } */
+
+
 
 /**
  *  @brief  PandoraPFANewProcessor class
@@ -32,6 +52,7 @@ public:
         StringVector    m_v0VertexCollections;          ///< The v0 vertex collections
         StringVector    m_caloHitCollections;           ///< The calorimeter hit collections
         StringVector    m_mcParticleCollections;        ///< The mc particle collections
+        StringVector    m_lcRelationCollections;        ///< The caloHit to MC particle relations
 
         float           m_absorberRadiationLength;      ///< The absorber radation length
         float           m_absorberInteractionLength;    ///< The absorber interaction length
@@ -137,6 +158,22 @@ private:
      *  @brief  Process steering file parameters, insert user code here
      */
     void ProcessSteeringFile();
+
+
+    /**
+     *  @brief  Get the MCParticles which contributed to a CaloHit ordered by energy
+     *          (the MCParticle .at(0) is the one with the highest contribution)
+     *
+     *  @param  pLCEvent the lcio event
+     *  @param  pCaloHit points to CalorimeterHit of which the MCParticles are requested
+     *  @param  pMCParticles is a reference to a vector of pairs which gets the pointers 
+     *          to the MCParticles together with their relative energy contributions to the hit
+     */
+    void GetCaloHitMCParticles( const LCEvent *const pLCEvent,
+                                CalorimeterHit* pCaloHit, 
+                                std::vector<std::pair<MCParticle*,double> >& pMcParticles ) const;
+
+    
 
     pandora::Pandora    m_pandora;          ///< The pandora instance
     Settings            m_settings;         ///< The settings for the pandora pfa new processor
