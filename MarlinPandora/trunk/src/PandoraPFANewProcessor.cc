@@ -12,17 +12,13 @@
 #include "EVENT/MCParticle.h"
 #include "EVENT/SimCalorimeterHit.h"
 
-#include "IMPL/LCRelationImpl.h"
-#include "UTIL/LCTOOLS.h"
-#include "UTIL/LCRelationNavigator.h"
-
 #include "UTIL/CellIDDecoder.h"
+#include "UTIL/LCRelationNavigator.h"
 
 #include "marlin/Global.h"
 
 #include "gear/GEAR.h"
 #include "gear/GearParameters.h"
-#include "gear/BField.h"
 #include "gear/CalorimeterParameters.h"
 #include "gear/TPCParameters.h"
 #include "gear/PadRowLayout2D.h"
@@ -94,7 +90,7 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateMCParticles(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateTracks(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateCaloHits(pLCEvent));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SetCaloHitToMCParticleRelationships(pLCEvent));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateCaloHitToMCParticleRelationships(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(m_pandora));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessParticleFlowObjects(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(m_pandora));
@@ -161,7 +157,7 @@ StatusCode PandoraPFANewProcessor::CreateGeometry() const
         SetDefaultSubDetectorParameters(hCalBarrelParameters, geometryParameters.m_hCalBarrelParameters);
         SetDefaultSubDetectorParameters(hCalEndCapParameters, geometryParameters.m_hCalEndCapParameters);
 
-        // Non-default values ...
+        // Non-default values (and those missing from GEAR parameters file)...
         geometryParameters.m_eCalEndCapParameters.m_innerSymmetryOrder = 4;
         geometryParameters.m_hCalBarrelParameters.m_outerPhiCoordinate = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
         geometryParameters.m_hCalBarrelParameters.m_outerSymmetryOrder = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
@@ -430,7 +426,7 @@ StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PandoraPFANewProcessor::SetCaloHitToMCParticleRelationships(const LCEvent *const pLCEvent) const
+StatusCode PandoraPFANewProcessor::CreateCaloHitToMCParticleRelationships(const LCEvent *const pLCEvent) const
 {
     typedef std::map<MCParticle *, float> MCParticleToEnergyWeightMap;
     MCParticleToEnergyWeightMap mcParticleToEnergyWeightMap;
@@ -446,9 +442,8 @@ StatusCode PandoraPFANewProcessor::SetCaloHitToMCParticleRelationships(const LCE
             for (CalorimeterHitVector::const_iterator caloHitIter = m_calorimeterHitVector.begin(),
                 caloHitIterEnd = m_calorimeterHitVector.end(); caloHitIter != caloHitIterEnd; ++caloHitIter)
             {
-                const LCObjectVec &objectVec = navigate.getRelatedToObjects(*caloHitIter);
-
                 mcParticleToEnergyWeightMap.clear();
+                const LCObjectVec &objectVec = navigate.getRelatedToObjects(*caloHitIter);
 
                 for(LCObjectVec::const_iterator itRel = objectVec.begin(), itRelEnd = objectVec.end(); itRel != itRelEnd; ++itRel)
                 {
@@ -458,9 +453,7 @@ StatusCode PandoraPFANewProcessor::SetCaloHitToMCParticleRelationships(const LCE
                         return STATUS_CODE_FAILURE;
 
                     for(int iCont = 0, iEnd = pSimHit->getNMCContributions(); iCont < iEnd; ++iCont)
-                    {
                         mcParticleToEnergyWeightMap[pSimHit->getParticleCont(iCont)] += pSimHit->getEnergyCont(iCont);
-                    }
                 }
 
                 for (MCParticleToEnergyWeightMap::const_iterator mcParticleIter = mcParticleToEnergyWeightMap.begin(),
@@ -473,8 +466,7 @@ StatusCode PandoraPFANewProcessor::SetCaloHitToMCParticleRelationships(const LCE
         }
         catch(...)
         {
-            std::cout   << "Failed to set calo hit to mc particle relationship using relationship collection: " << *iter 
-                        << ", unrecognised exception" << std::endl;
+            std::cout   << "Failed to extract calo hit to mc particle relationships from collection: " << *iter << std::endl;
         }
     }
 
@@ -544,4 +536,3 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_settings.m_absorberInteractionLength,
                             float(1.));
 }
-
