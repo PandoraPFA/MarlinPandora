@@ -317,7 +317,6 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
 StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 {
     // Insert user code here ...
-
     m_trackVector.clear();
 
     for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), 
@@ -368,10 +367,6 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
 {
     // Insert user code here ...
-    typedef std::vector<std::pair<MCParticle*,double> > MCParticleWithWeights;
-    MCParticleWithWeights pMcParticles;
-    typedef MCParticleWithWeights::iterator MCParticlesWithWeightsIterator;
-
     m_calorimeterHitVector.clear();
 
     for (StringVector::const_iterator iter = m_settings.m_caloHitCollections.begin(), 
@@ -509,7 +504,7 @@ StatusCode PandoraPFANewProcessor::CreateTrackToMCParticleRelationships(const LC
                          mcParticleIterEnd = mcParticleToWeightMap.end(); mcParticleIter != mcParticleIterEnd; ++mcParticleIter)
                 {
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackToMCParticleRelationship(m_pandora,
-                                                                                 *trackIter, mcParticleIter->first, mcParticleIter->second));
+                        *trackIter, mcParticleIter->first, mcParticleIter->second));
                 }
             }
         }
