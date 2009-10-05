@@ -28,7 +28,6 @@
 
 // User algorithm includes here
 
-
 #include "Api/PandoraApi.h"
 
 #include "PandoraPFANewProcessor.h"
@@ -90,6 +89,7 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateMCParticles(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateTracks(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateCaloHits(pLCEvent));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateTrackToMCParticleRelationships(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateCaloHitToMCParticleRelationships(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(m_pandora));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessParticleFlowObjects(pLCEvent));
@@ -314,9 +314,12 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent) const
+StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 {
     // Insert user code here ...
+
+    m_trackVector.clear();
+
     for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), 
         iterEnd = m_settings.m_trackCollections.end(); iter != iterEnd; ++iter)
     {
@@ -327,6 +330,7 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent) c
             for (int i = 0; i < pTrackCollection->getNumberOfElements(); ++i)
             {
                 Track* pTrack = dynamic_cast<Track*>(pTrackCollection->getElementAt(i));
+                m_trackVector.push_back( pTrack );
 
                 PandoraApi::Track::Parameters trackParameters;
                 trackParameters.m_d0 = 1;
@@ -431,7 +435,7 @@ StatusCode PandoraPFANewProcessor::CreateCaloHitToMCParticleRelationships(const 
     typedef std::map<MCParticle *, float> MCParticleToEnergyWeightMap;
     MCParticleToEnergyWeightMap mcParticleToEnergyWeightMap;
 
-    for (StringVector::const_iterator iter = m_settings.m_lcRelationCollections.begin(), iterEnd = m_settings.m_lcRelationCollections.end();
+    for (StringVector::const_iterator iter = m_settings.m_lcCaloHitRelationCollections.begin(), iterEnd = m_settings.m_lcCaloHitRelationCollections.end();
          iter != iterEnd; ++iter)
     {
         try
@@ -475,6 +479,52 @@ StatusCode PandoraPFANewProcessor::CreateCaloHitToMCParticleRelationships(const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+StatusCode PandoraPFANewProcessor::CreateTrackToMCParticleRelationships(const LCEvent *const pLCEvent) const
+{
+    typedef std::map<MCParticle *, float> MCParticleToWeightMap;
+    MCParticleToWeightMap mcParticleToWeightMap;
+
+    for (StringVector::const_iterator iter = m_settings.m_lcTrackRelationCollections.begin(), iterEnd = m_settings.m_lcTrackRelationCollections.end();
+         iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const LCCollection *pMCRelationCollection = pLCEvent->getCollection(*iter);
+            LCRelationNavigator navigate(pMCRelationCollection);
+
+            for (TrackVector::const_iterator trackIter = m_trackVector.begin(),
+                     trackIterEnd = m_trackVector.end(); trackIter != trackIterEnd; ++trackIter)
+            {
+                mcParticleToWeightMap.clear();
+
+                MCParticle* mcParticle = NULL;
+                
+                const LCObjectVec &objectVec = navigate.getRelatedToObjects(*trackIter);
+                if (objectVec.size() > 0) 
+                {
+                    mcParticle = dynamic_cast<MCParticle*>(objectVec[0]);
+                    mcParticleToWeightMap[mcParticle] += 1.0;
+                }
+                for (MCParticleToWeightMap::const_iterator mcParticleIter = mcParticleToWeightMap.begin(),
+                         mcParticleIterEnd = mcParticleToWeightMap.end(); mcParticleIter != mcParticleIterEnd; ++mcParticleIter)
+                {
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackToMCParticleRelationship(m_pandora,
+                                                                                 *trackIter, mcParticleIter->first, mcParticleIter->second));
+                }
+            }
+        }
+        catch(...)
+        {
+            std::cout   << "Failed to extract track to mc particle relationships from collection: " << *iter << std::endl;
+        }
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode PandoraPFANewProcessor::ProcessParticleFlowObjects(const LCEvent *const pLCEvent) const
 {
     // Insert user code here ...
@@ -509,7 +559,7 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             StringVector());
 
     registerInputCollections(LCIO::CALORIMETERHIT,
-                            "CaloHitcollections", 
+                            "CaloHitCollections", 
                             "Name of the HCAL collection used to form clusters",
                             m_settings.m_caloHitCollections,
                             StringVector());
@@ -521,9 +571,15 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             StringVector());
 
     registerInputCollections(LCIO::LCRELATION, 
-                            "RelCollections",
+                            "RelCaloHitCollections",
                             "SimCaloHit to CaloHit Relations Collection Name",
-                            m_settings.m_lcRelationCollections,
+                            m_settings.m_lcCaloHitRelationCollections,
+                            StringVector());
+
+    registerInputCollections(LCIO::LCRELATION, 
+                            "RelTrackCollections",
+                            "Track to MCParticle Relations Collection Name",
+                            m_settings.m_lcTrackRelationCollections,
                             StringVector());
 
     registerProcessorParameter("AbsorberRadiationLength",

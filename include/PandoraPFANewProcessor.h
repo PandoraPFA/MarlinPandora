@@ -32,7 +32,8 @@ public:
         StringVector    m_v0VertexCollections;          ///< The v0 vertex collections
         StringVector    m_caloHitCollections;           ///< The calorimeter hit collections
         StringVector    m_mcParticleCollections;        ///< The mc particle collections
-        StringVector    m_lcRelationCollections;        ///< The caloHit to MC particle relations
+        StringVector    m_lcCaloHitRelationCollections; ///< The SimCaloHit to CaloHit particle relations
+        StringVector    m_lcTrackRelationCollections; ///< The SimTrackerHit to TrackerHit particle relations
 
         float           m_absorberRadiationLength;      ///< The absorber radation length
         float           m_absorberInteractionLength;    ///< The absorber interaction length
@@ -111,7 +112,7 @@ private:
      * 
      *  @param  pLCEvent the lcio event
      */    
-    StatusCode CreateTracks(const LCEvent *const pLCEvent) const;
+    StatusCode CreateTracks(const LCEvent *const pLCEvent);
 
     /**
      *  @brief  Create MCParticles, insert user code here
@@ -135,6 +136,13 @@ private:
     StatusCode CreateCaloHitToMCParticleRelationships(const LCEvent *const pLCEvent) const;
 
     /**
+     *  @brief  Create Track to mc particle relationships
+     *
+     *  @param  pLCEvent the lcio event
+     */
+    StatusCode CreateTrackToMCParticleRelationships(const LCEvent *const pLCEvent) const;
+
+    /**
      *  @brief  Process particle flow objects, insert user code here
      * 
      *  @param  pLCEvent the lcio event
@@ -147,6 +155,7 @@ private:
     void ProcessSteeringFile();
 
     typedef std::vector<CalorimeterHit *> CalorimeterHitVector;
+    typedef std::vector<Track *>          TrackVector;
 
     pandora::Pandora            m_pandora;                  ///< The pandora instance
     Settings                    m_settings;                 ///< The settings for the pandora pfa new processor
@@ -154,6 +163,7 @@ private:
     unsigned int                m_nRun;                     ///< The run number
     unsigned int                m_nEvent;                   ///< The event number
     CalorimeterHitVector        m_calorimeterHitVector;     ///< The calorimeter hit vector
+    TrackVector                 m_trackVector;              ///< The track vector
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
