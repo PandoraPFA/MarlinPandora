@@ -196,7 +196,7 @@ void PandoraPFANewProcessor::SetDefaultSubDetectorParameters(const gear::Calorim
     for(int i = 0; i < layerLayout.getNLayers(); ++i)
     {
         PandoraApi::Geometry::Parameters::LayerParameters layerParameters;
-        layerParameters.m_closestDistanceToIp   = layerLayout.getDistance(i);
+        layerParameters.m_closestDistanceToIp   = layerLayout.getDistance(i) + (0.5 * (layerLayout.getThickness(i) + layerLayout.getAbsorberThickness(i)));
         layerParameters.m_nRadiationLengths     = m_settings.m_absorberRadiationLength * layerLayout.getAbsorberThickness(i);
         layerParameters.m_nInteractionLengths   = m_settings.m_absorberInteractionLength * layerLayout.getAbsorberThickness(i);
         subDetectorParameters.m_layerParametersList.push_back(layerParameters);
