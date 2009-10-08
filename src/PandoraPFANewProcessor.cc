@@ -397,8 +397,8 @@ StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
                 caloHitParameters.m_nRadiationLengths = 4;
                 caloHitParameters.m_nInteractionLengths = 5;
 
-                caloHitParameters.m_energy = pCaloHit->getEnergy();
                 caloHitParameters.m_time = 7;
+                caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
 
                 caloHitParameters.m_isDigital = false;
                 caloHitParameters.m_hitType = pandora::ECAL;
@@ -406,6 +406,27 @@ StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
 
                 caloHitParameters.m_layer = cellIdDecoder(pCaloHit)["K-1"];
                 caloHitParameters.m_pParentAddress = pCaloHit;
+
+                if (pandora::ECAL == caloHitParameters.m_hitType.Get())
+                {
+                    caloHitParameters.m_mipEquivalentEnergy = m_settings.m_eCalToMip * pCaloHit->getEnergy();
+
+                    if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_eCalMipThreshold)
+                        continue;
+
+                    caloHitParameters.m_electromagneticEnergy = m_settings.m_eCalToEMGeV * pCaloHit->getEnergy();
+                    caloHitParameters.m_hadronicEnergy = m_settings.m_eCalToHadGeV * pCaloHit->getEnergy();
+                }
+                else if (pandora::HCAL == caloHitParameters.m_hitType.Get())
+                {
+                    caloHitParameters.m_mipEquivalentEnergy = m_settings.m_hCalToMip * pCaloHit->getEnergy();
+
+                    if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_hCalMipThreshold)
+                        continue;
+
+                    caloHitParameters.m_electromagneticEnergy = m_settings.m_hCalToEMGeV * pCaloHit->getEnergy();
+                    caloHitParameters.m_hadronicEnergy = m_settings.m_hCalToHadGeV * pCaloHit->getEnergy();
+                }
 
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(m_pandora, caloHitParameters));
             }
@@ -577,6 +598,7 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_settings.m_lcTrackRelationCollections,
                             StringVector());
 
+    // Absorber properties
     registerProcessorParameter("AbsorberRadiationLength",
                             "The absorber radation length",
                             m_settings.m_absorberRadiationLength,
@@ -585,5 +607,46 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     registerProcessorParameter("AbsorberInteractionLength",
                             "The absorber interaction length",
                             m_settings.m_absorberInteractionLength,
+                            float(1.));
+
+    // Calibration constants
+    registerProcessorParameter("ECalToMipCalibration",
+                            "The calibration from deposited ECal energy to mip",
+                            m_settings.m_eCalToMip,
+                            float(1.));
+
+    registerProcessorParameter("HCalToMipCalibration",
+                            "The calibration from deposited HCal energy to mip",
+                            m_settings.m_hCalToMip,
+                            float(1.));
+
+    registerProcessorParameter("ECalMipThreshold",
+                            "Threshold for creating calo hits in the ECal, units mip",
+                            m_settings.m_eCalMipThreshold,
+                            float(0.));
+
+    registerProcessorParameter("HCalMipThreshold",
+                            "Threshold for creating calo hits in the HCal, units mip",
+                            m_settings.m_hCalMipThreshold,
+                            float(0.));
+
+    registerProcessorParameter("ECalToEMGeVCalibration",
+                            "The calibration from deposited ECal energy to EM energy",
+                            m_settings.m_eCalToEMGeV,
+                            float(1.));
+
+    registerProcessorParameter("HCalToEMGeVCalibration",
+                            "The calibration from deposited HCal energy to EM energy",
+                            m_settings.m_hCalToEMGeV,
+                            float(1.));
+
+    registerProcessorParameter("ECalToHadGeVCalibration",
+                            "The calibration from deposited ECal energy to hadronic energy",
+                            m_settings.m_eCalToHadGeV,
+                            float(1.));
+
+    registerProcessorParameter("HCalToHadGeVCalibration",
+                            "The calibration from deposited HCal energy to hadronic energy",
+                            m_settings.m_hCalToHadGeV,
                             float(1.));
 }

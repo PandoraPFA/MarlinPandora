@@ -33,10 +33,20 @@ public:
         StringVector    m_caloHitCollections;           ///< The calorimeter hit collections
         StringVector    m_mcParticleCollections;        ///< The mc particle collections
         StringVector    m_lcCaloHitRelationCollections; ///< The SimCaloHit to CaloHit particle relations
-        StringVector    m_lcTrackRelationCollections; ///< The SimTrackerHit to TrackerHit particle relations
+        StringVector    m_lcTrackRelationCollections;   ///< The SimTrackerHit to TrackerHit particle relations
 
         float           m_absorberRadiationLength;      ///< The absorber radation length
         float           m_absorberInteractionLength;    ///< The absorber interaction length
+
+        float           m_eCalToMip;                    ///< The calibration from deposited ECal energy to mip
+        float           m_hCalToMip;                    ///< The calibration from deposited HCal energy to mip
+        float           m_eCalMipThreshold;             ///< Threshold for creating calo hits in the ECal, units mip
+        float           m_hCalMipThreshold;             ///< Threshold for creating calo hits in the HCal, units mip
+
+        float           m_eCalToEMGeV;                  ///< The calibration from deposited ECal energy to EM energy
+        float           m_hCalToEMGeV;                  ///< The calibration from deposited HCal energy to EM energy
+        float           m_eCalToHadGeV;                 ///< The calibration from deposited ECal energy to hadronic energy
+        float           m_hCalToHadGeV;                 ///< The calibration from deposited HCal energy to hadronic energy
     };
 
     /**
