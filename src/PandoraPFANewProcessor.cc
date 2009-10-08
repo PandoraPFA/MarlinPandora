@@ -523,7 +523,7 @@ StatusCode PandoraPFANewProcessor::CreateTrackToMCParticleRelationships(const LC
 StatusCode PandoraPFANewProcessor::ProcessParticleFlowObjects(const LCEvent *const pLCEvent) const
 {
     // Insert user code here ...
-    PandoraApi::ParticleFlowObjectList particleFlowObjectList;
+    pandora::ParticleFlowObjectList particleFlowObjectList;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=,
         PandoraApi::GetParticleFlowObjects(m_pandora, particleFlowObjectList));
 
