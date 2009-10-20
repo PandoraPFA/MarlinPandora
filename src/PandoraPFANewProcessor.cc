@@ -12,8 +12,13 @@
 #include "EVENT/MCParticle.h"
 #include "EVENT/SimCalorimeterHit.h"
 
+#include "IMPL/ReconstructedParticleImpl.h"
+#include "IMPL/ClusterImpl.h"
+
 #include "UTIL/CellIDDecoder.h"
 #include "UTIL/LCRelationNavigator.h"
+
+#include "IMPL/LCCollectionVec.h"
 
 #include "marlin/Global.h"
 
@@ -397,7 +402,7 @@ StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
                 caloHitParameters.m_nRadiationLengths = 4;
                 caloHitParameters.m_nInteractionLengths = 5;
 
-                caloHitParameters.m_time = 7;
+                caloHitParameters.m_time = pCaloHit->getTime();
                 caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
 
                 caloHitParameters.m_isDigital = false;
@@ -541,13 +546,61 @@ StatusCode PandoraPFANewProcessor::CreateTrackToMCParticleRelationships(const LC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PandoraPFANewProcessor::ProcessParticleFlowObjects(const LCEvent *const pLCEvent) const
+StatusCode PandoraPFANewProcessor::ProcessParticleFlowObjects( LCEvent * pLCEvent)
 {
-    // Insert user code here ...
+    // get the particle flow objects
     pandora::ParticleFlowObjectList particleFlowObjectList;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=,
-        PandoraApi::GetParticleFlowObjects(m_pandora, particleFlowObjectList));
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, 
+                                   PandoraApi::GetParticleFlowObjects(m_pandora, particleFlowObjectList));
 
+    LCCollectionVec * reconstructedParticleCollection = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
+
+    ReconstructedParticleImpl* reconstructedParticle = NULL;
+    
+
+    // get particle flow objects and create "reconstructed particles"
+    for( pandora::ParticleFlowObjectList::iterator itPFO = particleFlowObjectList.begin(), itPFOEnd = particleFlowObjectList.end();
+         itPFO != itPFOEnd; itPFO++ )
+    {
+        reconstructedParticle= new ReconstructedParticleImpl();
+
+        pandora::ClusterAddressList clusterAddressList = (*itPFO)->GetClusterAddressList();
+        pandora::TrackAddressList trackAddressList = (*itPFO)->GetTrackAddressList();
+        
+        // make LCIO clusters
+        ClusterImpl * cluster = NULL;
+        for( pandora::ClusterAddressList::iterator itCluster = clusterAddressList.begin(), itClusterEnd = clusterAddressList.end(); itCluster != itClusterEnd; ++itCluster )
+        {
+            cluster = new ClusterImpl();
+            for( pandora::CaloHitAddressList::iterator itHit = (*itCluster).begin(), itHitEnd = (*itCluster).end(); itHit != itHitEnd; ++itHit )
+            {
+                cluster->addHit( (CalorimeterHit*)(*itHit), (float)1.0 ); // transform from Uid (=void*) to a CalorimeterHit*
+            }
+            reconstructedParticle->addCluster( cluster );
+        }
+
+        // add tracks
+        for( pandora::TrackAddressList::iterator itTrack = trackAddressList.begin(), itTrackEnd = trackAddressList.end(); itTrack != itTrackEnd; ++itTrack )
+        {
+            reconstructedParticle->addTrack( (Track*)(*itTrack) );
+        }
+
+        float momentum[3];
+        momentum[0] = (*itPFO)->GetMomentum().GetX();
+        momentum[1] = (*itPFO)->GetMomentum().GetY();
+        momentum[2] = (*itPFO)->GetMomentum().GetZ();
+        reconstructedParticle->setMomentum( momentum );
+        reconstructedParticle->setEnergy( (*itPFO)->GetEnergy() );
+        reconstructedParticle->setMass( (*itPFO)->GetMass() );
+        reconstructedParticle->setCharge( (*itPFO)->GetChargeSign() );
+        reconstructedParticle->setType( (*itPFO)->GetParticleId() );
+
+
+        reconstructedParticleCollection->addElement( reconstructedParticle );
+    } 
+
+    pLCEvent->addCollection( reconstructedParticleCollection , m_settings.m_particleCollectionName.c_str() );
+    
     return STATUS_CODE_SUCCESS;
 }
 
@@ -608,6 +661,15 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "The absorber interaction length",
                             m_settings.m_absorberInteractionLength,
                             float(1.));
+    // Name of PARTICLE collection written by algorithm
+    std::string particleCollectionName;
+    particleCollectionName = "PandoraNewPFOs";
+
+    registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
+                              "ParticleCollectionName" , 
+                              "Particle Collection Name "  ,
+                              m_settings.m_particleCollectionName,
+                              particleCollectionName);
 
     // Calibration constants
     registerProcessorParameter("ECalToMipCalibration",
