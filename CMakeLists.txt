@@ -38,7 +38,7 @@ OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" ON )
 
 # project dependencies
 # e.g. SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil LCIO GEAR CLHEP GSL RAIDA ROOT" )
-SET( ${PROJECT_NAME}_DEPENDS "Marlin LCIO GEAR PandoraPFANew" )
+SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil LCIO GEAR PandoraPFANew" )
 
 IF( APPLE )
     LIST(APPEND ${PROJECT_NAME}_DEPENDS "streamlog")

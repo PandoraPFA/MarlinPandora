@@ -35,7 +35,7 @@ public:
         StringVector    m_lcCaloHitRelationCollections; ///< The SimCaloHit to CaloHit particle relations
         StringVector    m_lcTrackRelationCollections;   ///< The SimTrackerHit to TrackerHit particle relations
 
-        std::string     m_particleCollectionName;       ///< The name of the PFO output collection
+        std::string     m_pfoCollectionName;            ///< The name of the PFO output collection
 
         float           m_absorberRadiationLength;      ///< The absorber radation length
         float           m_absorberInteractionLength;    ///< The absorber interaction length
@@ -49,6 +49,8 @@ public:
         float           m_hCalToEMGeV;                  ///< The calibration from deposited HCal energy to EM energy
         float           m_eCalToHadGeV;                 ///< The calibration from deposited ECal energy to hadronic energy
         float           m_hCalToHadGeV;                 ///< The calibration from deposited HCal energy to hadronic energy
+
+        int             m_nHitsForHelixFits;            ///< The number of hits to be used in helix fits at start/end of tracks
     };
 
     /**
@@ -120,6 +122,13 @@ private:
     StatusCode RegisterUserAlgorithmFactories() const;
 
     /**
+     *  @brief  Create MCParticles, insert user code here
+     * 
+     *  @param  pLCEvent the lcio event
+     */    
+    StatusCode CreateMCParticles(const LCEvent *const pLCEvent) const;
+
+    /**
      *  @brief  Create tracks, insert user code here
      * 
      *  @param  pLCEvent the lcio event
@@ -127,11 +136,47 @@ private:
     StatusCode CreateTracks(const LCEvent *const pLCEvent);
 
     /**
-     *  @brief  Create MCParticles, insert user code here
+     *  @brief  Perform helix fits to calculate track parameters: momentum at dca, start and end track states
      * 
+     *  @param  pTrack the lcio track
+     *  @param  trackParameters the track parameters
+     */
+    void FitHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
+
+    /**
+     *  @brief  Identify whether track is in positive or negative z direction
+     * 
+     *  @param  zMin minimum track z coordinate
+     *  @param  zMax maximum track z coordinate
+     *  @param  rMin cylindrical polar r coordinate at z min
+     *  @param  rMax cylindrical polar r coordinate at z max
+     * 
+     *  @return sign w.r.t increasing z direction
+     */
+    int GetTrackSignPz(float zMin, float zMax, float rMin, float rMax) const;
+
+    /**
+     *  @brief  Project track to the surface of the ecal
+     * 
+     *  @param  pHelixEnd helix fit to the end of the track
+     *  @param  signPz track sign w.r.t. increasing z direction
+     *  @param  trackParameters the track parameters
+     */
+    void ProjectTrackToECal(HelixClass *const pHelixEnd, int signPz, PandoraApi::Track::Parameters &trackParameters) const;
+
+    /**
+     *  @brief  Decide whether track reached the ecal surface
+     * 
+     *  @param  pTrack the lcio track
+     */
+    bool ReachedECAL(const Track *const pTrack);
+
+    /**
+     *  @brief  Create Track to mc particle relationships
+     *
      *  @param  pLCEvent the lcio event
-     */    
-    StatusCode CreateMCParticles(const LCEvent *const pLCEvent) const;
+     */
+    StatusCode CreateTrackToMCParticleRelationships(const LCEvent *const pLCEvent) const;
 
     /**
      *  @brief  Create calo hits, insert user code here
@@ -146,13 +191,6 @@ private:
      *  @param  pLCEvent the lcio event
      */
     StatusCode CreateCaloHitToMCParticleRelationships(const LCEvent *const pLCEvent) const;
-
-    /**
-     *  @brief  Create Track to mc particle relationships
-     *
-     *  @param  pLCEvent the lcio event
-     */
-    StatusCode CreateTrackToMCParticleRelationships(const LCEvent *const pLCEvent) const;
 
     /**
      *  @brief  Process particle flow objects, insert user code here
