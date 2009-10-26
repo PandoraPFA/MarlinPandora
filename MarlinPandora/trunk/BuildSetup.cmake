@@ -16,7 +16,7 @@
 #############################################################################
 
 # ILC_HOME
-SET( ILC_HOME "path_to_ilc_home"
+SET( ILC_HOME "/usera/marshall/ilcsoft"
     CACHE PATH "Path to ILC Software" FORCE )
 
 # Path to PandoraPFANew
@@ -26,6 +26,10 @@ SET( PandoraPFANew_HOME "${ILC_HOME}/PandoraPFANew"
 # Path to Marlin
 SET( Marlin_HOME "${ILC_HOME}/Marlin/HEAD"
     CACHE PATH "Path to Marlin" FORCE )
+
+# Path to MarlinUtil
+SET( MarlinUtil_HOME "${ILC_HOME}/MarlinUtil/HEAD"
+    CACHE PATH "Path to MarlinUtil" FORCE )
 
 # Path to LCIO
 SET( LCIO_HOME "${ILC_HOME}/lcio/v01-11"
