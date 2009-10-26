@@ -165,11 +165,11 @@ private:
     void ProjectTrackToECal(HelixClass *const pHelixEnd, int signPz, PandoraApi::Track::Parameters &trackParameters) const;
 
     /**
-     *  @brief  Decide whether track reached the ecal surface
+     *  @brief  Decide whether track reaches the ecal surface
      * 
      *  @param  pTrack the lcio track
      */
-    bool ReachedECAL(const Track *const pTrack);
+    bool ReachesECAL(const Track *const pTrack);
 
     /**
      *  @brief  Create Track to mc particle relationships
