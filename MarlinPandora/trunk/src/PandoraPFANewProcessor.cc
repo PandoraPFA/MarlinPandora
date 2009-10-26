@@ -350,7 +350,7 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
                 trackParameters.m_pParentAddress = pTrack;
 
                 this->FitHelices(pTrack, trackParameters);
-                trackParameters.m_reachesECal = this->ReachedECAL(pTrack);
+                trackParameters.m_reachesECal = this->ReachesECAL(pTrack);
 
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(m_pandora, trackParameters));
             }
@@ -579,7 +579,7 @@ void PandoraPFANewProcessor::ProjectTrackToECal(HelixClass *const pHelixEnd, int
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool PandoraPFANewProcessor::ReachedECAL(const Track *const pTrack)
+bool PandoraPFANewProcessor::ReachesECAL(const Track *const pTrack)
 {
     static const gear::TPCParameters &tpcParameters = marlin::Global::GEAR->getTPCParameters();
     static const gear::PadRowLayout2D &tpcPadLayout = tpcParameters.getPadLayout();
@@ -610,13 +610,13 @@ bool PandoraPFANewProcessor::ReachedECAL(const Track *const pTrack)
 
         if(hitType == 5)
         {
-            if((r > tpcOuterR) - (20 * tpcRowHeight))
+            if(r > (tpcOuterR - 20 * tpcRowHeight))
             {
                 if (++nTpcOuter > 5)
                     return true;
             }
 
-            if((fabs(z) > tpcZmax) - (20 * tpcRowHeight))
+            if(fabs(z) > (tpcZmax - 20 * tpcRowHeight))
             {
                 if (++nTpcEnd > 5)
                     return true;
