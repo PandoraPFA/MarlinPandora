@@ -9,6 +9,7 @@
 #include "EVENT/CalorimeterHit.h"
 #include "EVENT/LCCollection.h"
 #include "EVENT/Track.h"
+#include "EVENT/Vertex.h"
 #include "EVENT/MCParticle.h"
 #include "EVENT/SimCalorimeterHit.h"
 
@@ -97,6 +98,7 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateMCParticles(pLCEvent));
 
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateTrackAssociations(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateTracks(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateTrackToMCParticleRelationships(pLCEvent));
 
@@ -370,9 +372,48 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+StatusCode PandoraPFANewProcessor::CreateTrackAssociations(const LCEvent *const pLCEvent)
+{
+    // Insert user code here ...
+
+    for (StringVector::const_iterator iter = m_settings.m_v0VertexCollections.begin(), 
+	   iterEnd = m_settings.m_v0VertexCollections.end(); iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const LCCollection *pV0Collection = pLCEvent->getCollection(*iter);
+            
+            for (int i = 0; i < pV0Collection->getNumberOfElements(); ++i)
+            {
+  	        Vertex* v0 = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
+		ReconstructedParticle* part = v0->getAssociatedParticle();
+		TrackVec tracks = part->getTracks();
+		int goodTracks = 0;
+		for(unsigned int it = 0;it<tracks.size();it++){
+		    Track* t = tracks[it];
+		    TrackerHitVec hitvec = t->getTrackerHits();
+		    float nhits = (float)hitvec.size();
+		    std::cout << " VERTEX " << i << std::endl;
+		}
+	    }
+        }
+        catch (...)
+        {
+            streamlog_out(WARNING) << "Found no V0 vertex collection" << std::endl;
+        }
+
+    }
+    return STATUS_CODE_SUCCESS;
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void PandoraPFANewProcessor::FitHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
     static const float bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0.,0.,0.)).z());
+
+    std::cout << " FIT HELICES " << std::endl;
 
     // Fit from track parameters to determine momentum at dca
     HelixClass *pHelixFit = new HelixClass();
