@@ -211,34 +211,36 @@ private:
      *  @brief  Get common calo hit properties: position, parent address, input energy and time
      * 
      *  @param  pCaloHit the lcio calorimeter hit
+     *  @param  cellIdDecoder the cell id decoder
      *  @param  caloHitParameters the calo hit parameters to populate
      */
-    void GetCommonCaloHitProperties(CalorimeterHit *const pCaloHit, PandoraApi::CaloHit::Parameters &caloHitParameters) const;
+    void GetCommonCaloHitProperties(CalorimeterHit *const pCaloHit, CellIDDecoder<CalorimeterHit> &cellIdDecoder,
+        PandoraApi::CaloHit::Parameters &caloHitParameters) const;
 
     /**
      *  @brief  Get end cap specific calo hit properties: cell size, absorber radiation and interaction lengths, normal vector
      * 
      *  @param  pCaloHit the lcio calorimeter hit
-     *  @param  cellIdDecoder the cell id decoder
-     *  @param  endcapLayerLayout the gear end cap layer layout
+     *  @param  layerLayout the gear end cap layer layout
      *  @param  caloHitParameters the calo hit parameters to populate
+     *  @param  absorberCorrection to receive the absorber thickness correction for the mip equivalent energy
      */
-    void GetEndCapCaloHitProperties(CalorimeterHit *const pCaloHit, CellIDDecoder<CalorimeterHit> &cellIdDecoder,
-        const gear::LayerLayout &endcapLayerLayout, PandoraApi::CaloHit::Parameters &caloHitParameters) const;
+    void GetEndCapCaloHitProperties(CalorimeterHit *const pCaloHit, const gear::LayerLayout &layerLayout,
+        PandoraApi::CaloHit::Parameters &caloHitParameters, float &absorberCorrection) const;
 
     /**
      *  @brief  Get barrel specific calo hit properties: cell size, absorber radiation and interaction lengths, normal vector
      * 
      *  @param  pCaloHit the lcio calorimeter hit
-     *  @param  cellIdDecoder the cell id decoder
-     *  @param  barrelLayerLayout the gear barrel layer layout
+     *  @param  layerLayout the gear barrel layer layout
      *  @param  barrelSymmetryOrder the barrel order of symmetry
      *  @param  barrelPhi0 the barrel orientation
+     *  @param  staveNumber the stave number
      *  @param  caloHitParameters the calo hit parameters to populate
+     *  @param  absorberCorrection to receive the absorber thickness correction for the mip equivalent energy
      */
-    void GetBarrelCaloHitProperties(CalorimeterHit *const pCaloHit, CellIDDecoder<CalorimeterHit> &cellIdDecoder,
-        const gear::LayerLayout &barrelLayerLayout, unsigned int barrelSymmetryOrder, float barrelPhi0,
-        PandoraApi::CaloHit::Parameters &caloHitParameters) const;
+    void GetBarrelCaloHitProperties(CalorimeterHit *const pCaloHit, const gear::LayerLayout &layerLayout, unsigned int barrelSymmetryOrder,
+        float barrelPhi0, unsigned int staveNumber, PandoraApi::CaloHit::Parameters &caloHitParameters, float &absorberCorrection) const;
 
     /**
      *  @brief  Create calo hit to mc particle relationships
