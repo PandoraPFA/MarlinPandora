@@ -278,7 +278,7 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
 
             for(int i = 0; i < numberMCParticles; ++i)
             {
-                MCParticle* pMcParticle = dynamic_cast<MCParticle*>(pMCParticleCollection->getElementAt(i));
+                MCParticle *pMcParticle = dynamic_cast<MCParticle*>(pMCParticleCollection->getElementAt(i));
 
                 double innerRadius = 0.;
                 double outerRadius = 0.;
@@ -329,6 +329,46 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+StatusCode PandoraPFANewProcessor::CreateTrackAssociations(const LCEvent *const pLCEvent) const
+{
+    // Insert user code here ...
+    for (StringVector::const_iterator iter = m_settings.m_v0VertexCollections.begin(), iterEnd = m_settings.m_v0VertexCollections.end();
+        iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const LCCollection *pV0Collection = pLCEvent->getCollection(*iter);
+
+            for (int i = 0; i < pV0Collection->getNumberOfElements(); ++i)
+            {
+                Vertex *pVertex = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
+
+                ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
+                TrackVec trackVec = pReconstructedParticle->getTracks();
+
+                int nGoodTracks = 0;
+
+                for(unsigned int iTrack = 0; iTrack < trackVec.size(); ++iTrack)
+                {
+                    Track *pTrack = trackVec[iTrack];
+                    TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
+                    const float nHits(trackerHitVec.size());
+
+                    streamlog_out(DEBUG) << "Vertex " << iTrack << ", nHits " << nHits << ", nGoodTracks " << nGoodTracks << std::endl;
+                }
+            }
+        }
+        catch (...)
+        {
+            streamlog_out(ERROR) << "Failed to extract v0 vertex collection " << *iter << std::endl;
+        }
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 {
     // Insert user code here ...
@@ -343,8 +383,8 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
             
             for (int i = 0; i < pTrackCollection->getNumberOfElements(); ++i)
             {
-                Track* pTrack = dynamic_cast<Track*>(pTrackCollection->getElementAt(i));
-                m_trackVector.push_back( pTrack );
+                Track *pTrack = dynamic_cast<Track*>(pTrackCollection->getElementAt(i));
+                m_trackVector.push_back(pTrack);
 
                 PandoraApi::Track::Parameters trackParameters;
                 trackParameters.m_d0 = pTrack->getD0();
@@ -372,48 +412,9 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PandoraPFANewProcessor::CreateTrackAssociations(const LCEvent *const pLCEvent)
-{
-    // Insert user code here ...
-
-    for (StringVector::const_iterator iter = m_settings.m_v0VertexCollections.begin(), 
-	   iterEnd = m_settings.m_v0VertexCollections.end(); iter != iterEnd; ++iter)
-    {
-        try
-        {
-            const LCCollection *pV0Collection = pLCEvent->getCollection(*iter);
-            
-            for (int i = 0; i < pV0Collection->getNumberOfElements(); ++i)
-            {
-  	        Vertex* v0 = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
-		ReconstructedParticle* part = v0->getAssociatedParticle();
-		TrackVec tracks = part->getTracks();
-		int goodTracks = 0;
-		for(unsigned int it = 0;it<tracks.size();it++){
-		    Track* t = tracks[it];
-		    TrackerHitVec hitvec = t->getTrackerHits();
-		    float nhits = (float)hitvec.size();
-		    std::cout << " VERTEX " << i << std::endl;
-		}
-	    }
-        }
-        catch (...)
-        {
-            streamlog_out(WARNING) << "Found no V0 vertex collection" << std::endl;
-        }
-
-    }
-    return STATUS_CODE_SUCCESS;
-}
-
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void PandoraPFANewProcessor::FitHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
     static const float bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0.,0.,0.)).z());
-
-    std::cout << " FIT HELICES " << std::endl;
 
     // Fit from track parameters to determine momentum at dca
     HelixClass *pHelixFit = new HelixClass();
@@ -569,23 +570,23 @@ void PandoraPFANewProcessor::ProjectTrackToECal(HelixClass *const pHelixEnd, int
 
     // Then project to barrel surface(s)
     float barrelProjection[3];
-    static const float pi = std::acos(-1.);
+    static const float pi(std::acos(-1.));
 
     if (ecalSymmetryOrder > 0)
     {
         // Polygon
-        float twopi_n = 2. * pi/(static_cast<float>(ecalSymmetryOrder));
+        float twopi_n = 2. * pi / (static_cast<float>(ecalSymmetryOrder));
 
         for (int i = 0; i < ecalSymmetryOrder; ++i)
         {
-            float phi = twopi_n * ((float)i) + phi0;
+            float phi = twopi_n * static_cast<float>(i) + phi0;
             float xx = rOfBarrel * cos(phi);
             float yy = rOfBarrel * sin(phi);
             float ax = cos(phi + 0.5*pi);
             float ay = sin(phi + 0.5*pi);
             float tt = pHelixEnd->getPointInXY(xx, yy , ax, ay, referencePoint, barrelProjection);
 
-            // if helix intersects this plane before current best use this point
+            // If helix intersects this plane before current best use this point
             if (tt < minTime)
             {
                 minTime = tt;
@@ -730,70 +731,61 @@ StatusCode PandoraPFANewProcessor::CreateTrackToMCParticleRelationships(const LC
 
 StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
 {
-    // Insert user code here ...
+    CellIDDecoder<CalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6");
     m_calorimeterHitVector.clear();
 
-    for (StringVector::const_iterator iter = m_settings.m_caloHitCollections.begin(), 
-        iterEnd = m_settings.m_caloHitCollections.end(); iter != iterEnd; ++iter)
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateECalCaloHits(pLCEvent));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateHCalCaloHits(pLCEvent));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode PandoraPFANewProcessor::CreateECalCaloHits(const LCEvent *const pLCEvent)
+{
+    static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getEcalEndcapParameters().getLayerLayout());
+    static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getEcalBarrelParameters().getLayerLayout());
+
+    static const float endCapZCoordinate(marlin::Global::GEAR->getEcalEndcapParameters().getExtent()[2]);
+    static const unsigned int barrelSymmetryOrder(marlin::Global::GEAR->getEcalBarrelParameters().getSymmetryOrder());
+    static const float barrelPhi0(marlin::Global::GEAR->getEcalBarrelParameters().getPhi0());
+
+    for (StringVector::const_iterator iter = m_settings.m_eCalCaloHitCollections.begin(),
+        iterEnd = m_settings.m_eCalCaloHitCollections.end(); iter != iterEnd; ++iter)
     {
         try
         {
-            CellIDDecoder<CalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6");
-
             const LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
             CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
 
             for (int i = 0; i < pCaloHitCollection->getNumberOfElements(); ++i)
             {
-                CalorimeterHit* pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
+                CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
                 m_calorimeterHitVector.push_back(pCaloHit);
 
                 PandoraApi::CaloHit::Parameters caloHitParameters;
-
-                const float *pCaloHitPosition(pCaloHit->getPosition());
-                caloHitParameters.m_positionVector = pandora::CartesianVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
-
-                // TODO complete these parameters
-
-
-                caloHitParameters.m_normalVector = pandora::CartesianVector(4, 5, 6);
-
-                caloHitParameters.m_cellSizeU = 1;
-                caloHitParameters.m_cellSizeV = 2;
-                caloHitParameters.m_cellSizeZ = 3;
-
-                caloHitParameters.m_nRadiationLengths = 4;
-                caloHitParameters.m_nInteractionLengths = 5;
-
-                caloHitParameters.m_isDigital = false;
                 caloHitParameters.m_hitType = pandora::ECAL;
-                caloHitParameters.m_detectorRegion = pandora::BARREL;
 
-                caloHitParameters.m_time = pCaloHit->getTime();
-                caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
+                this->GetCommonCaloHitProperties(pCaloHit, caloHitParameters);
+                caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ? pandora::BARREL : pandora::ENDCAP;
 
-                caloHitParameters.m_layer = cellIdDecoder(pCaloHit)["K-1"];
-                caloHitParameters.m_pParentAddress = pCaloHit;
+                // TODO absorber thickness correction
+                caloHitParameters.m_mipEquivalentEnergy = m_settings.m_eCalToMip * pCaloHit->getEnergy();
+                if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_eCalMipThreshold)
+                    continue;
 
-                if (pandora::ECAL == caloHitParameters.m_hitType.Get())
+                caloHitParameters.m_electromagneticEnergy = m_settings.m_eCalToEMGeV * pCaloHit->getEnergy();
+                caloHitParameters.m_hadronicEnergy = m_settings.m_eCalToHadGeV * pCaloHit->getEnergy();
+
+                if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
                 {
-                    caloHitParameters.m_mipEquivalentEnergy = m_settings.m_eCalToMip * pCaloHit->getEnergy();
-
-                    if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_eCalMipThreshold)
-                        continue;
-
-                    caloHitParameters.m_electromagneticEnergy = m_settings.m_eCalToEMGeV * pCaloHit->getEnergy();
-                    caloHitParameters.m_hadronicEnergy = m_settings.m_eCalToHadGeV * pCaloHit->getEnergy();
+                    this->GetEndCapCaloHitProperties(pCaloHit, cellIdDecoder, endcapLayerLayout, caloHitParameters);
                 }
-                else if (pandora::HCAL == caloHitParameters.m_hitType.Get())
+                else
                 {
-                    caloHitParameters.m_mipEquivalentEnergy = m_settings.m_hCalToMip * pCaloHit->getEnergy();
-
-                    if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_hCalMipThreshold)
-                        continue;
-
-                    caloHitParameters.m_electromagneticEnergy = m_settings.m_hCalToEMGeV * pCaloHit->getEnergy();
-                    caloHitParameters.m_hadronicEnergy = m_settings.m_hCalToHadGeV * pCaloHit->getEnergy();
+                    this->GetBarrelCaloHitProperties(pCaloHit, cellIdDecoder, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0,
+                        caloHitParameters);
                 }
 
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(m_pandora, caloHitParameters));
@@ -801,15 +793,150 @@ StatusCode PandoraPFANewProcessor::CreateCaloHits(const LCEvent *const pLCEvent)
         }
         catch (StatusCodeException &statusCodeException)
         {
-            streamlog_out(ERROR) << "Failed to extract a calo hit: " << statusCodeException.ToString() << std::endl;
+            streamlog_out(ERROR) << "Failed to extract ecal calo hit: " << statusCodeException.ToString() << std::endl;
         }
         catch (...)
         {
-            streamlog_out(ERROR) << "Failed to extract a calo hit, unrecognised exception" << std::endl;
+            streamlog_out(ERROR) << "Failed to extract ecal calo hit, unrecognised exception" << std::endl;
         }
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode PandoraPFANewProcessor::CreateHCalCaloHits(const LCEvent *const pLCEvent)
+{
+    static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getHcalEndcapParameters().getLayerLayout());
+    static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getHcalBarrelParameters().getLayerLayout());
+
+    static const float endCapZCoordinate(marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[2]);
+    static const unsigned int barrelSymmetryOrder(marlin::Global::GEAR->getHcalBarrelParameters().getSymmetryOrder());
+    static const float barrelPhi0(marlin::Global::GEAR->getHcalBarrelParameters().getPhi0());
+
+    for (StringVector::const_iterator iter = m_settings.m_hCalCaloHitCollections.begin(),
+        iterEnd = m_settings.m_hCalCaloHitCollections.end(); iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
+            CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
+
+            for (int i = 0; i < pCaloHitCollection->getNumberOfElements(); ++i)
+            {
+                CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
+                m_calorimeterHitVector.push_back(pCaloHit);
+
+                PandoraApi::CaloHit::Parameters caloHitParameters;
+                caloHitParameters.m_hitType = pandora::HCAL;
+
+                this->GetCommonCaloHitProperties(pCaloHit, caloHitParameters);
+                caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ? pandora::BARREL : pandora::ENDCAP;
+
+                // TODO absorber thickness correction
+                caloHitParameters.m_mipEquivalentEnergy = m_settings.m_hCalToMip * pCaloHit->getEnergy();
+                if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_hCalMipThreshold)
+                    continue;
+
+                caloHitParameters.m_hadronicEnergy = m_settings.m_hCalToHadGeV * pCaloHit->getEnergy();
+                caloHitParameters.m_electromagneticEnergy = m_settings.m_hCalToEMGeV * pCaloHit->getEnergy();
+
+                if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
+                {
+                    this->GetEndCapCaloHitProperties(pCaloHit, cellIdDecoder, endcapLayerLayout, caloHitParameters);
+                }
+                else
+                {
+                    this->GetBarrelCaloHitProperties(pCaloHit, cellIdDecoder, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0,
+                        caloHitParameters);
+                }
+
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(m_pandora, caloHitParameters));
+            }
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            streamlog_out(ERROR) << "Failed to extract hcal calo hit: " << statusCodeException.ToString() << std::endl;
+        }
+        catch (...)
+        {
+            streamlog_out(ERROR) << "Failed to extract hcal calo hit, unrecognised exception" << std::endl;
+        }
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PandoraPFANewProcessor::GetCommonCaloHitProperties(CalorimeterHit *const pCaloHit, PandoraApi::CaloHit::Parameters &caloHitParameters) const
+{
+    const float *pCaloHitPosition(pCaloHit->getPosition());
+    caloHitParameters.m_positionVector = pandora::CartesianVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
+
+    caloHitParameters.m_pParentAddress = pCaloHit;
+    caloHitParameters.m_isDigital = false;
+
+    caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
+    caloHitParameters.m_time = pCaloHit->getTime();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PandoraPFANewProcessor::GetEndCapCaloHitProperties(CalorimeterHit *const pCaloHit, CellIDDecoder<CalorimeterHit> &cellIdDecoder,
+    const gear::LayerLayout &endcapLayerLayout, PandoraApi::CaloHit::Parameters &caloHitParameters) const
+{
+    const unsigned int physicalLayer(cellIdDecoder(pCaloHit)["K-1"]);
+    caloHitParameters.m_layer = physicalLayer;
+
+    caloHitParameters.m_cellSizeU = endcapLayerLayout.getCellSize0(physicalLayer);
+    caloHitParameters.m_cellSizeV = endcapLayerLayout.getCellSize1(physicalLayer);
+    caloHitParameters.m_cellSizeZ = endcapLayerLayout.getThickness(physicalLayer);
+
+    caloHitParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * endcapLayerLayout.getAbsorberThickness(physicalLayer);
+    caloHitParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * endcapLayerLayout.getAbsorberThickness(physicalLayer);
+
+    caloHitParameters.m_normalVector = (pCaloHit->getPosition()[2] > 0) ? pandora::CartesianVector(0, 0, 1) : pandora::CartesianVector(0, 0, -1);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PandoraPFANewProcessor::GetBarrelCaloHitProperties(CalorimeterHit *const pCaloHit, CellIDDecoder<CalorimeterHit> &cellIdDecoder,
+    const gear::LayerLayout &barrelLayerLayout, unsigned int barrelSymmetryOrder, float barrelPhi0,
+    PandoraApi::CaloHit::Parameters &caloHitParameters) const
+{
+    const unsigned int physicalLayer(cellIdDecoder(pCaloHit)["K-1"]);
+    caloHitParameters.m_layer = physicalLayer;
+
+    caloHitParameters.m_cellSizeU = barrelLayerLayout.getThickness(physicalLayer);
+    caloHitParameters.m_cellSizeV = barrelLayerLayout.getCellSize1(physicalLayer);
+    caloHitParameters.m_cellSizeZ = barrelLayerLayout.getCellSize0(physicalLayer);
+
+    caloHitParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * barrelLayerLayout.getAbsorberThickness(physicalLayer);
+    caloHitParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * barrelLayerLayout.getAbsorberThickness(physicalLayer);
+
+    if (barrelSymmetryOrder > 0)
+    {
+        static const float pi(std::acos(-1.));
+        const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
+        const float phi = barrelPhi0 + (2. * pi * static_cast<float>(staveNumber) / static_cast<float>(barrelSymmetryOrder));
+        caloHitParameters.m_normalVector = pandora::CartesianVector(-std::sin(phi), std::cos(phi), 0);
+    }
+    else
+    {
+        const float *pCaloHitPosition(pCaloHit->getPosition());
+
+        if (pCaloHitPosition[1] != 0)
+        {
+            const float phi = barrelPhi0 + std::atan(pCaloHitPosition[0] / pCaloHitPosition[1]);
+            caloHitParameters.m_normalVector = pandora::CartesianVector(std::sin(phi), std::cos(phi), 0);
+        }
+        else
+        {
+            caloHitParameters.m_normalVector = (pCaloHitPosition[0] > 0) ? pandora::CartesianVector(1, 0, 0) : pandora::CartesianVector(-1, 0, 0);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -940,9 +1067,15 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             StringVector());
 
     registerInputCollections(LCIO::CALORIMETERHIT,
-                            "CaloHitCollections", 
-                            "Name of the HCAL collection used to form clusters",
-                            m_settings.m_caloHitCollections,
+                            "ECalCaloHitCollections", 
+                            "Name of the ECAL calo hit collections",
+                            m_settings.m_eCalCaloHitCollections,
+                            StringVector());
+
+    registerInputCollections(LCIO::CALORIMETERHIT,
+                            "HCalCaloHitCollections", 
+                            "Name of the HCAL calo hit collections",
+                            m_settings.m_hCalCaloHitCollections,
                             StringVector());
 
     registerInputCollections(LCIO::MCPARTICLE,
