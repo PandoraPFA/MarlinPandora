@@ -136,11 +136,20 @@ private:
     StatusCode CreateTracks(const LCEvent *const pLCEvent);
 
     /**
+     *  @brief  Creates the associations between tracks, V0s, kinks, etc
+     * 
+     *  @param  pLCEvent the lcio event
+     */
+
+    StatusCode CreateTrackAssociations(const LCEvent *const pLCEvent);
+
+    /**
      *  @brief  Perform helix fits to calculate track parameters: momentum at dca, start and end track states
      * 
      *  @param  pTrack the lcio track
      *  @param  trackParameters the track parameters
      */
+
     void FitHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
 
     /**
