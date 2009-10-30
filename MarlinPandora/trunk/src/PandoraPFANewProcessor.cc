@@ -352,9 +352,11 @@ StatusCode PandoraPFANewProcessor::CreateTrackAssociations(const LCEvent *const 
                 {
                     Track *pTrack = trackVec[iTrack];
                     TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
-                    const float nHits(trackerHitVec.size());
+                    const float nTrackHits(trackerHitVec.size());
 
-                    streamlog_out(DEBUG) << "Vertex " << iTrack << ", nHits " << nHits << ", nGoodTracks " << nGoodTracks << std::endl;
+                    streamlog_out(DEBUG) << "Vertex " << iTrack
+                                         << ", nTrackHits " << nTrackHits
+                                         << ", nGoodTracks " << nGoodTracks << std::endl;
                 }
             }
         }
@@ -766,27 +768,31 @@ StatusCode PandoraPFANewProcessor::CreateECalCaloHits(const LCEvent *const pLCEv
 
                 PandoraApi::CaloHit::Parameters caloHitParameters;
                 caloHitParameters.m_hitType = pandora::ECAL;
+                caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ?
+                    pandora::BARREL : pandora::ENDCAP;
 
-                this->GetCommonCaloHitProperties(pCaloHit, caloHitParameters);
-                caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ? pandora::BARREL : pandora::ENDCAP;
+                this->GetCommonCaloHitProperties(pCaloHit, cellIdDecoder, caloHitParameters);
 
-                // TODO absorber thickness correction
-                caloHitParameters.m_mipEquivalentEnergy = m_settings.m_eCalToMip * pCaloHit->getEnergy();
+                float absorberCorrection(1.);
+
+                if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
+                {
+                    this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
+                }
+                else
+                {
+                    const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
+                    this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0, staveNumber,
+                        caloHitParameters, absorberCorrection);
+                }
+
+                caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_eCalToMip * absorberCorrection;
+
                 if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_eCalMipThreshold)
                     continue;
 
                 caloHitParameters.m_electromagneticEnergy = m_settings.m_eCalToEMGeV * pCaloHit->getEnergy();
                 caloHitParameters.m_hadronicEnergy = m_settings.m_eCalToHadGeV * pCaloHit->getEnergy();
-
-                if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
-                {
-                    this->GetEndCapCaloHitProperties(pCaloHit, cellIdDecoder, endcapLayerLayout, caloHitParameters);
-                }
-                else
-                {
-                    this->GetBarrelCaloHitProperties(pCaloHit, cellIdDecoder, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0,
-                        caloHitParameters);
-                }
 
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(m_pandora, caloHitParameters));
             }
@@ -831,26 +837,30 @@ StatusCode PandoraPFANewProcessor::CreateHCalCaloHits(const LCEvent *const pLCEv
                 PandoraApi::CaloHit::Parameters caloHitParameters;
                 caloHitParameters.m_hitType = pandora::HCAL;
 
-                this->GetCommonCaloHitProperties(pCaloHit, caloHitParameters);
-                caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ? pandora::BARREL : pandora::ENDCAP;
+                this->GetCommonCaloHitProperties(pCaloHit, cellIdDecoder, caloHitParameters);
+                caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ?
+                    pandora::BARREL : pandora::ENDCAP;
 
-                // TODO absorber thickness correction
-                caloHitParameters.m_mipEquivalentEnergy = m_settings.m_hCalToMip * pCaloHit->getEnergy();
+                float absorberCorrection(1.);
+
+                if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
+                {
+                    this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
+                }
+                else
+                {
+                    const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
+                    this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0, staveNumber,
+                        caloHitParameters, absorberCorrection);
+                }
+
+                caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_hCalToMip * absorberCorrection;
+
                 if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_hCalMipThreshold)
                     continue;
 
                 caloHitParameters.m_hadronicEnergy = m_settings.m_hCalToHadGeV * pCaloHit->getEnergy();
                 caloHitParameters.m_electromagneticEnergy = m_settings.m_hCalToEMGeV * pCaloHit->getEnergy();
-
-                if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
-                {
-                    this->GetEndCapCaloHitProperties(pCaloHit, cellIdDecoder, endcapLayerLayout, caloHitParameters);
-                }
-                else
-                {
-                    this->GetBarrelCaloHitProperties(pCaloHit, cellIdDecoder, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0,
-                        caloHitParameters);
-                }
 
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(m_pandora, caloHitParameters));
             }
@@ -870,7 +880,8 @@ StatusCode PandoraPFANewProcessor::CreateHCalCaloHits(const LCEvent *const pLCEv
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PandoraPFANewProcessor::GetCommonCaloHitProperties(CalorimeterHit *const pCaloHit, PandoraApi::CaloHit::Parameters &caloHitParameters) const
+void PandoraPFANewProcessor::GetCommonCaloHitProperties(CalorimeterHit *const pCaloHit, CellIDDecoder<CalorimeterHit> &cellIdDecoder,
+    PandoraApi::CaloHit::Parameters &caloHitParameters) const
 {
     const float *pCaloHitPosition(pCaloHit->getPosition());
     caloHitParameters.m_positionVector = pandora::CartesianVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
@@ -880,46 +891,59 @@ void PandoraPFANewProcessor::GetCommonCaloHitProperties(CalorimeterHit *const pC
 
     caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
     caloHitParameters.m_time = pCaloHit->getTime();
+
+    caloHitParameters.m_layer = cellIdDecoder(pCaloHit)["K-1"];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PandoraPFANewProcessor::GetEndCapCaloHitProperties(CalorimeterHit *const pCaloHit, CellIDDecoder<CalorimeterHit> &cellIdDecoder,
-    const gear::LayerLayout &endcapLayerLayout, PandoraApi::CaloHit::Parameters &caloHitParameters) const
+void PandoraPFANewProcessor::GetEndCapCaloHitProperties(CalorimeterHit *const pCaloHit, const gear::LayerLayout &layerLayout,
+    PandoraApi::CaloHit::Parameters &caloHitParameters, float &absorberCorrection) const
 {
-    const unsigned int physicalLayer(cellIdDecoder(pCaloHit)["K-1"]);
-    caloHitParameters.m_layer = physicalLayer;
+    const unsigned int physicalLayer(caloHitParameters.m_layer.Get());
 
-    caloHitParameters.m_cellSizeU = endcapLayerLayout.getCellSize0(physicalLayer);
-    caloHitParameters.m_cellSizeV = endcapLayerLayout.getCellSize1(physicalLayer);
-    caloHitParameters.m_cellSizeZ = endcapLayerLayout.getThickness(physicalLayer);
+    caloHitParameters.m_cellSizeU = layerLayout.getCellSize0(physicalLayer);
+    caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
+    caloHitParameters.m_cellSizeZ = layerLayout.getThickness(physicalLayer);
 
-    caloHitParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * endcapLayerLayout.getAbsorberThickness(physicalLayer);
-    caloHitParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * endcapLayerLayout.getAbsorberThickness(physicalLayer);
+    const float layerAbsorberThickness(layerLayout.getAbsorberThickness(std::max(0, static_cast<int>(physicalLayer) - 1)));
+
+    if (0 == layerAbsorberThickness)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    caloHitParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * layerAbsorberThickness;
+    caloHitParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * layerAbsorberThickness;
+
+    absorberCorrection = layerLayout.getAbsorberThickness(0) / layerAbsorberThickness;
 
     caloHitParameters.m_normalVector = (pCaloHit->getPosition()[2] > 0) ? pandora::CartesianVector(0, 0, 1) : pandora::CartesianVector(0, 0, -1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PandoraPFANewProcessor::GetBarrelCaloHitProperties(CalorimeterHit *const pCaloHit, CellIDDecoder<CalorimeterHit> &cellIdDecoder,
-    const gear::LayerLayout &barrelLayerLayout, unsigned int barrelSymmetryOrder, float barrelPhi0,
-    PandoraApi::CaloHit::Parameters &caloHitParameters) const
+void PandoraPFANewProcessor::GetBarrelCaloHitProperties(CalorimeterHit *const pCaloHit, const gear::LayerLayout &layerLayout,
+    unsigned int barrelSymmetryOrder, float barrelPhi0, unsigned int staveNumber,
+    PandoraApi::CaloHit::Parameters &caloHitParameters, float &absorberCorrection) const
 {
-    const unsigned int physicalLayer(cellIdDecoder(pCaloHit)["K-1"]);
-    caloHitParameters.m_layer = physicalLayer;
+    const unsigned int physicalLayer(caloHitParameters.m_layer.Get());
 
-    caloHitParameters.m_cellSizeU = barrelLayerLayout.getThickness(physicalLayer);
-    caloHitParameters.m_cellSizeV = barrelLayerLayout.getCellSize1(physicalLayer);
-    caloHitParameters.m_cellSizeZ = barrelLayerLayout.getCellSize0(physicalLayer);
+    caloHitParameters.m_cellSizeU = layerLayout.getThickness(physicalLayer);
+    caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
+    caloHitParameters.m_cellSizeZ = layerLayout.getCellSize0(physicalLayer);
 
-    caloHitParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * barrelLayerLayout.getAbsorberThickness(physicalLayer);
-    caloHitParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * barrelLayerLayout.getAbsorberThickness(physicalLayer);
+    const float layerAbsorberThickness(layerLayout.getAbsorberThickness(std::max(0, static_cast<int>(physicalLayer) - 1)));
+
+    if (0 == layerAbsorberThickness)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    caloHitParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * layerAbsorberThickness;
+    caloHitParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * layerAbsorberThickness;
+
+    absorberCorrection = layerLayout.getAbsorberThickness(0) / layerAbsorberThickness;
 
     if (barrelSymmetryOrder > 0)
     {
         static const float pi(std::acos(-1.));
-        const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
         const float phi = barrelPhi0 + (2. * pi * static_cast<float>(staveNumber) / static_cast<float>(barrelSymmetryOrder));
         caloHitParameters.m_normalVector = pandora::CartesianVector(-std::sin(phi), std::cos(phi), 0);
     }
