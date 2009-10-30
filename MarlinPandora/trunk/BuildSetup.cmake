@@ -16,7 +16,7 @@
 #############################################################################
 
 # ILC_HOME
-SET( ILC_HOME "/usera/marshall/ilcsoft"
+SET( ILC_HOME "path_to_ilc_home"
     CACHE PATH "Path to ILC Software" FORCE )
 
 # Path to PandoraPFANew
