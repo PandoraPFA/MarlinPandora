@@ -904,7 +904,7 @@ void PandoraPFANewProcessor::GetEndCapCaloHitProperties(CalorimeterHit *const pC
 
     caloHitParameters.m_cellSizeU = layerLayout.getCellSize0(physicalLayer);
     caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
-    caloHitParameters.m_cellSizeZ = layerLayout.getThickness(physicalLayer);
+    caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
     const float layerAbsorberThickness(layerLayout.getAbsorberThickness(std::max(0, static_cast<int>(physicalLayer) - 1)));
 
@@ -927,9 +927,9 @@ void PandoraPFANewProcessor::GetBarrelCaloHitProperties(CalorimeterHit *const pC
 {
     const unsigned int physicalLayer(caloHitParameters.m_layer.Get());
 
-    caloHitParameters.m_cellSizeU = layerLayout.getThickness(physicalLayer);
+    caloHitParameters.m_cellSizeU = layerLayout.getCellSize0(physicalLayer);
     caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
-    caloHitParameters.m_cellSizeZ = layerLayout.getCellSize0(physicalLayer);
+    caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
     const float layerAbsorberThickness(layerLayout.getAbsorberThickness(std::max(0, static_cast<int>(physicalLayer) - 1)));
 
