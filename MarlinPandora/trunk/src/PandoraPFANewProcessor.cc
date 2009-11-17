@@ -430,7 +430,7 @@ void PandoraPFANewProcessor::FitHelices(const Track *const pTrack, PandoraApi::T
     const int nTrackHits = trackerHitvec.size();
     const int nTrackHitsForFit = std::min(m_settings.m_nHitsForHelixFits, nTrackHits);
 
-    // Order hits by increasing z  
+    // Order hits by increasing z
     for (int iz = 0 ; iz < nTrackHits - 1; ++iz)
     {
         for (int jz = 0; jz < nTrackHits - iz - 1; ++jz)
@@ -498,7 +498,7 @@ void PandoraPFANewProcessor::FitHelices(const Track *const pTrack, PandoraApi::T
                          << "TrackStateAtEnd: "   << std::endl << trackParameters.m_trackStateAtEnd.Get()   << std::endl;
 
     // Get track state at ecal surface
-    this->ProjectTrackToECal(pHelixEnd, signPz, trackParameters);
+    this->ProjectTrackToECal(pTrack, pHelixEnd, signPz, trackParameters);
 
     delete pHelix1;
     delete pHelix2;
@@ -554,7 +554,8 @@ int PandoraPFANewProcessor::GetTrackSignPz(float zMin, float zMax, float rMin, f
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PandoraPFANewProcessor::ProjectTrackToECal(HelixClass *const pHelixEnd, int signPz, PandoraApi::Track::Parameters &trackParameters) const
+void PandoraPFANewProcessor::ProjectTrackToECal(const Track *const pTrack, HelixClass *const pHelixEnd, int signPz,
+    PandoraApi::Track::Parameters &trackParameters) const
 {
     static const gear::CalorimeterParameters &ecalBarrelParameters = marlin::Global::GEAR->getEcalBarrelParameters();
     static const gear::CalorimeterParameters &ecalEndCapParameters = marlin::Global::GEAR->getEcalEndcapParameters();
@@ -562,13 +563,17 @@ void PandoraPFANewProcessor::ProjectTrackToECal(HelixClass *const pHelixEnd, int
     static const float phi0(ecalBarrelParameters.getPhi0());
     static const int ecalSymmetryOrder(ecalBarrelParameters.getSymmetryOrder());
     static const float rOfBarrel(ecalBarrelParameters.getExtent()[0]);
-    static const float zOfEndCap(static_cast<float>(signPz) * ecalEndCapParameters.getExtent()[2]);
+    static const float zOfEndCap(ecalEndCapParameters.getExtent()[2]);
 
     float bestEcalProjection[3];
 
     // First project to endcap
-    float referencePoint[3] = {pHelixEnd->getReferencePoint()[0], pHelixEnd->getReferencePoint()[1], pHelixEnd->getReferencePoint()[2]};
-    float minTime = pHelixEnd->getPointInZ(zOfEndCap, referencePoint, bestEcalProjection);
+    const float trackD0(pTrack->getD0());
+    const float trackPhi0(pTrack->getPhi());
+
+    // TODO use reference point at beginning of helix fit, rather than at start of track
+    float referencePoint[3] = {trackD0 * sin(trackPhi0), -trackD0 * cos(trackPhi0), pTrack->getZ0()};
+    float minTime = pHelixEnd->getPointInZ(static_cast<float>(signPz) * zOfEndCap, referencePoint, bestEcalProjection);
 
     // Then project to barrel surface(s)
     float barrelProjection[3];
