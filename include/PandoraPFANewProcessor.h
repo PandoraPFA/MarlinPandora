@@ -166,11 +166,12 @@ private:
     /**
      *  @brief  Project track to the surface of the ecal
      * 
+     *  @param  pTrack the lcio track
      *  @param  pHelixEnd helix fit to the end of the track
      *  @param  signPz track sign w.r.t. increasing z direction
      *  @param  trackParameters the track parameters
      */
-    void ProjectTrackToECal(HelixClass *const pHelixEnd, int signPz, PandoraApi::Track::Parameters &trackParameters) const;
+    void ProjectTrackToECal(const Track *const pTrack, HelixClass *const pHelixEnd, int signPz, PandoraApi::Track::Parameters &trackParameters) const;
 
     /**
      *  @brief  Decide whether track reaches the ecal surface
