@@ -26,32 +26,31 @@ public:
     class Settings
     {
       public:
-        std::string     m_pandoraSettingsXmlFile;       ///< The pandora settings xml file
+        std::string     m_pandoraSettingsXmlFile;               ///< The pandora settings xml file
 
-        StringVector    m_trackCollections;             ///< The reconstructed track collections
-        StringVector    m_v0VertexCollections;          ///< The v0 vertex collections
-        StringVector    m_eCalCaloHitCollections;       ///< The ecal calorimeter hit collections
-        StringVector    m_hCalCaloHitCollections;       ///< The hcal calorimeter hit collections
-        StringVector    m_mcParticleCollections;        ///< The mc particle collections
-        StringVector    m_lcCaloHitRelationCollections; ///< The SimCaloHit to CaloHit particle relations
-        StringVector    m_lcTrackRelationCollections;   ///< The SimTrackerHit to TrackerHit particle relations
+        StringVector    m_trackCollections;                     ///< The reconstructed track collections
+        StringVector    m_v0VertexCollections;                  ///< The v0 vertex collections
+        StringVector    m_eCalCaloHitCollections;               ///< The ecal calorimeter hit collections
+        StringVector    m_hCalCaloHitCollections;               ///< The hcal calorimeter hit collections
+        StringVector    m_mcParticleCollections;                ///< The mc particle collections
+        StringVector    m_lcCaloHitRelationCollections;         ///< The SimCaloHit to CaloHit particle relations
+        StringVector    m_lcTrackRelationCollections;           ///< The SimTrackerHit to TrackerHit particle relations
+        std::string     m_pfoCollectionName;                    ///< The name of the PFO output collection
+        float           m_absorberRadiationLength;              ///< The absorber radation length
+        float           m_absorberInteractionLength;            ///< The absorber interaction length
+        float           m_eCalToMip;                            ///< The calibration from deposited ECal energy to mip
+        float           m_hCalToMip;                            ///< The calibration from deposited HCal energy to mip
+        float           m_eCalMipThreshold;                     ///< Threshold for creating calo hits in the ECal, units mip
+        float           m_hCalMipThreshold;                     ///< Threshold for creating calo hits in the HCal, units mip
 
-        std::string     m_pfoCollectionName;            ///< The name of the PFO output collection
+        float           m_eCalToEMGeV;                          ///< The calibration from deposited ECal energy to EM energy
+        float           m_hCalToEMGeV;                          ///< The calibration from deposited HCal energy to EM energy
+        float           m_eCalToHadGeV;                         ///< The calibration from deposited ECal energy to hadronic energy
+        float           m_hCalToHadGeV;                         ///< The calibration from deposited HCal energy to hadronic energy
+        int             m_nHitsForHelixFits;                    ///< The number of hits to be used in helix fits at start/end of tracks
 
-        float           m_absorberRadiationLength;      ///< The absorber radation length
-        float           m_absorberInteractionLength;    ///< The absorber interaction length
-
-        float           m_eCalToMip;                    ///< The calibration from deposited ECal energy to mip
-        float           m_hCalToMip;                    ///< The calibration from deposited HCal energy to mip
-        float           m_eCalMipThreshold;             ///< Threshold for creating calo hits in the ECal, units mip
-        float           m_hCalMipThreshold;             ///< Threshold for creating calo hits in the HCal, units mip
-
-        float           m_eCalToEMGeV;                  ///< The calibration from deposited ECal energy to EM energy
-        float           m_hCalToEMGeV;                  ///< The calibration from deposited HCal energy to EM energy
-        float           m_eCalToHadGeV;                 ///< The calibration from deposited ECal energy to hadronic energy
-        float           m_hCalToHadGeV;                 ///< The calibration from deposited HCal energy to hadronic energy
-
-        int             m_nHitsForHelixFits;            ///< The number of hits to be used in helix fits at start/end of tracks
+        int             m_useEndTrackHelixForECalProjection;    ///< Use end track fit or full track helix for ECal projection 
+        int             m_useDcaAsReferencePointForProjection;  ///< Use DCA as helix reference point for ECal projection 
     };
 
     /**
@@ -164,14 +163,13 @@ private:
     int GetTrackSignPz(float zMin, float zMax, float rMin, float rMax) const;
 
     /**
-     *  @brief  Project track to the surface of the ecal
+     *  @brief  Project helix to the surface of the ecal
      * 
-     *  @param  pTrack the lcio track
-     *  @param  pHelixEnd helix fit to the end of the track
-     *  @param  signPz track sign w.r.t. increasing z direction
-     *  @param  trackParameters the track parameters
+     *  @param  pHelix helix fit to be projected to ecal surface
+     *  @param  referencePoint helix reference point
+     *  @param  signPz sign w.r.t. increasing z direction
      */
-    void ProjectTrackToECal(const Track *const pTrack, HelixClass *const pHelixEnd, int signPz, PandoraApi::Track::Parameters &trackParameters) const;
+    pandora::TrackState GetECalProjection(HelixClass *const pHelix, float referencePoint[3], int signPz) const;
 
     /**
      *  @brief  Decide whether track reaches the ecal surface
