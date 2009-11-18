@@ -345,24 +345,21 @@ StatusCode PandoraPFANewProcessor::CreateTrackAssociations(const LCEvent *const 
 
                 ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
                 TrackVec trackVec = pReconstructedParticle->getTracks();
-
-                int nGoodTracks = 0;
-
                 for(unsigned int iTrack = 0; iTrack < trackVec.size(); ++iTrack)
                 {
                     Track *pTrack = trackVec[iTrack];
                     TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
                     const float nTrackHits(trackerHitVec.size());
 
-                    streamlog_out(DEBUG) << "Vertex " << iTrack
+                    streamlog_out(DEBUG) << "  V0Track " << iTrack
                                          << ", nTrackHits " << nTrackHits
-                                         << ", nGoodTracks " << nGoodTracks << std::endl;
+                                         << ", ptrack " << pTrack << std::endl;
                 }
             }
         }
         catch (...)
         {
-            streamlog_out(ERROR) << "Failed to extract v0 vertex collection " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract v0 vertex collection " << *iter << std::endl;
         }
     }
 
@@ -423,7 +420,6 @@ void PandoraPFANewProcessor::FitHelices(const Track *const pTrack, PandoraApi::T
     pHelixFit->Initialize_Canonical(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), bField);
 
     trackParameters.m_momentumAtDca = pandora::CartesianVector(pHelixFit->getMomentum()[0], pHelixFit->getMomentum()[1], pHelixFit->getMomentum()[2]);
-    delete pHelixFit;
 
     // Fit start and end of tracks
     TrackerHitVec trackerHitvec(pTrack->getTrackerHits());
@@ -494,14 +490,31 @@ void PandoraPFANewProcessor::FitHelices(const Track *const pTrack, PandoraApi::T
     trackParameters.m_trackStateAtEnd = pandora::TrackState(pHelixEnd->getReferencePoint()[0], pHelixEnd->getReferencePoint()[1],
         pHelixEnd->getReferencePoint()[2], pHelixEnd->getMomentum()[0], pHelixEnd->getMomentum()[1], pHelixEnd->getMomentum()[2]);
 
-    streamlog_out(DEBUG) << "TrackStateAtStart: " << std::endl << trackParameters.m_trackStateAtStart.Get() << std::endl
-                         << "TrackStateAtEnd: "   << std::endl << trackParameters.m_trackStateAtEnd.Get()   << std::endl;
-
     // Get track state at ecal surface
-    this->ProjectTrackToECal(pTrack, pHelixEnd, signPz, trackParameters);
+    HelixClass* pHelixToProject = pHelixFit;
+    float referencePoint[3] = {pHelixFit->getReferencePoint()[0], pHelixFit->getReferencePoint()[1], pHelixFit->getReferencePoint()[2]};
+
+    if(0 != m_settings.m_useEndTrackHelixForECalProjection)
+        pHelixToProject = pHelixEnd;
+
+    if(0 != m_settings.m_useDcaAsReferencePointForProjection)
+    {
+        const float trackPhi0(pTrack->getPhi());
+        const float trackD0(pTrack->getD0());
+        referencePoint[0] = ( trackD0 * sin(trackPhi0));
+        referencePoint[1] = (-trackD0 * cos(trackPhi0));
+        referencePoint[2] = pTrack->getZ0();
+    }
+
+    trackParameters.m_trackStateAtECal = this->GetECalProjection(pHelixToProject, referencePoint, signPz);
+
+    streamlog_out(DEBUG) << "TrackStateAtStart: " << std::endl << trackParameters.m_trackStateAtStart.Get() << std::endl
+                         << "TrackStateAtEnd: "   << std::endl << trackParameters.m_trackStateAtEnd.Get()   << std::endl
+                         << "TrackStateAtECal: "  << std::endl << trackParameters.m_trackStateAtECal.Get()  << std::endl;
 
     delete pHelix1;
     delete pHelix2;
+    delete pHelixFit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -530,7 +543,7 @@ int PandoraPFANewProcessor::GetTrackSignPz(float zMin, float zMax, float rMin, f
             signPz = -1;
 
         // TODO: if this is a track from IP check momentumAtDca assignment is correct
-        streamlog_out(DEBUG) << "PandoraPFANewProcessor::FitHelices CROSSES TPC check code..." << std::endl;
+        streamlog_out(WARNING) << "PandoraPFANewProcessor::FitHelices CROSSES TPC check code..." << std::endl;
     }
 
     // If above conditions not satisfied, default is to order in z
@@ -543,7 +556,7 @@ int PandoraPFANewProcessor::GetTrackSignPz(float zMin, float zMax, float rMin, f
             signPz = -1;
 
         // TODO: these tracks should be associated with a V0, etc... If not something could be wrong
-        streamlog_out(DEBUG) << "PandoraPFANewProcessor::FitHelices DEFAULT TRACK DIRECTION..." << std::endl;
+        streamlog_out(WARNING) << "PandoraPFANewProcessor::FitHelices DEFAULT TRACK DIRECTION..." << std::endl;
 
         if(0 == signPz)
             throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -554,8 +567,7 @@ int PandoraPFANewProcessor::GetTrackSignPz(float zMin, float zMax, float rMin, f
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PandoraPFANewProcessor::ProjectTrackToECal(const Track *const pTrack, HelixClass *const pHelixEnd, int signPz,
-    PandoraApi::Track::Parameters &trackParameters) const
+pandora::TrackState PandoraPFANewProcessor::GetECalProjection(HelixClass *const pHelix, float referencePoint[3], int signPz) const
 {
     static const gear::CalorimeterParameters &ecalBarrelParameters = marlin::Global::GEAR->getEcalBarrelParameters();
     static const gear::CalorimeterParameters &ecalEndCapParameters = marlin::Global::GEAR->getEcalEndcapParameters();
@@ -568,12 +580,7 @@ void PandoraPFANewProcessor::ProjectTrackToECal(const Track *const pTrack, Helix
     float bestEcalProjection[3];
 
     // First project to endcap
-    const float trackD0(pTrack->getD0());
-    const float trackPhi0(pTrack->getPhi());
-
-    // TODO use reference point at beginning of helix fit, rather than at start of track
-    float referencePoint[3] = {trackD0 * sin(trackPhi0), -trackD0 * cos(trackPhi0), pTrack->getZ0()};
-    float minTime = pHelixEnd->getPointInZ(static_cast<float>(signPz) * zOfEndCap, referencePoint, bestEcalProjection);
+    float minTime = pHelix->getPointInZ(static_cast<float>(signPz) * zOfEndCap, referencePoint, bestEcalProjection);
 
     // Then project to barrel surface(s)
     float barrelProjection[3];
@@ -591,7 +598,7 @@ void PandoraPFANewProcessor::ProjectTrackToECal(const Track *const pTrack, Helix
             float yy = rOfBarrel * sin(phi);
             float ax = cos(phi + 0.5*pi);
             float ay = sin(phi + 0.5*pi);
-            float tt = pHelixEnd->getPointInXY(xx, yy , ax, ay, referencePoint, barrelProjection);
+            float tt = pHelix->getPointInXY(xx, yy , ax, ay, referencePoint, barrelProjection);
 
             // If helix intersects this plane before current best use this point
             if (tt < minTime)
@@ -606,7 +613,7 @@ void PandoraPFANewProcessor::ProjectTrackToECal(const Track *const pTrack, Helix
     else
     {
         // Cylinder
-        float tt = pHelixEnd->getPointOnCircle(rOfBarrel, referencePoint, barrelProjection);
+        float tt = pHelix->getPointOnCircle(rOfBarrel, referencePoint, barrelProjection);
 
         if (tt < minTime)
         {
@@ -618,12 +625,10 @@ void PandoraPFANewProcessor::ProjectTrackToECal(const Track *const pTrack, Helix
     }
 
     float extrapolatedMomentum[3];
-    pHelixEnd->getExtrapolatedMomentum(bestEcalProjection, extrapolatedMomentum);
+    pHelix->getExtrapolatedMomentum(bestEcalProjection, extrapolatedMomentum);
 
-    trackParameters.m_trackStateAtECal = pandora::TrackState(bestEcalProjection[0], bestEcalProjection[1], bestEcalProjection[2],
+    return pandora::TrackState(bestEcalProjection[0], bestEcalProjection[1], bestEcalProjection[2],
         extrapolatedMomentum[0], extrapolatedMomentum[1], extrapolatedMomentum[2]);
-
-    streamlog_out(DEBUG) << "TrackStateAtECal: " << std::endl << trackParameters.m_trackStateAtECal.Get() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1189,4 +1194,14 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "The number of hits to be used in helix fits at start/end of tracks",
                             m_settings.m_nHitsForHelixFits,
                             int(50));
+
+    registerProcessorParameter("UseEndTrackHelixForECalProjection",
+                            "==0 use full track, ==1 use last NumberOfHitsForTrackHelixFit hits",
+                            m_settings.m_useEndTrackHelixForECalProjection,
+                            int(1));
+
+    registerProcessorParameter("UseDcaForReferenceInECalProjection",
+                            "==0 use helix reference point, ==1 use DCA as reference point",
+                            m_settings.m_useDcaAsReferencePointForProjection,
+                            int(1));
 }
