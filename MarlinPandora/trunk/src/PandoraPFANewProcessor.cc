@@ -492,10 +492,12 @@ void PandoraPFANewProcessor::FitHelices(const Track *const pTrack, PandoraApi::T
 
     // Get track state at ecal surface
     HelixClass* pHelixToProject = pHelixFit;
-    float referencePoint[3] = {pHelixFit->getReferencePoint()[0], pHelixFit->getReferencePoint()[1], pHelixFit->getReferencePoint()[2]};
 
     if(0 != m_settings.m_useEndTrackHelixForECalProjection)
         pHelixToProject = pHelixEnd;
+
+    float referencePoint[3] = {pHelixToProject->getReferencePoint()[0], pHelixToProject->getReferencePoint()[1],
+        pHelixToProject->getReferencePoint()[2]};
 
     if(0 != m_settings.m_useDcaAsReferencePointForProjection)
     {
