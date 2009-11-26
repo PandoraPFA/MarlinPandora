@@ -63,10 +63,11 @@ void PandoraPFANewProcessor::init()
     try
     {
         streamlog_out(MESSAGE) << "PandoraPFANewProcessor - Init" << std::endl;
+        m_pPandora = new pandora::Pandora();
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateGeometry());
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RegisterUserAlgorithmFactories());
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ReadSettings(m_pandora, m_settings.m_pandoraSettingsXmlFile));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ReadSettings(*m_pPandora, m_settings.m_pandoraSettingsXmlFile));
     }
     catch (StatusCodeException &statusCodeException)
     {
@@ -105,20 +106,20 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateCaloHits(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateCaloHitToMCParticleRelationships(pLCEvent));
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(m_pandora));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pPandora));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessParticleFlowObjects(pLCEvent));
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(m_pandora));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pPandora));
     }
     catch (StatusCodeException &statusCodeException)
     {
         streamlog_out(ERROR) << "Failed to process event: " << statusCodeException.ToString() << std::endl;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(m_pandora));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pPandora));
     }
     catch (...)
     {
         streamlog_out(ERROR) << "Failed to process event, unrecognized exception" << std::endl;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(m_pandora));        
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pPandora));
     }
 }
 
@@ -133,6 +134,7 @@ void PandoraPFANewProcessor::check(LCEvent *pLCEvent)
 
 void PandoraPFANewProcessor::end()
 {
+    delete m_pPandora;
     streamlog_out(MESSAGE) << "PandoraPFANewProcessor - End" << std::endl;
 }
 
@@ -180,7 +182,7 @@ StatusCode PandoraPFANewProcessor::CreateGeometry() const
         // Addition subdetectors
         this->SetAdditionalSubDetectorParameters(geometryParameters);
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::Create(m_pandora, geometryParameters));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::Create(*m_pPandora, geometryParameters));
     }
     catch (gear::UnknownParameterException &e)
     {
@@ -303,13 +305,13 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
                 mcParticleParameters.m_outerRadius = outerRadius;
                 mcParticleParameters.m_pParentAddress = pMcParticle;
 
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(m_pandora, mcParticleParameters));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*m_pPandora, mcParticleParameters));
 
                 // Create parent-daughter relationships
                 for(MCParticleVec::const_iterator itDaughter = pMcParticle->getDaughters().begin(),
                     itDaughterEnd = pMcParticle->getDaughters().end(); itDaughter != itDaughterEnd; ++itDaughter)
                 {
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetMCParentDaughterRelationship(m_pandora, pMcParticle,
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetMCParentDaughterRelationship(*m_pPandora, pMcParticle,
                         *itDaughter));
                 }
             }
@@ -393,7 +395,7 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
                 this->FitHelices(pTrack, trackParameters);
                 trackParameters.m_reachesECal = this->ReachesECAL(pTrack);
 
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(m_pandora, trackParameters));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(*m_pPandora, trackParameters));
             }
         }
         catch (StatusCodeException &statusCodeException)
@@ -727,7 +729,7 @@ StatusCode PandoraPFANewProcessor::CreateTrackToMCParticleRelationships(const LC
                 for (MCParticleToWeightMap::const_iterator mcParticleIter = mcParticleToWeightMap.begin(),
                     mcParticleIterEnd = mcParticleToWeightMap.end(); mcParticleIter != mcParticleIterEnd; ++mcParticleIter)
                 {
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackToMCParticleRelationship(m_pandora,
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackToMCParticleRelationship(*m_pPandora,
                         *trackIter, mcParticleIter->first, mcParticleIter->second));
                 }
             }
@@ -806,7 +808,7 @@ StatusCode PandoraPFANewProcessor::CreateECalCaloHits(const LCEvent *const pLCEv
                 caloHitParameters.m_electromagneticEnergy = m_settings.m_eCalToEMGeV * pCaloHit->getEnergy();
                 caloHitParameters.m_hadronicEnergy = m_settings.m_eCalToHadGeV * pCaloHit->getEnergy();
 
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(m_pandora, caloHitParameters));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pPandora, caloHitParameters));
             }
         }
         catch (StatusCodeException &statusCodeException)
@@ -874,7 +876,7 @@ StatusCode PandoraPFANewProcessor::CreateHCalCaloHits(const LCEvent *const pLCEv
                 caloHitParameters.m_hadronicEnergy = m_settings.m_hCalToHadGeV * pCaloHit->getEnergy();
                 caloHitParameters.m_electromagneticEnergy = m_settings.m_hCalToEMGeV * pCaloHit->getEnergy();
 
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(m_pandora, caloHitParameters));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pPandora, caloHitParameters));
             }
         }
         catch (StatusCodeException &statusCodeException)
@@ -1010,7 +1012,7 @@ StatusCode PandoraPFANewProcessor::CreateCaloHitToMCParticleRelationships(const 
                 for (MCParticleToEnergyWeightMap::const_iterator mcParticleIter = mcParticleToEnergyWeightMap.begin(),
                     mcParticleIterEnd = mcParticleToEnergyWeightMap.end(); mcParticleIter != mcParticleIterEnd; ++mcParticleIter)
                 {
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetCaloHitToMCParticleRelationship(m_pandora,
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetCaloHitToMCParticleRelationship(*m_pPandora,
                         *caloHitIter, mcParticleIter->first, mcParticleIter->second));
                 }
             }
@@ -1030,7 +1032,7 @@ StatusCode PandoraPFANewProcessor::ProcessParticleFlowObjects( LCEvent * pLCEven
 {
     // get the particle flow objects
     pandora::ParticleFlowObjectList particleFlowObjectList;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraApi::GetParticleFlowObjects(m_pandora,
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraApi::GetParticleFlowObjects(*m_pPandora,
         particleFlowObjectList));
 
     LCCollectionVec *pReconstructedParticleCollection = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
