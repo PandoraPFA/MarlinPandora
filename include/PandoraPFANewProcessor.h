@@ -10,7 +10,9 @@
 
 #include "marlin/Processor.h"
 
-#include "Pandora/Pandora.h"
+namespace pandora {class Pandora;}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  PandoraPFANewProcessor class
@@ -263,7 +265,7 @@ private:
     typedef std::vector<CalorimeterHit *> CalorimeterHitVector;
     typedef std::vector<Track *>          TrackVector;
 
-    pandora::Pandora            m_pandora;                  ///< The pandora instance
+    pandora::Pandora           *m_pPandora;                 ///< Address of the pandora instance
     Settings                    m_settings;                 ///< The settings for the pandora pfa new processor
     std::string                 m_detectorName;             ///< The detector name
     unsigned int                m_nRun;                     ///< The run number
