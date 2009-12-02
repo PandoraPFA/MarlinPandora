@@ -227,32 +227,32 @@ void PandoraPFANewProcessor::SetAdditionalSubDetectorParameters(PandoraApi::Geom
     PandoraApi::Geometry::Parameters::SubDetectorParameters yokeBarrelParameters;
     const gear::CalorimeterParameters &yokeBarrelInputParameters = marlin::Global::GEAR->getYokeBarrelParameters();
     SetDefaultSubDetectorParameters(yokeBarrelInputParameters, yokeBarrelParameters);
-    geometryParameters.m_additionalSubDetectors.push_back(yokeBarrelParameters);
+    geometryParameters.m_additionalSubDetectors["YokeBarrel"] = yokeBarrelParameters;
 
     PandoraApi::Geometry::Parameters::SubDetectorParameters yokeEndcapParameters;
     const gear::CalorimeterParameters &yokeEndcapInputParameters = marlin::Global::GEAR->getYokeEndcapParameters();
     SetDefaultSubDetectorParameters(yokeEndcapInputParameters, yokeEndcapParameters);
-    geometryParameters.m_additionalSubDetectors.push_back(yokeEndcapParameters);
+    geometryParameters.m_additionalSubDetectors["YokeEndcap"] = yokeEndcapParameters;
 
     PandoraApi::Geometry::Parameters::SubDetectorParameters eCalPlugParameters;
     const gear::CalorimeterParameters &eCalPlugInputParameters = marlin::Global::GEAR->getEcalPlugParameters();
     SetDefaultSubDetectorParameters(eCalPlugInputParameters, eCalPlugParameters);
-    geometryParameters.m_additionalSubDetectors.push_back(eCalPlugParameters);
+    geometryParameters.m_additionalSubDetectors["ECalPlug"] = eCalPlugParameters;
 
     PandoraApi::Geometry::Parameters::SubDetectorParameters hCalRingParameters;
     const gear::CalorimeterParameters &hCalRingInputParameters = marlin::Global::GEAR->getHcalRingParameters();
     SetDefaultSubDetectorParameters(hCalRingInputParameters, hCalRingParameters);
-    geometryParameters.m_additionalSubDetectors.push_back(hCalRingParameters);
+    geometryParameters.m_additionalSubDetectors["HCalRing"] = hCalRingParameters;
 
     PandoraApi::Geometry::Parameters::SubDetectorParameters lCalParameters;
     const gear::CalorimeterParameters &lCalInputParameters = marlin::Global::GEAR->getLcalParameters();
     SetDefaultSubDetectorParameters(lCalInputParameters, lCalParameters);
-    geometryParameters.m_additionalSubDetectors.push_back(lCalParameters);
+    geometryParameters.m_additionalSubDetectors["LCal"] = lCalParameters;
 
     PandoraApi::Geometry::Parameters::SubDetectorParameters lHCalParameters;
     const gear::CalorimeterParameters &lHCalInputParameters = marlin::Global::GEAR->getLHcalParameters();
     SetDefaultSubDetectorParameters(lHCalInputParameters, lHCalParameters);
-    geometryParameters.m_additionalSubDetectors.push_back(lHCalParameters);
+    geometryParameters.m_additionalSubDetectors["LHCal"] = lHCalParameters;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
