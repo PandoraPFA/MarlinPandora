@@ -157,6 +157,7 @@ StatusCode PandoraPFANewProcessor::CreateGeometry() const
         geometryParameters.m_coilInnerRadius        = coilParameters.getDoubleVal("Coil_cryostat_inner_radius");
         geometryParameters.m_coilOuterRadius        = coilParameters.getDoubleVal("Coil_cryostat_outer_radius");
         geometryParameters.m_coilZExtent            = coilParameters.getDoubleVal("Coil_cryostat_half_z");
+        geometryParameters.m_bField                 = marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z();
 
         geometryParameters.m_nRadLengthsInZGap      = 0;
         geometryParameters.m_nIntLengthsInZGap      = 0;
@@ -392,6 +393,14 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
                 trackParameters.m_z0 = pTrack->getZ0();
                 trackParameters.m_pParentAddress = pTrack;
 
+                // For now, assume tracks are charged pions
+                trackParameters.m_mass = 0.1396;
+
+                const float signedCurvature(pTrack->getOmega());
+
+                if (0. != signedCurvature)
+                    trackParameters.m_chargeSign = static_cast<int>(signedCurvature / std::fabs(signedCurvature));
+
                 this->FitHelices(pTrack, trackParameters);
                 trackParameters.m_reachesECal = this->ReachesECAL(pTrack);
 
@@ -415,7 +424,7 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 
 void PandoraPFANewProcessor::FitHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
-    static const float bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0.,0.,0.)).z());
+    static const float bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z());
 
     // Fit from track parameters to determine momentum at dca
     HelixClass *pHelixFit = new HelixClass();
@@ -547,7 +556,7 @@ int PandoraPFANewProcessor::GetTrackSignPz(float zMin, float zMax, float rMin, f
             signPz = -1;
 
         // TODO: if this is a track from IP check momentumAtDca assignment is correct
-        streamlog_out(WARNING) << "PandoraPFANewProcessor::FitHelices CROSSES TPC check code..." << std::endl;
+        streamlog_out(WARNING) << "PandoraPFANewProcessor::GetTrackSignPz CROSSES TPC check code..." << std::endl;
     }
 
     // If above conditions not satisfied, default is to order in z
@@ -560,7 +569,7 @@ int PandoraPFANewProcessor::GetTrackSignPz(float zMin, float zMax, float rMin, f
             signPz = -1;
 
         // TODO: these tracks should be associated with a V0, etc... If not something could be wrong
-        streamlog_out(WARNING) << "PandoraPFANewProcessor::FitHelices DEFAULT TRACK DIRECTION..." << std::endl;
+        streamlog_out(WARNING) << "PandoraPFANewProcessor::GetTrackSignPz DEFAULT TRACK DIRECTION..." << std::endl;
 
         if(0 == signPz)
             throw StatusCodeException(STATUS_CODE_FAILURE);
