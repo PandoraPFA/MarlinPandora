@@ -277,53 +277,58 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
         {
             const LCCollection *pMCParticleCollection = pLCEvent->getCollection(*iter);
 
-            const int numberMCParticles = pMCParticleCollection->getNumberOfElements();
-
-            for(int i = 0; i < numberMCParticles; ++i)
+            for(int i = 0, iMax = pMCParticleCollection->getNumberOfElements(); i < iMax; ++i)
             {
-                MCParticle *pMcParticle = dynamic_cast<MCParticle*>(pMCParticleCollection->getElementAt(i));
-
-                double innerRadius = 0.;
-                double outerRadius = 0.;
-                double momentum    = 0.;
-
-                for(int i = 0; i < 3; ++i)
+                try
                 {
-                    innerRadius += pow(pMcParticle->getVertex()[i], 2);
-                    outerRadius += pow(pMcParticle->getEndpoint()[i], 2);
-                    momentum    += pow(pMcParticle->getMomentum()[i], 2);
+                    MCParticle *pMcParticle = dynamic_cast<MCParticle*>(pMCParticleCollection->getElementAt(i));
+
+                    double innerRadius = 0.;
+                    double outerRadius = 0.;
+                    double momentum    = 0.;
+
+                    for(int i = 0; i < 3; ++i)
+                    {
+                        innerRadius += pow(pMcParticle->getVertex()[i], 2);
+                        outerRadius += pow(pMcParticle->getEndpoint()[i], 2);
+                        momentum    += pow(pMcParticle->getMomentum()[i], 2);
+                    }
+
+                    innerRadius = std::sqrt(innerRadius);
+                    outerRadius = std::sqrt(outerRadius);
+                    momentum    = std::sqrt(momentum);
+         
+                    PandoraApi::MCParticle::Parameters mcParticleParameters;
+                    mcParticleParameters.m_energy = pMcParticle->getEnergy();
+                    mcParticleParameters.m_particleId = pMcParticle->getPDG();
+                    mcParticleParameters.m_momentum = momentum;
+                    mcParticleParameters.m_innerRadius = innerRadius;
+                    mcParticleParameters.m_outerRadius = outerRadius;
+                    mcParticleParameters.m_pParentAddress = pMcParticle;
+
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*m_pPandora, mcParticleParameters));
+
+                    // Create parent-daughter relationships
+                    for(MCParticleVec::const_iterator itDaughter = pMcParticle->getDaughters().begin(),
+                        itDaughterEnd = pMcParticle->getDaughters().end(); itDaughter != itDaughterEnd; ++itDaughter)
+                    {
+                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetMCParentDaughterRelationship(*m_pPandora, pMcParticle,
+                            *itDaughter));
+                    }
                 }
-
-                innerRadius = std::sqrt(innerRadius);
-                outerRadius = std::sqrt(outerRadius);
-                momentum    = std::sqrt(momentum);
-     
-                PandoraApi::MCParticle::Parameters mcParticleParameters;
-                mcParticleParameters.m_energy = pMcParticle->getEnergy();
-                mcParticleParameters.m_particleId = pMcParticle->getPDG();
-                mcParticleParameters.m_momentum = momentum;
-                mcParticleParameters.m_innerRadius = innerRadius;
-                mcParticleParameters.m_outerRadius = outerRadius;
-                mcParticleParameters.m_pParentAddress = pMcParticle;
-
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*m_pPandora, mcParticleParameters));
-
-                // Create parent-daughter relationships
-                for(MCParticleVec::const_iterator itDaughter = pMcParticle->getDaughters().begin(),
-                    itDaughterEnd = pMcParticle->getDaughters().end(); itDaughter != itDaughterEnd; ++itDaughter)
+                catch (StatusCodeException &statusCodeException)
                 {
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetMCParentDaughterRelationship(*m_pPandora, pMcParticle,
-                        *itDaughter));
+                    streamlog_out(ERROR) << "Failed to extract MCParticle: " << statusCodeException.ToString() << std::endl;
+                }
+                catch (...)
+                {
+                    streamlog_out(ERROR) << "Failed to extract MCParticle, unrecognised exception" << std::endl;
                 }
             }
         }
-        catch (StatusCodeException &statusCodeException)
-        {
-            streamlog_out(ERROR) << "Failed to extract MCParticles: " << statusCodeException.ToString() << std::endl;
-        }
         catch (...)
         {
-            streamlog_out(ERROR) << "Failed to extract MCParticles, unrecognised exception" << std::endl;
+            streamlog_out(ERROR) << "Failed to extract MCParticles collection: " << *iter << std::endl;
         }
     }
 
@@ -342,7 +347,7 @@ StatusCode PandoraPFANewProcessor::CreateTrackAssociations(const LCEvent *const 
         {
             const LCCollection *pV0Collection = pLCEvent->getCollection(*iter);
 
-            for (int i = 0; i < pV0Collection->getNumberOfElements(); ++i)
+            for (int i = 0, iMax = pV0Collection->getNumberOfElements(); i < iMax; ++i)
             {
                 Vertex *pVertex = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
 
@@ -350,19 +355,26 @@ StatusCode PandoraPFANewProcessor::CreateTrackAssociations(const LCEvent *const 
                 TrackVec trackVec = pReconstructedParticle->getTracks();
                 for(unsigned int iTrack = 0; iTrack < trackVec.size(); ++iTrack)
                 {
-                    Track *pTrack = trackVec[iTrack];
-                    TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
-                    const float nTrackHits(trackerHitVec.size());
+                    try
+                    {
+                        Track *pTrack = trackVec[iTrack];
+                        TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
+                        const float nTrackHits(trackerHitVec.size());
 
-                    streamlog_out(DEBUG) << "  V0Track " << iTrack
-                                         << ", nTrackHits " << nTrackHits
-                                         << ", ptrack " << pTrack << std::endl;
+                        streamlog_out(DEBUG) << "  V0Track " << iTrack
+                                             << ", nTrackHits " << nTrackHits
+                                             << ", ptrack " << pTrack << std::endl;
+                    }
+                    catch (...)
+                    {
+                        streamlog_out(ERROR) << "Failed to extract v0 vertex, unrecognised exception" << std::endl;
+                    }
                 }
             }
         }
         catch (...)
         {
-            streamlog_out(WARNING) << "Failed to extract v0 vertex collection " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract v0 vertex collection: " << *iter << std::endl;
         }
     }
 
@@ -382,38 +394,45 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
         try
         {
             const LCCollection *pTrackCollection = pLCEvent->getCollection(*iter);
-            
-            for (int i = 0; i < pTrackCollection->getNumberOfElements(); ++i)
+
+            for (int i = 0, iMax = pTrackCollection->getNumberOfElements(); i < iMax; ++i)
             {
-                Track *pTrack = dynamic_cast<Track*>(pTrackCollection->getElementAt(i));
-                m_trackVector.push_back(pTrack);
+                try
+                {
+                    Track *pTrack = dynamic_cast<Track*>(pTrackCollection->getElementAt(i));
+                    m_trackVector.push_back(pTrack);
 
-                PandoraApi::Track::Parameters trackParameters;
-                trackParameters.m_d0 = pTrack->getD0();
-                trackParameters.m_z0 = pTrack->getZ0();
-                trackParameters.m_pParentAddress = pTrack;
+                    PandoraApi::Track::Parameters trackParameters;
+                    trackParameters.m_d0 = pTrack->getD0();
+                    trackParameters.m_z0 = pTrack->getZ0();
+                    trackParameters.m_pParentAddress = pTrack;
 
-                // For now, assume tracks are charged pions
-                trackParameters.m_mass = 0.1396;
+                    // For now, assume tracks are charged pions
+                    trackParameters.m_mass = 0.1396;
 
-                const float signedCurvature(pTrack->getOmega());
+                    const float signedCurvature(pTrack->getOmega());
 
-                if (0. != signedCurvature)
-                    trackParameters.m_chargeSign = static_cast<int>(signedCurvature / std::fabs(signedCurvature));
+                    if (0. != signedCurvature)
+                        trackParameters.m_chargeSign = static_cast<int>(signedCurvature / std::fabs(signedCurvature));
 
-                this->FitHelices(pTrack, trackParameters);
-                trackParameters.m_reachesECal = this->ReachesECAL(pTrack);
+                    this->FitHelices(pTrack, trackParameters);
+                    trackParameters.m_reachesECal = this->ReachesECAL(pTrack);
 
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(*m_pPandora, trackParameters));
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(*m_pPandora, trackParameters));
+                }
+                catch (StatusCodeException &statusCodeException)
+                {
+                    streamlog_out(ERROR) << "Failed to extract a track: " << statusCodeException.ToString() << std::endl;
+                }
+                catch (...)
+                {
+                    streamlog_out(ERROR) << "Failed to extract a track, unrecognised exception" << std::endl;
+                }
             }
-        }
-        catch (StatusCodeException &statusCodeException)
-        {
-            streamlog_out(ERROR) << "Failed to extract a track: " << statusCodeException.ToString() << std::endl;
         }
         catch (...)
         {
-            streamlog_out(ERROR) << "Failed to extract a track, unrecognised exception" << std::endl;
+            streamlog_out(ERROR) << "Failed to extract track collection: " << *iter << std::endl;
         }
     }
 
@@ -720,32 +739,43 @@ StatusCode PandoraPFANewProcessor::CreateTrackToMCParticleRelationships(const LC
             const LCCollection *pMCRelationCollection = pLCEvent->getCollection(*iter);
             LCRelationNavigator navigate(pMCRelationCollection);
 
-            for (TrackVector::const_iterator trackIter = m_trackVector.begin(),
-                     trackIterEnd = m_trackVector.end(); trackIter != trackIterEnd; ++trackIter)
+            for (TrackVector::const_iterator trackIter = m_trackVector.begin(), trackIterEnd = m_trackVector.end();
+                trackIter != trackIterEnd; ++trackIter)
             {
-                mcParticleToWeightMap.clear();
-
-                MCParticle* mcParticle = NULL;
-                
-                const LCObjectVec &objectVec = navigate.getRelatedToObjects(*trackIter);
-
-                if (objectVec.size() > 0) 
+                try
                 {
-                    mcParticle = dynamic_cast<MCParticle*>(objectVec[0]);
-                    mcParticleToWeightMap[mcParticle] += 1.0;
+                    mcParticleToWeightMap.clear();
+
+                    MCParticle* mcParticle = NULL;
+                    
+                    const LCObjectVec &objectVec = navigate.getRelatedToObjects(*trackIter);
+
+                    if (objectVec.size() > 0) 
+                    {
+                        mcParticle = dynamic_cast<MCParticle*>(objectVec[0]);
+                        mcParticleToWeightMap[mcParticle] += 1.0;
+                    }
+
+                    for (MCParticleToWeightMap::const_iterator mcParticleIter = mcParticleToWeightMap.begin(),
+                        mcParticleIterEnd = mcParticleToWeightMap.end(); mcParticleIter != mcParticleIterEnd; ++mcParticleIter)
+                    {
+                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackToMCParticleRelationship(*m_pPandora,
+                            *trackIter, mcParticleIter->first, mcParticleIter->second));
+                    }
                 }
-
-                for (MCParticleToWeightMap::const_iterator mcParticleIter = mcParticleToWeightMap.begin(),
-                    mcParticleIterEnd = mcParticleToWeightMap.end(); mcParticleIter != mcParticleIterEnd; ++mcParticleIter)
+                catch (StatusCodeException &statusCodeException)
                 {
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackToMCParticleRelationship(*m_pPandora,
-                        *trackIter, mcParticleIter->first, mcParticleIter->second));
+                    streamlog_out(ERROR) << "Failed to extract track to mc particle relationship: " << statusCodeException.ToString() << std::endl;
+                }
+                catch (...)
+                {
+                    streamlog_out(ERROR) << "Failed to extract track to mc particle relationship, unrecognised exception" << std::endl;
                 }
             }
         }
         catch(...)
         {
-            streamlog_out(ERROR) << "Failed to extract track to mc particle relationships from collection: " << *iter << std::endl;
+            streamlog_out(ERROR) << "Failed to extract track to mc particle relationships collection: " << *iter << std::endl;
         }
     }
 
@@ -784,49 +814,56 @@ StatusCode PandoraPFANewProcessor::CreateECalCaloHits(const LCEvent *const pLCEv
             const LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
             CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
 
-            for (int i = 0; i < pCaloHitCollection->getNumberOfElements(); ++i)
+            for (int i = 0, iMax = pCaloHitCollection->getNumberOfElements(); i < iMax; ++i)
             {
-                CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
-                m_calorimeterHitVector.push_back(pCaloHit);
-
-                PandoraApi::CaloHit::Parameters caloHitParameters;
-                caloHitParameters.m_hitType = pandora::ECAL;
-                caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ?
-                    pandora::BARREL : pandora::ENDCAP;
-
-                this->GetCommonCaloHitProperties(pCaloHit, cellIdDecoder, caloHitParameters);
-
-                float absorberCorrection(1.);
-
-                if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
+                try
                 {
-                    this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
+                    CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
+                    m_calorimeterHitVector.push_back(pCaloHit);
+
+                    PandoraApi::CaloHit::Parameters caloHitParameters;
+                    caloHitParameters.m_hitType = pandora::ECAL;
+                    caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ?
+                        pandora::BARREL : pandora::ENDCAP;
+
+                    this->GetCommonCaloHitProperties(pCaloHit, cellIdDecoder, caloHitParameters);
+
+                    float absorberCorrection(1.);
+
+                    if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
+                    {
+                        this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
+                    }
+                    else
+                    {
+                        const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
+                        this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0, staveNumber,
+                            caloHitParameters, absorberCorrection);
+                    }
+
+                    caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_eCalToMip * absorberCorrection;
+
+                    if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_eCalMipThreshold)
+                        continue;
+
+                    caloHitParameters.m_electromagneticEnergy = m_settings.m_eCalToEMGeV * pCaloHit->getEnergy();
+                    caloHitParameters.m_hadronicEnergy = m_settings.m_eCalToHadGeV * pCaloHit->getEnergy();
+
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pPandora, caloHitParameters));
                 }
-                else
+                catch (StatusCodeException &statusCodeException)
                 {
-                    const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
-                    this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0, staveNumber,
-                        caloHitParameters, absorberCorrection);
+                    streamlog_out(ERROR) << "Failed to extract ecal calo hit: " << statusCodeException.ToString() << std::endl;
                 }
-
-                caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_eCalToMip * absorberCorrection;
-
-                if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_eCalMipThreshold)
-                    continue;
-
-                caloHitParameters.m_electromagneticEnergy = m_settings.m_eCalToEMGeV * pCaloHit->getEnergy();
-                caloHitParameters.m_hadronicEnergy = m_settings.m_eCalToHadGeV * pCaloHit->getEnergy();
-
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pPandora, caloHitParameters));
+                catch (...)
+                {
+                    streamlog_out(ERROR) << "Failed to extract ecal calo hit, unrecognised exception" << std::endl;
+                }
             }
-        }
-        catch (StatusCodeException &statusCodeException)
-        {
-            streamlog_out(ERROR) << "Failed to extract ecal calo hit: " << statusCodeException.ToString() << std::endl;
         }
         catch (...)
         {
-            streamlog_out(ERROR) << "Failed to extract ecal calo hit, unrecognised exception" << std::endl;
+            streamlog_out(ERROR) << "Failed to extract ecal calo hit collection: " << *iter << std::endl;
         }
     }
 
@@ -852,49 +889,56 @@ StatusCode PandoraPFANewProcessor::CreateHCalCaloHits(const LCEvent *const pLCEv
             const LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
             CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
 
-            for (int i = 0; i < pCaloHitCollection->getNumberOfElements(); ++i)
+            for (int i = 0, iMax = pCaloHitCollection->getNumberOfElements(); i < iMax; ++i)
             {
-                CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
-                m_calorimeterHitVector.push_back(pCaloHit);
-
-                PandoraApi::CaloHit::Parameters caloHitParameters;
-                caloHitParameters.m_hitType = pandora::HCAL;
-
-                this->GetCommonCaloHitProperties(pCaloHit, cellIdDecoder, caloHitParameters);
-                caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ?
-                    pandora::BARREL : pandora::ENDCAP;
-
-                float absorberCorrection(1.);
-
-                if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
+                try
                 {
-                    this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
+                    CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
+                    m_calorimeterHitVector.push_back(pCaloHit);
+
+                    PandoraApi::CaloHit::Parameters caloHitParameters;
+                    caloHitParameters.m_hitType = pandora::HCAL;
+
+                    this->GetCommonCaloHitProperties(pCaloHit, cellIdDecoder, caloHitParameters);
+                    caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ?
+                        pandora::BARREL : pandora::ENDCAP;
+
+                    float absorberCorrection(1.);
+
+                    if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
+                    {
+                        this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
+                    }
+                    else
+                    {
+                        const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
+                        this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0, staveNumber,
+                            caloHitParameters, absorberCorrection);
+                    }
+
+                    caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_hCalToMip * absorberCorrection;
+
+                    if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_hCalMipThreshold)
+                        continue;
+
+                    caloHitParameters.m_hadronicEnergy = m_settings.m_hCalToHadGeV * pCaloHit->getEnergy();
+                    caloHitParameters.m_electromagneticEnergy = m_settings.m_hCalToEMGeV * pCaloHit->getEnergy();
+
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pPandora, caloHitParameters));
                 }
-                else
+                catch (StatusCodeException &statusCodeException)
                 {
-                    const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
-                    this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0, staveNumber,
-                        caloHitParameters, absorberCorrection);
+                    streamlog_out(ERROR) << "Failed to extract hcal calo hit: " << statusCodeException.ToString() << std::endl;
                 }
-
-                caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_hCalToMip * absorberCorrection;
-
-                if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_hCalMipThreshold)
-                    continue;
-
-                caloHitParameters.m_hadronicEnergy = m_settings.m_hCalToHadGeV * pCaloHit->getEnergy();
-                caloHitParameters.m_electromagneticEnergy = m_settings.m_hCalToEMGeV * pCaloHit->getEnergy();
-
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pPandora, caloHitParameters));
+                catch (...)
+                {
+                    streamlog_out(ERROR) << "Failed to extract hcal calo hit, unrecognised exception" << std::endl;
+                }
             }
-        }
-        catch (StatusCodeException &statusCodeException)
-        {
-            streamlog_out(ERROR) << "Failed to extract hcal calo hit: " << statusCodeException.ToString() << std::endl;
         }
         catch (...)
         {
-            streamlog_out(ERROR) << "Failed to extract hcal calo hit, unrecognised exception" << std::endl;
+            streamlog_out(ERROR) << "Failed to extract hcal calo hit collection: " << *iter << std::endl;
         }
     }
 
@@ -1004,31 +1048,42 @@ StatusCode PandoraPFANewProcessor::CreateCaloHitToMCParticleRelationships(const 
             for (CalorimeterHitVector::const_iterator caloHitIter = m_calorimeterHitVector.begin(),
                 caloHitIterEnd = m_calorimeterHitVector.end(); caloHitIter != caloHitIterEnd; ++caloHitIter)
             {
-                mcParticleToEnergyWeightMap.clear();
-                const LCObjectVec &objectVec = navigate.getRelatedToObjects(*caloHitIter);
-
-                for(LCObjectVec::const_iterator itRel = objectVec.begin(), itRelEnd = objectVec.end(); itRel != itRelEnd; ++itRel)
+                try
                 {
-                    SimCalorimeterHit *pSimHit = dynamic_cast<SimCalorimeterHit *>(*itRel);
+                    mcParticleToEnergyWeightMap.clear();
+                    const LCObjectVec &objectVec = navigate.getRelatedToObjects(*caloHitIter);
 
-                    if(pSimHit == NULL)
-                        return STATUS_CODE_FAILURE;
+                    for(LCObjectVec::const_iterator itRel = objectVec.begin(), itRelEnd = objectVec.end(); itRel != itRelEnd; ++itRel)
+                    {
+                        SimCalorimeterHit *pSimHit = dynamic_cast<SimCalorimeterHit *>(*itRel);
 
-                    for(int iCont = 0, iEnd = pSimHit->getNMCContributions(); iCont < iEnd; ++iCont)
-                        mcParticleToEnergyWeightMap[pSimHit->getParticleCont(iCont)] += pSimHit->getEnergyCont(iCont);
+                        if(pSimHit == NULL)
+                            return STATUS_CODE_FAILURE;
+
+                        for(int iCont = 0, iEnd = pSimHit->getNMCContributions(); iCont < iEnd; ++iCont)
+                            mcParticleToEnergyWeightMap[pSimHit->getParticleCont(iCont)] += pSimHit->getEnergyCont(iCont);
+                    }
+
+                    for (MCParticleToEnergyWeightMap::const_iterator mcParticleIter = mcParticleToEnergyWeightMap.begin(),
+                        mcParticleIterEnd = mcParticleToEnergyWeightMap.end(); mcParticleIter != mcParticleIterEnd; ++mcParticleIter)
+                    {
+                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetCaloHitToMCParticleRelationship(*m_pPandora,
+                            *caloHitIter, mcParticleIter->first, mcParticleIter->second));
+                    }
                 }
-
-                for (MCParticleToEnergyWeightMap::const_iterator mcParticleIter = mcParticleToEnergyWeightMap.begin(),
-                    mcParticleIterEnd = mcParticleToEnergyWeightMap.end(); mcParticleIter != mcParticleIterEnd; ++mcParticleIter)
+                catch (StatusCodeException &statusCodeException)
                 {
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetCaloHitToMCParticleRelationship(*m_pPandora,
-                        *caloHitIter, mcParticleIter->first, mcParticleIter->second));
+                    streamlog_out(ERROR) << "Failed to extract calo hit to mc particle relationship: " << statusCodeException.ToString() << std::endl;
+                }
+                catch (...)
+                {
+                    streamlog_out(ERROR) << "Failed to extract calo hit to mc particle relationship, unrecognised exception" << std::endl;
                 }
             }
         }
         catch(...)
         {
-            streamlog_out(ERROR) << "Failed to extract calo hit to mc particle relationships from collection: " << *iter << std::endl;
+            streamlog_out(ERROR) << "Failed to extract calo hit to mc particle relationships collection: " << *iter << std::endl;
         }
     }
 
