@@ -322,13 +322,13 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
                 }
                 catch (...)
                 {
-                    streamlog_out(ERROR) << "Failed to extract MCParticle, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract MCParticle, unrecognised exception" << std::endl;
                 }
             }
         }
         catch (...)
         {
-            streamlog_out(ERROR) << "Failed to extract MCParticles collection: " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract MCParticles collection: " << *iter << std::endl;
         }
     }
 
@@ -367,7 +367,7 @@ StatusCode PandoraPFANewProcessor::CreateTrackAssociations(const LCEvent *const 
                     }
                     catch (...)
                     {
-                        streamlog_out(ERROR) << "Failed to extract v0 vertex, unrecognised exception" << std::endl;
+                        streamlog_out(WARNING) << "Failed to extract v0 vertex, unrecognised exception" << std::endl;
                     }
                 }
             }
@@ -426,13 +426,13 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
                 }
                 catch (...)
                 {
-                    streamlog_out(ERROR) << "Failed to extract a track, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract a track, unrecognised exception" << std::endl;
                 }
             }
         }
         catch (...)
         {
-            streamlog_out(ERROR) << "Failed to extract track collection: " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract track collection: " << *iter << std::endl;
         }
     }
 
@@ -769,13 +769,13 @@ StatusCode PandoraPFANewProcessor::CreateTrackToMCParticleRelationships(const LC
                 }
                 catch (...)
                 {
-                    streamlog_out(ERROR) << "Failed to extract track to mc particle relationship, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract track to mc particle relationship, unrecognised exception" << std::endl;
                 }
             }
         }
         catch(...)
         {
-            streamlog_out(ERROR) << "Failed to extract track to mc particle relationships collection: " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract track to mc particle relationships collection: " << *iter << std::endl;
         }
     }
 
@@ -857,13 +857,13 @@ StatusCode PandoraPFANewProcessor::CreateECalCaloHits(const LCEvent *const pLCEv
                 }
                 catch (...)
                 {
-                    streamlog_out(ERROR) << "Failed to extract ecal calo hit, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract ecal calo hit, unrecognised exception" << std::endl;
                 }
             }
         }
         catch (...)
         {
-            streamlog_out(ERROR) << "Failed to extract ecal calo hit collection: " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract ecal calo hit collection: " << *iter << std::endl;
         }
     }
 
@@ -932,13 +932,13 @@ StatusCode PandoraPFANewProcessor::CreateHCalCaloHits(const LCEvent *const pLCEv
                 }
                 catch (...)
                 {
-                    streamlog_out(ERROR) << "Failed to extract hcal calo hit, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract hcal calo hit, unrecognised exception" << std::endl;
                 }
             }
         }
         catch (...)
         {
-            streamlog_out(ERROR) << "Failed to extract hcal calo hit collection: " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract hcal calo hit collection: " << *iter << std::endl;
         }
     }
 
@@ -1077,13 +1077,13 @@ StatusCode PandoraPFANewProcessor::CreateCaloHitToMCParticleRelationships(const 
                 }
                 catch (...)
                 {
-                    streamlog_out(ERROR) << "Failed to extract calo hit to mc particle relationship, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract calo hit to mc particle relationship, unrecognised exception" << std::endl;
                 }
             }
         }
         catch(...)
         {
-            streamlog_out(ERROR) << "Failed to extract calo hit to mc particle relationships collection: " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract calo hit to mc particle relationships collection: " << *iter << std::endl;
         }
     }
 
