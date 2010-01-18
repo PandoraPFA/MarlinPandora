@@ -37,7 +37,10 @@ public:
         StringVector    m_mcParticleCollections;                ///< The mc particle collections
         StringVector    m_lcCaloHitRelationCollections;         ///< The SimCaloHit to CaloHit particle relations
         StringVector    m_lcTrackRelationCollections;           ///< The SimTrackerHit to TrackerHit particle relations
+
+        std::string     m_clusterCollectionName;                ///< The name of the cluster output collection
         std::string     m_pfoCollectionName;                    ///< The name of the PFO output collection
+
         float           m_absorberRadiationLength;              ///< The absorber radation length
         float           m_absorberInteractionLength;            ///< The absorber interaction length
         float           m_eCalToMip;                            ///< The calibration from deposited ECal energy to mip
