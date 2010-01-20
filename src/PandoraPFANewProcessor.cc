@@ -401,15 +401,20 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
                 try
                 {
                     Track *pTrack = dynamic_cast<Track*>(pTrackCollection->getElementAt(i));
-                    m_trackVector.push_back(pTrack);
 
+                    const int nTrackHits(static_cast<int>(pTrack->getTrackerHits().size()));
+
+                    if ((nTrackHits < m_settings.m_minTrackHits) || (nTrackHits > m_settings.m_maxTrackHits))
+                        continue;
+
+                    // Proceed to create the pandora track
                     PandoraApi::Track::Parameters trackParameters;
                     trackParameters.m_d0 = pTrack->getD0();
                     trackParameters.m_z0 = pTrack->getZ0();
                     trackParameters.m_pParentAddress = pTrack;
 
                     // For now, assume tracks are charged pions
-                    trackParameters.m_mass = 0.1396;
+                    trackParameters.m_mass = 0.13957018;
 
                     const float signedCurvature(pTrack->getOmega());
 
@@ -420,6 +425,7 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
                     trackParameters.m_reachesECal = this->ReachesECAL(pTrack);
 
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(*m_pPandora, trackParameters));
+                    m_trackVector.push_back(pTrack);
                 }
                 catch (StatusCodeException &statusCodeException)
                 {
@@ -820,7 +826,6 @@ StatusCode PandoraPFANewProcessor::CreateECalCaloHits(const LCEvent *const pLCEv
                 try
                 {
                     CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
-                    m_calorimeterHitVector.push_back(pCaloHit);
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::ECAL;
@@ -851,6 +856,7 @@ StatusCode PandoraPFANewProcessor::CreateECalCaloHits(const LCEvent *const pLCEv
                     caloHitParameters.m_hadronicEnergy = m_settings.m_eCalToHadGeV * pCaloHit->getEnergy();
 
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pPandora, caloHitParameters));
+                    m_calorimeterHitVector.push_back(pCaloHit);
                 }
                 catch (StatusCodeException &statusCodeException)
                 {
@@ -895,7 +901,6 @@ StatusCode PandoraPFANewProcessor::CreateHCalCaloHits(const LCEvent *const pLCEv
                 try
                 {
                     CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
-                    m_calorimeterHitVector.push_back(pCaloHit);
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::HCAL;
@@ -926,6 +931,7 @@ StatusCode PandoraPFANewProcessor::CreateHCalCaloHits(const LCEvent *const pLCEv
                     caloHitParameters.m_electromagneticEnergy = m_settings.m_hCalToEMGeV * pCaloHit->getEnergy();
 
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pPandora, caloHitParameters));
+                    m_calorimeterHitVector.push_back(pCaloHit);
                 }
                 catch (StatusCodeException &statusCodeException)
                 {
@@ -1323,6 +1329,16 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             float(1.));
 
     // For calculating track properties
+   registerProcessorParameter("MinTrackHits",
+                            "Track quality cut: the minimum number of track hits",
+                            m_settings.m_minTrackHits,
+                            int(5));
+
+   registerProcessorParameter("MaxTrackHits",
+                            "Track quality cut: the maximum number of track hits",
+                            m_settings.m_maxTrackHits,
+                            int(5000));
+
     registerProcessorParameter("NumberOfHitsForTrackHelixFits",
                             "The number of hits to be used in helix fits at start/end of tracks",
                             m_settings.m_nHitsForHelixFits,
