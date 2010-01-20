@@ -52,6 +52,9 @@ public:
         float           m_hCalToEMGeV;                          ///< The calibration from deposited HCal energy to EM energy
         float           m_eCalToHadGeV;                         ///< The calibration from deposited ECal energy to hadronic energy
         float           m_hCalToHadGeV;                         ///< The calibration from deposited HCal energy to hadronic energy
+
+        int             m_minTrackHits;                         ///< Track quality cut: the minimum number of track hits
+        int             m_maxTrackHits;                         ///< Track quality cut: the maximum number of track hits
         int             m_nHitsForHelixFits;                    ///< The number of hits to be used in helix fits at start/end of tracks
 
         int             m_useEndTrackHelixForECalProjection;    ///< Use end track fit or full track helix for ECal projection 
