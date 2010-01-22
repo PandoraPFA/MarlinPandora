@@ -117,6 +117,13 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
         streamlog_out(ERROR) << "Failed to process event: " << statusCodeException.ToString() << std::endl;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pPandora));
     }
+    catch (lcio::EventException& eventException)
+    {
+        streamlog_out(ERROR) << "Failed to process event, LCIO Event exception: " 
+							 << eventException.what() << std::endl;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pPandora));
+        throw;
+    }
     catch (...)
     {
         streamlog_out(ERROR) << "Failed to process event, unrecognized exception" << std::endl;
@@ -286,18 +293,16 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
 
                     double innerRadius = 0.;
                     double outerRadius = 0.;
-                    double momentum    = 0.;
+                    pandora::CartesianVector momentum( pMcParticle->getMomentum()[0], pMcParticle->getMomentum()[1], pMcParticle->getMomentum()[2] );
 
                     for(int i = 0; i < 3; ++i)
                     {
                         innerRadius += pow(pMcParticle->getVertex()[i], 2);
                         outerRadius += pow(pMcParticle->getEndpoint()[i], 2);
-                        momentum    += pow(pMcParticle->getMomentum()[i], 2);
                     }
 
                     innerRadius = std::sqrt(innerRadius);
                     outerRadius = std::sqrt(outerRadius);
-                    momentum    = std::sqrt(momentum);
          
                     PandoraApi::MCParticle::Parameters mcParticleParameters;
                     mcParticleParameters.m_energy = pMcParticle->getEnergy();
