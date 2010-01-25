@@ -114,20 +114,23 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
     }
     catch (StatusCodeException &statusCodeException)
     {
-        streamlog_out(ERROR) << "Failed to process event: " << statusCodeException.ToString() << std::endl;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pPandora));
+        streamlog_out(ERROR) << "StatusCodeException: " << statusCodeException.ToString() << std::endl;
+        throw;
     }
     catch (lcio::EventException& eventException)
     {
-        streamlog_out(ERROR) << "Failed to process event, LCIO Event exception: " 
-							 << eventException.what() << std::endl;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pPandora));
+        streamlog_out(ERROR) << "LCIO Event exception: " << eventException.what() << std::endl;
         throw;
     }
     catch (...)
     {
-        streamlog_out(ERROR) << "Failed to process event, unrecognized exception" << std::endl;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pPandora));
+        streamlog_out(ERROR) << "Failed to process event" << std::endl;
+
+        if (STATUS_CODE_SUCCESS != PandoraApi::Reset(*m_pPandora))
+        {
+            streamlog_out(ERROR) << "Failed to reset Pandora, aborting" << std::endl;
+            abort();
+        }
     }
 }
 
