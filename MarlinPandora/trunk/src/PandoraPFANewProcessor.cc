@@ -1206,7 +1206,7 @@ StatusCode PandoraPFANewProcessor::ProcessParticleFlowObjects( LCEvent * pLCEven
         pReconstructedParticle->setMomentum(momentum);
         pReconstructedParticle->setEnergy((*itPFO)->GetEnergy());
         pReconstructedParticle->setMass((*itPFO)->GetMass());
-        pReconstructedParticle->setCharge((*itPFO)->GetChargeSign());
+        pReconstructedParticle->setCharge((*itPFO)->GetCharge());
         pReconstructedParticle->setType((*itPFO)->GetParticleId());
 
         pReconstructedParticleCollection->addElement(pReconstructedParticle);
