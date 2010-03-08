@@ -22,6 +22,7 @@
 #include "UTIL/LCRelationNavigator.h"
 
 #include "marlin/Global.h"
+#include "marlin/Exceptions.h"
 
 #include "gear/BField.h"
 #include "gear/GEAR.h"
@@ -94,6 +95,14 @@ void PandoraPFANewProcessor::processRunHeader(LCRunHeader *pLCRunHeader)
 
 void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
 {
+    static int eventCounter = 0;
+
+    if (eventCounter < m_settings.m_nEventsToSkip)
+    {
+        ++eventCounter;
+        throw marlin::SkipEventException(this);
+    }
+
     try
     {
         streamlog_out(MESSAGE) << "Run " << m_nRun << ", Event " << ++m_nEvent << std::endl;
@@ -429,8 +438,9 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
                     if (0. != signedCurvature)
                         trackParameters.m_chargeSign = static_cast<int>(signedCurvature / std::fabs(signedCurvature));
 
-                    this->FitHelices(pTrack, trackParameters);
-                    trackParameters.m_reachesECal = this->ReachesECAL(pTrack);
+                    this->FitTrackHelices(pTrack, trackParameters);
+                    this->TrackReachesECAL(pTrack, trackParameters);
+                    this->DefineTrackPfoUsage(pTrack, trackParameters);
 
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(*m_pPandora, trackParameters));
                     m_trackVector.push_back(pTrack);
@@ -456,7 +466,86 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PandoraPFANewProcessor::FitHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
+void PandoraPFANewProcessor::TrackReachesECAL(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
+{
+    static const gear::TPCParameters &tpcParameters = marlin::Global::GEAR->getTPCParameters();
+    static const gear::PadRowLayout2D &tpcPadLayout = tpcParameters.getPadLayout();
+    static const float tpcInnerR(tpcPadLayout.getPlaneExtent()[0]);
+    static const float tpcOuterR(tpcPadLayout.getPlaneExtent()[1]);
+    static const float tpcZmax(tpcParameters.getMaxDriftLength());
+    static const float tpcMaxRow(tpcPadLayout.getNRows());
+
+    if (0 == tpcMaxRow)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    static const float tpcRowHeight((tpcOuterR - tpcInnerR) / tpcMaxRow);
+
+    TrackerHitVec trackerHitVec(pTrack->getTrackerHits());
+    const int nTrackHits(trackerHitVec.size());
+
+    bool reachesECal(false);
+    int nTpcOuter(0), nTpcEnd(0);
+
+    for (int i = 0; i < nTrackHits; ++i)
+    {
+        const float x(trackerHitVec[i]->getPosition()[0]);
+        const float y(trackerHitVec[i]->getPosition()[1]);
+        const float z(trackerHitVec[i]->getPosition()[2]);
+        const float r(std::sqrt(x * x + y * y));
+
+        // HitTypes: 1 = vtx, 2 = etd/ftd, 4 = sit/set, 5 = tpc
+        int hitType = trackerHitVec[i]->getType() / 100;
+
+        if (hitType == 5)
+        {
+            if (r > (tpcOuterR - 20 * tpcRowHeight))
+            {
+                if (++nTpcOuter > 5)
+                {
+                    reachesECal = true;
+                    break;
+                }
+            }
+
+            if (fabs(z) > (tpcZmax - 20 * tpcRowHeight))
+            {
+                if (++nTpcEnd > 5)
+                {
+                    reachesECal = true;
+                    break;
+                }
+            }
+        }
+        else if ((hitType == 4 && r > tpcOuterR) || (hitType == 2 && fabs(z) > tpcZmax) || (hitType == 2 && trackerHitVec[i]->getType() > 204))
+        {
+            reachesECal = true;
+            break;
+        }
+    }
+
+    if (!reachesECal)
+    {
+        // If track is lowpt, it may curl up and end inside tpc inner radius
+        static const float bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z());
+        static const float cosTpc(tpcZmax / std::sqrt(tpcZmax * tpcZmax + tpcInnerR * tpcInnerR));
+
+        const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
+
+        const float cosAngleAtDca(momentumAtDca.GetZ() / momentumAtDca.GetMagnitude());
+        const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY());
+        const float pT(std::sqrt(pX * pX + pY * pY));
+
+        // TODO remove hard-coded constants
+        if ((cosAngleAtDca > cosTpc) || (pT < 0.3 * bField * tpcOuterR / 2000.))
+            reachesECal = true;
+    }
+
+    trackParameters.m_reachesECal = reachesECal;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PandoraPFANewProcessor::FitTrackHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
     static const float bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z());
 
@@ -562,6 +651,69 @@ void PandoraPFANewProcessor::FitHelices(const Track *const pTrack, PandoraApi::T
     delete pHelix1;
     delete pHelix2;
     delete pHelixFit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PandoraPFANewProcessor::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
+{
+    bool canFormPfo(false);
+    bool canFormClusterlessPfo(false);
+
+    if (trackParameters.m_reachesECal.Get())
+    {
+        const float d0(std::fabs(pTrack->getD0())), z0(std::fabs(pTrack->getZ0()));
+        const float zStart(std::fabs(trackParameters.m_trackStateAtStart.Get().GetPosition().GetX()));
+
+        float rInner(std::numeric_limits<float>::max());
+        TrackerHitVec trackHitvec(pTrack->getTrackerHits());
+
+        for (TrackerHitVec::const_iterator iter = trackHitvec.begin(), iterEnd = trackHitvec.end(); iter != iterEnd; ++iter)
+        {
+            const float x((*iter)->getPosition()[0]), y((*iter)->getPosition()[1]);
+            const float r(std::sqrt(x * x + y * y));
+
+            if (r < rInner)
+                rInner = r;
+        }
+
+        static const float tpcInnerR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[0]);
+
+        const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
+        const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY()), pZ(momentumAtDca.GetZ());
+        const float pT(std::sqrt(pX * pX + pY * pY));
+
+        // TODO remove hard-coded constants
+        const float zCutForNonVertexTracks(tpcInnerR * std::fabs(pZ / pT) + 250.);
+        const bool passRzQualityCuts((zStart < zCutForNonVertexTracks) && (rInner < tpcInnerR + 50.));
+
+        if ((d0 < m_settings.m_d0TrackCut) && (z0 < m_settings.m_z0TrackCut) && (rInner < tpcInnerR + 50.))
+        {
+            canFormPfo = true;
+        }
+        else if (passRzQualityCuts && (0 != m_settings.m_usingNonVertexTracks))
+        {
+            canFormPfo = true;
+        }
+
+        const float particleMass(trackParameters.m_mass.Get());
+        const float trackEnergy(std::sqrt(momentumAtDca.GetMagnitudeSquared() + particleMass * particleMass));
+
+        if ((0 != m_settings.m_usingUnmatchedVertexTracks) && (trackEnergy < m_settings.m_unmatchedVertexTrackMaxEnergy))
+        {
+            if ((d0 < m_settings.m_d0TrackCut / 10.) && (z0 < m_settings.m_z0TrackCut / 10.) && (rInner < tpcInnerR + 50.))
+            {
+                canFormClusterlessPfo = true;
+            }
+            else if (passRzQualityCuts && (0 != m_settings.m_usingNonVertexTracks) && (0 != m_settings.m_usingUnmatchedNonVertexTracks))
+            {
+                canFormClusterlessPfo = true;
+            }
+        }
+    }
+
+    trackParameters.m_canFormPfo = canFormPfo;
+    trackParameters.m_canFormClusterlessPfo = canFormClusterlessPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -676,67 +828,6 @@ pandora::TrackState PandoraPFANewProcessor::GetECalProjection(HelixClass *const 
 
     return pandora::TrackState(bestEcalProjection[0], bestEcalProjection[1], bestEcalProjection[2],
         extrapolatedMomentum[0], extrapolatedMomentum[1], extrapolatedMomentum[2]);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool PandoraPFANewProcessor::ReachesECAL(const Track *const pTrack)
-{
-    static const gear::TPCParameters &tpcParameters = marlin::Global::GEAR->getTPCParameters();
-    static const gear::PadRowLayout2D &tpcPadLayout = tpcParameters.getPadLayout();
-    static const float tpcInnerR(tpcPadLayout.getPlaneExtent()[0]);
-    static const float tpcOuterR(tpcPadLayout.getPlaneExtent()[1]);
-    static const float tpcZmax(tpcParameters.getMaxDriftLength());
-    static const float tpcMaxRow(tpcPadLayout.getNRows());
-
-    if (0 == tpcMaxRow)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    static const float tpcRowHeight((tpcOuterR - tpcInnerR) / tpcMaxRow);
-
-    TrackerHitVec trackerHitVec(pTrack->getTrackerHits());
-    const int nTrackHits(trackerHitVec.size());
-
-    int nTpcOuter = 0, nTpcEnd = 0;
-
-    for (int i = 0; i < nTrackHits; ++i)
-    {
-        const float x(trackerHitVec[i]->getPosition()[0]);
-        const float y(trackerHitVec[i]->getPosition()[1]);
-        const float z(trackerHitVec[i]->getPosition()[2]);
-        const float r(std::sqrt(x * x + y * y));
-
-        // HitTypes: 1 = vtx, 2 = etd/ftd, 4 = sit/set, 5 = tpc
-        int hitType = trackerHitVec[i]->getType() / 100;
-
-        if(hitType == 5)
-        {
-            if(r > (tpcOuterR - 20 * tpcRowHeight))
-            {
-                if (++nTpcOuter > 5)
-                    return true;
-            }
-
-            if(fabs(z) > (tpcZmax - 20 * tpcRowHeight))
-            {
-                if (++nTpcEnd > 5)
-                    return true;
-            }
-        }
-        else if((hitType == 4 && r > tpcOuterR) || (hitType == 2 && fabs(z) > tpcZmax) || (hitType == 2 && trackerHitVec[i]->getType() > 204))
-        {
-            return true;
-        }
-    }
-
-    streamlog_out(DEBUG) << " nTrackHits : " << nTrackHits
-                         << " vtxHits : " << pTrack->getSubdetectorHitNumbers()[0]
-                         << " ftdHits : " << pTrack->getSubdetectorHitNumbers()[1]
-                         << " sitHits : " << pTrack->getSubdetectorHitNumbers()[2]
-                         << " tpcHits : " << pTrack->getSubdetectorHitNumbers()[3]
-                         << " nTpcOuter : " << nTpcOuter << " nTpcEnd : " << nTpcEnd << std::endl;
-
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1361,4 +1452,41 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "==0 use helix reference point, ==1 use DCA as reference point",
                             m_settings.m_useDcaAsReferencePointForProjection,
                             int(1));
+
+    // Track PFO usage parameters
+    registerProcessorParameter("D0TrackCut",
+                            "Track d0 cut used to determine whether track can be used to form pfo",
+                            m_settings.m_d0TrackCut,
+                            float(50.));
+
+    registerProcessorParameter("Z0TrackCut",
+                            "Track z0 cut used to determine whether track can be used to form pfo",
+                            m_settings.m_z0TrackCut,
+                            float(50.));
+
+    registerProcessorParameter("UseNonVertexTracks",
+                            "Whether can form pfos from tracks that don't start at vertex",
+                            m_settings.m_usingNonVertexTracks,
+                            int(1.));
+
+    registerProcessorParameter("UseUnmatchedNonVertexTracks",
+                            "Whether can form pfos from unmatched tracks that don't start at vertex",
+                            m_settings.m_usingUnmatchedNonVertexTracks,
+                            int(0.));
+
+    registerProcessorParameter("UseUnmatchedVertexTracks",
+                            "Whether can form pfos from unmatched tracks that start at vertex",
+                            m_settings.m_usingUnmatchedVertexTracks,
+                            int(1.));
+
+    registerProcessorParameter("UnmatchedVertexTrackMaxEnergy",
+                            "Maximum energy for unmatched vertex track",
+                            m_settings.m_unmatchedVertexTrackMaxEnergy,
+                            float(5.));
+
+    // Number of events to skip
+    registerProcessorParameter("NEventsToSkip",
+                            "Number of events to skip at start of reconstruction job",
+                            m_settings.m_nEventsToSkip,
+                            int(0.));
 }
