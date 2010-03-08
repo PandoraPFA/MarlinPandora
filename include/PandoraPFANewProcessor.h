@@ -57,8 +57,19 @@ public:
         int             m_maxTrackHits;                         ///< Track quality cut: the maximum number of track hits
         int             m_nHitsForHelixFits;                    ///< The number of hits to be used in helix fits at start/end of tracks
 
-        int             m_useEndTrackHelixForECalProjection;    ///< Use end track fit or full track helix for ECal projection 
-        int             m_useDcaAsReferencePointForProjection;  ///< Use DCA as helix reference point for ECal projection 
+        int             m_useEndTrackHelixForECalProjection;    ///< Use end track fit or full track helix for ECal projection
+        int             m_useDcaAsReferencePointForProjection;  ///< Use DCA as helix reference point for ECal projection
+
+        float           m_d0TrackCut;                           ///< Track d0 cut used to determine whether track can be used to form pfo
+        float           m_z0TrackCut;                           ///< Track z0 cut used to determine whether track can be used to form pfo
+
+        int             m_usingNonVertexTracks;                 ///< Whether can form pfos from tracks that don't start at vertex
+        int             m_usingUnmatchedNonVertexTracks;        ///< Whether can form pfos from unmatched tracks that don't start at vertex
+
+        int             m_usingUnmatchedVertexTracks;           ///< Whether can form pfos from unmatched tracks that start at vertex
+        float           m_unmatchedVertexTrackMaxEnergy;        ///< Maximum energy for unmatched vertex track
+
+        int             m_nEventsToSkip;                        ///< Number of events to skip at start of reconstruction job
     };
 
     /**
@@ -151,12 +162,30 @@ private:
     StatusCode CreateTracks(const LCEvent *const pLCEvent);
 
     /**
+     *  @brief  Decide whether track reaches the ecal surface
+     * 
+     *  @param  pTrack the lcio track
+     *  @param  trackParameters the track parameters
+     */
+    void TrackReachesECAL(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
+
+    /**
      *  @brief  Perform helix fits to calculate track parameters: momentum at dca, start and end track states
      * 
      *  @param  pTrack the lcio track
      *  @param  trackParameters the track parameters
      */
-    void FitHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
+    void FitTrackHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
+
+    /**
+     *  @brief  Determine whether a track can be used to form a pfo under the following conditions:
+     *          1) if the track proves to be associated with a cluster, OR
+     *          2) if the track proves to have no cluster associations
+     * 
+     *  @param  pTrack the lcio track
+     *  @param  trackParameters the track parameters
+     */
+    void DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
 
     /**
      *  @brief  Identify whether track is in positive or negative z direction
@@ -178,13 +207,6 @@ private:
      *  @param  signPz sign w.r.t. increasing z direction
      */
     pandora::TrackState GetECalProjection(HelixClass *const pHelix, float referencePoint[3], int signPz) const;
-
-    /**
-     *  @brief  Decide whether track reaches the ecal surface
-     * 
-     *  @param  pTrack the lcio track
-     */
-    bool ReachesECAL(const Track *const pTrack);
 
     /**
      *  @brief  Create Track to mc particle relationships
