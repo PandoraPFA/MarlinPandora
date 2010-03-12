@@ -531,7 +531,7 @@ void PandoraPFANewProcessor::TrackReachesECAL(const Track *const pTrack, Pandora
 
         const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
 
-        const float cosAngleAtDca(momentumAtDca.GetZ() / momentumAtDca.GetMagnitude());
+        const float cosAngleAtDca(std::fabs(momentumAtDca.GetZ()) / momentumAtDca.GetMagnitude());
         const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY());
         const float pT(std::sqrt(pX * pX + pY * pY));
 
@@ -663,18 +663,21 @@ void PandoraPFANewProcessor::DefineTrackPfoUsage(const Track *const pTrack, Pand
     if (trackParameters.m_reachesECal.Get())
     {
         const float d0(std::fabs(pTrack->getD0())), z0(std::fabs(pTrack->getZ0()));
-        const float zStart(std::fabs(trackParameters.m_trackStateAtStart.Get().GetPosition().GetX()));
 
-        float rInner(std::numeric_limits<float>::max());
         TrackerHitVec trackHitvec(pTrack->getTrackerHits());
+        float rInner(std::numeric_limits<float>::max()), zMin(std::numeric_limits<float>::max());
 
         for (TrackerHitVec::const_iterator iter = trackHitvec.begin(), iterEnd = trackHitvec.end(); iter != iterEnd; ++iter)
         {
-            const float x((*iter)->getPosition()[0]), y((*iter)->getPosition()[1]);
+            const double *pPosition((*iter)->getPosition());
+            const float x(pPosition[0]), y(pPosition[1]), absZ(std::fabs(pPosition[2]));
             const float r(std::sqrt(x * x + y * y));
 
             if (r < rInner)
                 rInner = r;
+
+            if (absZ < zMin)
+                zMin = absZ;
         }
 
         static const float tpcInnerR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[0]);
@@ -685,7 +688,7 @@ void PandoraPFANewProcessor::DefineTrackPfoUsage(const Track *const pTrack, Pand
 
         // TODO remove hard-coded constants
         const float zCutForNonVertexTracks(tpcInnerR * std::fabs(pZ / pT) + 250.);
-        const bool passRzQualityCuts((zStart < zCutForNonVertexTracks) && (rInner < tpcInnerR + 50.));
+        const bool passRzQualityCuts((zMin < zCutForNonVertexTracks) && (rInner < tpcInnerR + 50.));
 
         if ((d0 < m_settings.m_d0TrackCut) && (z0 < m_settings.m_z0TrackCut) && (rInner < tpcInnerR + 50.))
         {
