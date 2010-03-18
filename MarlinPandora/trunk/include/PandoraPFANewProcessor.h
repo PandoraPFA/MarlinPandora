@@ -58,7 +58,6 @@ public:
         int             m_nHitsForHelixFits;                    ///< The number of hits to be used in helix fits at start/end of tracks
 
         int             m_useEndTrackHelixForECalProjection;    ///< Use end track fit or full track helix for ECal projection
-        int             m_useDcaAsReferencePointForProjection;  ///< Use DCA as helix reference point for ECal projection
 
         float           m_d0TrackCut;                           ///< Track d0 cut used to determine whether track can be used to form pfo
         float           m_z0TrackCut;                           ///< Track z0 cut used to determine whether track can be used to form pfo

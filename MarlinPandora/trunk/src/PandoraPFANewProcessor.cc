@@ -431,7 +431,7 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
                     trackParameters.m_pParentAddress = pTrack;
 
                     // For now, assume tracks are charged pions
-                    trackParameters.m_mass = 0.13957018;
+                    trackParameters.m_mass = 0.140;//0.13957018;
 
                     const float signedCurvature(pTrack->getOmega());
 
@@ -469,57 +469,59 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
 void PandoraPFANewProcessor::TrackReachesECAL(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
     static const gear::TPCParameters &tpcParameters = marlin::Global::GEAR->getTPCParameters();
-    static const gear::PadRowLayout2D &tpcPadLayout = tpcParameters.getPadLayout();
-    static const float tpcInnerR(tpcPadLayout.getPlaneExtent()[0]);
-    static const float tpcOuterR(tpcPadLayout.getPlaneExtent()[1]);
+    static const float tpcInnerR(tpcParameters.getPadLayout().getPlaneExtent()[0]);
+    static const float tpcOuterR(tpcParameters.getPadLayout().getPlaneExtent()[1]);
     static const float tpcZmax(tpcParameters.getMaxDriftLength());
-    static const float tpcMaxRow(tpcPadLayout.getNRows());
 
-    if (0 == tpcMaxRow)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+    // TODO remove hard-coded constants
+    TrackerHitVec hitvec = pTrack->getTrackerHits();
+    int nhits = (int)hitvec.size();
+    float zmax = -99999.;
+    float zmin = +99999.;
+    float rinner=99999.;
+    float router=-99999.;
+    int nTPC = 0;
 
-    static const float tpcRowHeight((tpcOuterR - tpcInnerR) / tpcMaxRow);
-
-    TrackerHitVec trackerHitVec(pTrack->getTrackerHits());
-    const int nTrackHits(trackerHitVec.size());
-
-    bool reachesECal(false);
-    int nTpcOuter(0), nTpcEnd(0);
-
-    for (int i = 0; i < nTrackHits; ++i)
+    for(int i =0;i<nhits;++i)
     {
-        const float x(trackerHitVec[i]->getPosition()[0]);
-        const float y(trackerHitVec[i]->getPosition()[1]);
-        const float z(trackerHitVec[i]->getPosition()[2]);
-        const float r(std::sqrt(x * x + y * y));
+        float x = (float)hitvec[i]->getPosition()[0];
+        float y = (float)hitvec[i]->getPosition()[1];
+        float z = (float)hitvec[i]->getPosition()[2];
 
-        // HitTypes: 1 = vtx, 2 = etd/ftd, 4 = sit/set, 5 = tpc
-        int hitType = trackerHitVec[i]->getType() / 100;
+        float r2 = x*x+y*y;
+        float r = sqrt(r2);
 
-        if (hitType == 5)
+        if (z > zmax)
         {
-            if (r > (tpcOuterR - 20 * tpcRowHeight))
-            {
-                if (++nTpcOuter > 5)
-                {
-                    reachesECal = true;
-                    break;
-                }
-            }
-
-            if (fabs(z) > (tpcZmax - 20 * tpcRowHeight))
-            {
-                if (++nTpcEnd > 5)
-                {
-                    reachesECal = true;
-                    break;
-                }
-            }
+            zmax = z;
         }
-        else if ((hitType == 4 && r > tpcOuterR) || (hitType == 2 && fabs(z) > tpcZmax) || (hitType == 2 && trackerHitVec[i]->getType() > 204))
+        if (z < zmin)
         {
-            reachesECal = true;
-            break;
+            zmin = z;
+        }
+        if (r < rinner)
+        {
+            rinner=r;
+        }
+        if (r > router)
+        {
+            router=r;
+        }
+        if (r > tpcInnerR)
+        {
+            nTPC++;
+        }
+    }
+
+    bool reachesECal=false;
+
+    // If there are at least N hits in the TPC hits
+    // then require hits in outer part of TPC
+    if (nTPC > 10)
+    {
+        if ((router  - tpcOuterR > -100.) || (fabs(zmax) - tpcZmax   > -50.) || (fabs(zmin) - tpcZmax > -50.))
+        {
+            reachesECal=true;
         }
     }
 
@@ -560,12 +562,15 @@ void PandoraPFANewProcessor::FitTrackHelices(const Track *const pTrack, PandoraA
     const int nTrackHits = trackerHitvec.size();
     const int nTrackHitsForFit = std::min(m_settings.m_nHitsForHelixFits, nTrackHits);
 
+    float zmax = -std::numeric_limits<float>::max();
+    float zmin = std::numeric_limits<float>::max();
+
     // Order hits by increasing z
     for (int iz = 0 ; iz < nTrackHits - 1; ++iz)
     {
         for (int jz = 0; jz < nTrackHits - iz - 1; ++jz)
         {
-            if(trackerHitvec[jz]->getPosition()[2] > trackerHitvec[jz + 1]->getPosition()[2])
+            if (trackerHitvec[jz]->getPosition()[2] > trackerHitvec[jz + 1]->getPosition()[2])
             {
                 TrackerHit *pTempTrackerHit = trackerHitvec[jz];
                 trackerHitvec[jz] = trackerHitvec[jz + 1];
@@ -574,49 +579,66 @@ void PandoraPFANewProcessor::FitTrackHelices(const Track *const pTrack, PandoraA
         }
     }
 
-    // Arrays for helix fits
-    float xf[nTrackHitsForFit], yf[nTrackHitsForFit], zf[nTrackHitsForFit], rf[nTrackHitsForFit], af[nTrackHitsForFit];
-    float xb[nTrackHitsForFit], yb[nTrackHitsForFit], zb[nTrackHitsForFit], rb[nTrackHitsForFit], ab[nTrackHitsForFit];
 
-    for(int i = 0; i < nTrackHitsForFit; ++i)
+    for (int i = 0 ; i < nTrackHits; ++i)
+    {
+        const float z(trackerHitvec[i]->getPosition()[2]);
+
+        if (z > zmax)
+          zmax = z;
+
+        if (z < zmin)
+          zmin = z;
+    }
+
+    float zBegin, zEnd;
+    if (std::fabs(zmin) < std::fabs(zmax))
+    {
+        zBegin = zmin;
+        zEnd   = zmax;
+    }
+    else
+    {
+        zBegin = zmax;
+        zEnd   = zmin;
+    }
+
+    const int signPz(zEnd - zBegin > 0 ? 1 : -1);
+
+    // Arrays for helix fits
+    float xf[nTrackHitsForFit], yf[nTrackHitsForFit], zf[nTrackHitsForFit], af[nTrackHitsForFit];
+    float xb[nTrackHitsForFit], yb[nTrackHitsForFit], zb[nTrackHitsForFit], ab[nTrackHitsForFit];
+
+    for (int i = 0; i < nTrackHitsForFit; ++i)
     {
         xf[i] = trackerHitvec[i]->getPosition()[0];
         yf[i] = trackerHitvec[i]->getPosition()[1];
         zf[i] = trackerHitvec[i]->getPosition()[2];
-        rf[i] = std::sqrt(xf[i] * xf[i] + yf[i] * yf[i]);
         af[i] = 0;
 
         int j = nTrackHits - 1 - i;
         xb[i] = trackerHitvec[j]->getPosition()[0];
         yb[i] = trackerHitvec[j]->getPosition()[1];
         zb[i] = trackerHitvec[j]->getPosition()[2];
-        rb[i] = std::sqrt(xb[i] * xb[i] + yb[i] * yb[i]);
         ab[i] = 0;
     }
-
-    // Find z extremes of track
-    const float zMin(zf[0]);
-    const float zMax(zb[0]);
-    const float rMin(std::sqrt(xf[0] * xf[0] + yf[0] * yf[0]));
-    const float rMax(std::sqrt(xb[0] * xb[0] + yb[0] * yb[0]));
-    const int signPz(this->GetTrackSignPz(zMin, zMax, rMin, rMax));
 
     // Helix from first nTrackHitsForFit (i.e. lowest z)
     float par[5], dpar[5], chi2, distmax;
     ClusterShapes clusterShapesF(nTrackHitsForFit, af, xf, yf, zf);
     clusterShapesF.FitHelix(500, 0, 1, par, dpar, chi2, distmax);
     HelixClass *pHelix1 = new HelixClass();
-    pHelix1->Initialize_BZ(par[0], par[1], par[2], par[3], par[4], bField, signPz, zf[0]);
+    pHelix1->Initialize_BZ(par[0], par[1], par[2], par[3], par[4], bField, signPz, zmin);
 
     // Helix from last nTrackHitsForFit (i.e. highest z)
     ClusterShapes clusterShapesB(nTrackHitsForFit, ab, xb, yb, zb);
     clusterShapesB.FitHelix(500, 0, 1, par, dpar, chi2, distmax);
     HelixClass *pHelix2 = new HelixClass();
-    pHelix2->Initialize_BZ(par[0], par[1], par[2], par[3], par[4], bField, signPz, zb[0]);
+    pHelix2->Initialize_BZ(par[0], par[1], par[2], par[3], par[4], bField, signPz, zmax);
 
     // Label as start and end depending on assigned sign of Pz
-    HelixClass *const pHelixStart = (signPz < 0) ? pHelix2 : pHelix1;
-    HelixClass *const pHelixEnd   = (signPz < 0) ? pHelix1 : pHelix2;
+    HelixClass *const pHelixStart = (signPz > 0) ? pHelix1 : pHelix2;
+    HelixClass *const pHelixEnd   = (signPz > 0) ? pHelix2 : pHelix1;
 
     trackParameters.m_trackStateAtStart = pandora::TrackState(pHelixStart->getReferencePoint()[0], pHelixStart->getReferencePoint()[1],
         pHelixStart->getReferencePoint()[2], pHelixStart->getMomentum()[0], pHelixStart->getMomentum()[1], pHelixStart->getMomentum()[2]);
@@ -632,15 +654,6 @@ void PandoraPFANewProcessor::FitTrackHelices(const Track *const pTrack, PandoraA
 
     float referencePoint[3] = {pHelixToProject->getReferencePoint()[0], pHelixToProject->getReferencePoint()[1],
         pHelixToProject->getReferencePoint()[2]};
-
-    if(0 != m_settings.m_useDcaAsReferencePointForProjection)
-    {
-        const float trackPhi0(pTrack->getPhi());
-        const float trackD0(pTrack->getD0());
-        referencePoint[0] = ( trackD0 * sin(trackPhi0));
-        referencePoint[1] = (-trackD0 * cos(trackPhi0));
-        referencePoint[2] = pTrack->getZ0();
-    }
 
     trackParameters.m_trackStateAtECal = this->GetECalProjection(pHelixToProject, referencePoint, signPz);
 
@@ -783,7 +796,7 @@ pandora::TrackState PandoraPFANewProcessor::GetECalProjection(HelixClass *const 
 
     // First project to endcap
     float minTime = pHelix->getPointInZ(static_cast<float>(signPz) * zOfEndCap, referencePoint, bestEcalProjection);
-
+std::cout << " minTime " << minTime << " signPz " << signPz << " bestEcalProjection " << bestEcalProjection[0] << ", " << bestEcalProjection[1] << ", " << bestEcalProjection[2] << std::endl;
     // Then project to barrel surface(s)
     float barrelProjection[3];
     static const float pi(std::acos(-1.));
@@ -1029,7 +1042,7 @@ StatusCode PandoraPFANewProcessor::CreateHCalCaloHits(const LCEvent *const pLCEv
                     if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_hCalMipThreshold)
                         continue;
 
-                    caloHitParameters.m_hadronicEnergy = m_settings.m_hCalToHadGeV * pCaloHit->getEnergy();
+                    caloHitParameters.m_hadronicEnergy = std::min(m_settings.m_hCalToHadGeV * pCaloHit->getEnergy(), 1.f);
                     caloHitParameters.m_electromagneticEnergy = m_settings.m_hCalToEMGeV * pCaloHit->getEnergy();
 
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pPandora, caloHitParameters));
@@ -1076,13 +1089,13 @@ void PandoraPFANewProcessor::GetCommonCaloHitProperties(CalorimeterHit *const pC
 void PandoraPFANewProcessor::GetEndCapCaloHitProperties(CalorimeterHit *const pCaloHit, const gear::LayerLayout &layerLayout,
     PandoraApi::CaloHit::Parameters &caloHitParameters, float &absorberCorrection) const
 {
-    const unsigned int physicalLayer(caloHitParameters.m_layer.Get());
+    const int physicalLayer(std::min(static_cast<int>(caloHitParameters.m_layer.Get()), layerLayout.getNLayers() - 1));
 
     caloHitParameters.m_cellSizeU = layerLayout.getCellSize0(physicalLayer);
     caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
-    const float layerAbsorberThickness(layerLayout.getAbsorberThickness(std::max(0, static_cast<int>(physicalLayer) - 1)));
+    const float layerAbsorberThickness(layerLayout.getAbsorberThickness(std::max(0, physicalLayer - 1)));
 
     if (0 == layerAbsorberThickness)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -1101,13 +1114,13 @@ void PandoraPFANewProcessor::GetBarrelCaloHitProperties(CalorimeterHit *const pC
     unsigned int barrelSymmetryOrder, float barrelPhi0, unsigned int staveNumber,
     PandoraApi::CaloHit::Parameters &caloHitParameters, float &absorberCorrection) const
 {
-    const unsigned int physicalLayer(caloHitParameters.m_layer.Get());
+    const int physicalLayer(std::min(static_cast<int>(caloHitParameters.m_layer.Get()), layerLayout.getNLayers() - 1));
 
     caloHitParameters.m_cellSizeU = layerLayout.getCellSize0(physicalLayer);
     caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
-    const float layerAbsorberThickness(layerLayout.getAbsorberThickness(std::max(0, static_cast<int>(physicalLayer) - 1)));
+    const float layerAbsorberThickness(layerLayout.getAbsorberThickness(std::max(0, physicalLayer - 1)));
 
     if (0 == layerAbsorberThickness)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -1449,11 +1462,6 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     registerProcessorParameter("UseEndTrackHelixForECalProjection",
                             "==0 use full track, ==1 use last NumberOfHitsForTrackHelixFit hits",
                             m_settings.m_useEndTrackHelixForECalProjection,
-                            int(1));
-
-    registerProcessorParameter("UseDcaForReferenceInECalProjection",
-                            "==0 use helix reference point, ==1 use DCA as reference point",
-                            m_settings.m_useDcaAsReferencePointForProjection,
                             int(1));
 
     // Track PFO usage parameters
