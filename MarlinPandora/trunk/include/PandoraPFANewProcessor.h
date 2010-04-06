@@ -27,7 +27,7 @@ public:
      */
     class Settings
     {
-      public:
+    public:
         std::string     m_pandoraSettingsXmlFile;               ///< The pandora settings xml file
 
         StringVector    m_trackCollections;                     ///< The reconstructed track collections
@@ -61,13 +61,22 @@ public:
 
         float           m_d0TrackCut;                           ///< Track d0 cut used to determine whether track can be used to form pfo
         float           m_z0TrackCut;                           ///< Track z0 cut used to determine whether track can be used to form pfo
+        float           m_maxTpcInnerRDistance;                 ///< Track cut on distance from tpc inner r to id whether track can form pfo
 
         int             m_usingNonVertexTracks;                 ///< Whether can form pfos from tracks that don't start at vertex
         int             m_usingUnmatchedNonVertexTracks;        ///< Whether can form pfos from unmatched tracks that don't start at vertex
-
         int             m_usingUnmatchedVertexTracks;           ///< Whether can form pfos from unmatched tracks that start at vertex
         float           m_unmatchedVertexTrackMaxEnergy;        ///< Maximum energy for unmatched vertex track
 
+        float           m_d0UnmatchedVertexTrackCut;            ///< d0 cut used to determine whether unmatched vertex track can form pfo
+        float           m_z0UnmatchedVertexTrackCut;            ///< z0 cut used to determine whether unmatched vertex track can form pfo
+        float           m_zCutForNonVertexTracks;               ///< Non vtx track z cut to determine whether track can be used to form pfo
+
+        float           m_reachesECalTpcOuterDistance;          ///< Max distance from track to tpc r max to id whether track reaches ecal
+        float           m_reachesECalTpcZMaxDistance;           ///< Max distance from track to tpc z max to id whether track reaches ecal
+        float           m_curvatureToMomentumFactor;            ///< Constant relating track curvature in b field to momentum
+
+        int             m_eCalEndCapInnerSymmetryOrder;         ///< ECal end cap inner symmetry order, (missing from ILD00 gear file)
         int             m_nEventsToSkip;                        ///< Number of events to skip at start of reconstruction job
     };
 

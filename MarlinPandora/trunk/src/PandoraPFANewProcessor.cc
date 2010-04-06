@@ -54,7 +54,6 @@ PandoraPFANewProcessor::PandoraPFANewProcessor() :
     m_nEvent(0)
 {
     _description = "Pandora reconstructs clusters and particle flow objects";
-
     this->ProcessSteeringFile();
 }
 
@@ -105,14 +104,12 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
 
     try
     {
-        streamlog_out(MESSAGE) << "Run " << m_nRun << ", Event " << ++m_nEvent << std::endl;
+        streamlog_out(MESSAGE) << "PandoraPFANewProcessor, Run " << m_nRun << ", Event " << ++m_nEvent << std::endl;
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateMCParticles(pLCEvent));
-
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateTrackAssociations(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateTracks(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateTrackToMCParticleRelationships(pLCEvent));
-
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateCaloHits(pLCEvent));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateCaloHitToMCParticleRelationships(pLCEvent));
 
@@ -196,7 +193,7 @@ StatusCode PandoraPFANewProcessor::CreateGeometry() const
         SetDefaultSubDetectorParameters(hCalEndCapParameters, geometryParameters.m_hCalEndCapParameters);
 
         // Non-default values (and those missing from GEAR parameters file)...
-        geometryParameters.m_eCalEndCapParameters.m_innerSymmetryOrder = 4;
+        geometryParameters.m_eCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_eCalEndCapInnerSymmetryOrder;
         geometryParameters.m_hCalBarrelParameters.m_outerPhiCoordinate = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
         geometryParameters.m_hCalBarrelParameters.m_outerSymmetryOrder = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
 
@@ -297,7 +294,7 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
         {
             const LCCollection *pMCParticleCollection = pLCEvent->getCollection(*iter);
 
-            for(int i = 0, iMax = pMCParticleCollection->getNumberOfElements(); i < iMax; ++i)
+            for (int i = 0, iMax = pMCParticleCollection->getNumberOfElements(); i < iMax; ++i)
             {
                 try
                 {
@@ -305,7 +302,7 @@ StatusCode PandoraPFANewProcessor::CreateMCParticles(const LCEvent *const pLCEve
 
                     double innerRadius = 0.;
                     double outerRadius = 0.;
-                    pandora::CartesianVector momentum( pMcParticle->getMomentum()[0], pMcParticle->getMomentum()[1], pMcParticle->getMomentum()[2] );
+                    pandora::CartesianVector momentum(pMcParticle->getMomentum()[0], pMcParticle->getMomentum()[1], pMcParticle->getMomentum()[2]);
 
                     for(int i = 0; i < 3; ++i)
                     {
@@ -371,6 +368,7 @@ StatusCode PandoraPFANewProcessor::CreateTrackAssociations(const LCEvent *const 
 
                 ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
                 TrackVec trackVec = pReconstructedParticle->getTracks();
+
                 for(unsigned int iTrack = 0; iTrack < trackVec.size(); ++iTrack)
                 {
                     try
@@ -379,9 +377,7 @@ StatusCode PandoraPFANewProcessor::CreateTrackAssociations(const LCEvent *const 
                         TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
                         const float nTrackHits(trackerHitVec.size());
 
-                        streamlog_out(DEBUG) << "  V0Track " << iTrack
-                                             << ", nTrackHits " << nTrackHits
-                                             << ", ptrack " << pTrack << std::endl;
+                        streamlog_out(DEBUG) << "  V0Track " << iTrack << ", nTrackHits " << nTrackHits << ", ptrack " << pTrack << std::endl;
                     }
                     catch (...)
                     {
@@ -406,8 +402,8 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
     // Insert user code here ...
     m_trackVector.clear();
 
-    for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), 
-        iterEnd = m_settings.m_trackCollections.end(); iter != iterEnd; ++iter)
+    for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), iterEnd = m_settings.m_trackCollections.end();
+        iter != iterEnd; ++iter)
     {
         try
         {
@@ -431,7 +427,7 @@ StatusCode PandoraPFANewProcessor::CreateTracks(const LCEvent *const pLCEvent)
                     trackParameters.m_pParentAddress = pTrack;
 
                     // For now, assume tracks are charged pions
-                    trackParameters.m_mass = 0.140;//0.13957018;
+                    trackParameters.m_mass = 0.140;
 
                     const float signedCurvature(pTrack->getOmega());
 
@@ -473,53 +469,44 @@ void PandoraPFANewProcessor::TrackReachesECAL(const Track *const pTrack, Pandora
     static const float tpcOuterR(tpcParameters.getPadLayout().getPlaneExtent()[1]);
     static const float tpcZmax(tpcParameters.getMaxDriftLength());
 
-    // TODO remove hard-coded constants
-    TrackerHitVec hitvec = pTrack->getTrackerHits();
-    int nhits = (int)hitvec.size();
-    float zmax = -99999.;
-    float zmin = +99999.;
-    float rinner=99999.;
-    float router=-99999.;
-    int nTPC = 0;
+    // Examine positions of track hits ...
+    float hitZMax(-std::numeric_limits<float>::max());
+    float hitZMin(std::numeric_limits<float>::max());
+    float hitOuterR(-std::numeric_limits<float>::max());
 
-    for(int i =0;i<nhits;++i)
+    TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
+    unsigned int nTrackHits(trackerHitVec.size());
+    unsigned int nTpcHits(0);
+
+    for (unsigned int i = 0; i < nTrackHits; ++i)
     {
-        float x = (float)hitvec[i]->getPosition()[0];
-        float y = (float)hitvec[i]->getPosition()[1];
-        float z = (float)hitvec[i]->getPosition()[2];
+        const float x(static_cast<float>(trackerHitVec[i]->getPosition()[0]));
+        const float y(static_cast<float>(trackerHitVec[i]->getPosition()[1]));
+        const float z(static_cast<float>(trackerHitVec[i]->getPosition()[2]));
 
-        float r2 = x*x+y*y;
-        float r = sqrt(r2);
+        const float r(std::sqrt(x * x + y * y));
 
-        if (z > zmax)
-        {
-            zmax = z;
-        }
-        if (z < zmin)
-        {
-            zmin = z;
-        }
-        if (r < rinner)
-        {
-            rinner=r;
-        }
-        if (r > router)
-        {
-            router=r;
-        }
+        if (z > hitZMax)
+            hitZMax = z;
+
+        if (z < hitZMin)
+            hitZMin = z;
+
+        if (r > hitOuterR)
+            hitOuterR = r;
+
         if (r > tpcInnerR)
-        {
-            nTPC++;
-        }
+            nTpcHits++;
     }
 
     bool reachesECal=false;
 
-    // If there are at least N hits in the TPC hits
-    // then require hits in outer part of TPC
-    if (nTPC > 10)
+    // If there are at least N hits in the TPC, then require hits in outer part of TPC
+    if (nTpcHits > 10)
     {
-        if ((router  - tpcOuterR > -100.) || (fabs(zmax) - tpcZmax   > -50.) || (fabs(zmin) - tpcZmax > -50.))
+        if ((hitOuterR - tpcOuterR > m_settings.m_reachesECalTpcOuterDistance) ||
+            (fabs(hitZMax) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance) ||
+            (fabs(hitZMin) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance))
         {
             reachesECal=true;
         }
@@ -537,8 +524,7 @@ void PandoraPFANewProcessor::TrackReachesECAL(const Track *const pTrack, Pandora
         const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY());
         const float pT(std::sqrt(pX * pX + pY * pY));
 
-        // TODO remove hard-coded constants
-        if ((cosAngleAtDca > cosTpc) || (pT < 0.3 * bField * tpcOuterR / 2000.))
+        if ((cosAngleAtDca > cosTpc) || (pT < m_settings.m_curvatureToMomentumFactor * bField * tpcOuterR))
             reachesECal = true;
     }
 
@@ -554,16 +540,12 @@ void PandoraPFANewProcessor::FitTrackHelices(const Track *const pTrack, PandoraA
     // Fit from track parameters to determine momentum at dca
     HelixClass *pHelixFit = new HelixClass();
     pHelixFit->Initialize_Canonical(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), bField);
-
     trackParameters.m_momentumAtDca = pandora::CartesianVector(pHelixFit->getMomentum()[0], pHelixFit->getMomentum()[1], pHelixFit->getMomentum()[2]);
 
     // Fit start and end of tracks
     TrackerHitVec trackerHitvec(pTrack->getTrackerHits());
     const int nTrackHits = trackerHitvec.size();
     const int nTrackHitsForFit = std::min(m_settings.m_nHitsForHelixFits, nTrackHits);
-
-    float zmax = -std::numeric_limits<float>::max();
-    float zmin = std::numeric_limits<float>::max();
 
     // Order hits by increasing z
     for (int iz = 0 ; iz < nTrackHits - 1; ++iz)
@@ -579,31 +561,9 @@ void PandoraPFANewProcessor::FitTrackHelices(const Track *const pTrack, PandoraA
         }
     }
 
-
-    for (int i = 0 ; i < nTrackHits; ++i)
-    {
-        const float z(trackerHitvec[i]->getPosition()[2]);
-
-        if (z > zmax)
-          zmax = z;
-
-        if (z < zmin)
-          zmin = z;
-    }
-
-    float zBegin, zEnd;
-    if (std::fabs(zmin) < std::fabs(zmax))
-    {
-        zBegin = zmin;
-        zEnd   = zmax;
-    }
-    else
-    {
-        zBegin = zmax;
-        zEnd   = zmin;
-    }
-
-    const int signPz(zEnd - zBegin > 0 ? 1 : -1);
+    const float zMin(trackerHitvec[0]->getPosition()[2]);
+    const float zMax(trackerHitvec[nTrackHits - 1]->getPosition()[2]);
+    const int signPz(std::fabs(zMin) < std::fabs(zMax) ? 1 : -1);
 
     // Arrays for helix fits
     float xf[nTrackHitsForFit], yf[nTrackHitsForFit], zf[nTrackHitsForFit], af[nTrackHitsForFit];
@@ -628,13 +588,13 @@ void PandoraPFANewProcessor::FitTrackHelices(const Track *const pTrack, PandoraA
     ClusterShapes clusterShapesF(nTrackHitsForFit, af, xf, yf, zf);
     clusterShapesF.FitHelix(500, 0, 1, par, dpar, chi2, distmax);
     HelixClass *pHelix1 = new HelixClass();
-    pHelix1->Initialize_BZ(par[0], par[1], par[2], par[3], par[4], bField, signPz, zmin);
+    pHelix1->Initialize_BZ(par[0], par[1], par[2], par[3], par[4], bField, signPz, zMin);
 
     // Helix from last nTrackHitsForFit (i.e. highest z)
     ClusterShapes clusterShapesB(nTrackHitsForFit, ab, xb, yb, zb);
     clusterShapesB.FitHelix(500, 0, 1, par, dpar, chi2, distmax);
     HelixClass *pHelix2 = new HelixClass();
-    pHelix2->Initialize_BZ(par[0], par[1], par[2], par[3], par[4], bField, signPz, zmax);
+    pHelix2->Initialize_BZ(par[0], par[1], par[2], par[3], par[4], bField, signPz, zMax);
 
     // Label as start and end depending on assigned sign of Pz
     HelixClass *const pHelixStart = (signPz > 0) ? pHelix1 : pHelix2;
@@ -677,10 +637,10 @@ void PandoraPFANewProcessor::DefineTrackPfoUsage(const Track *const pTrack, Pand
     {
         const float d0(std::fabs(pTrack->getD0())), z0(std::fabs(pTrack->getZ0()));
 
-        TrackerHitVec trackHitvec(pTrack->getTrackerHits());
+        TrackerHitVec trackerHitvec(pTrack->getTrackerHits());
         float rInner(std::numeric_limits<float>::max()), zMin(std::numeric_limits<float>::max());
 
-        for (TrackerHitVec::const_iterator iter = trackHitvec.begin(), iterEnd = trackHitvec.end(); iter != iterEnd; ++iter)
+        for (TrackerHitVec::const_iterator iter = trackerHitvec.begin(), iterEnd = trackerHitvec.end(); iter != iterEnd; ++iter)
         {
             const double *pPosition((*iter)->getPosition());
             const float x(pPosition[0]), y(pPosition[1]), absZ(std::fabs(pPosition[2]));
@@ -699,11 +659,10 @@ void PandoraPFANewProcessor::DefineTrackPfoUsage(const Track *const pTrack, Pand
         const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY()), pZ(momentumAtDca.GetZ());
         const float pT(std::sqrt(pX * pX + pY * pY));
 
-        // TODO remove hard-coded constants
-        const float zCutForNonVertexTracks(tpcInnerR * std::fabs(pZ / pT) + 250.);
-        const bool passRzQualityCuts((zMin < zCutForNonVertexTracks) && (rInner < tpcInnerR + 50.));
+        const float zCutForNonVertexTracks(tpcInnerR * std::fabs(pZ / pT) + m_settings.m_zCutForNonVertexTracks);
+        const bool passRzQualityCuts((zMin < zCutForNonVertexTracks) && (rInner < tpcInnerR + m_settings.m_maxTpcInnerRDistance));
 
-        if ((d0 < m_settings.m_d0TrackCut) && (z0 < m_settings.m_z0TrackCut) && (rInner < tpcInnerR + 50.))
+        if ((d0 < m_settings.m_d0TrackCut) && (z0 < m_settings.m_z0TrackCut) && (rInner < tpcInnerR + m_settings.m_maxTpcInnerRDistance))
         {
             canFormPfo = true;
         }
@@ -717,7 +676,8 @@ void PandoraPFANewProcessor::DefineTrackPfoUsage(const Track *const pTrack, Pand
 
         if ((0 != m_settings.m_usingUnmatchedVertexTracks) && (trackEnergy < m_settings.m_unmatchedVertexTrackMaxEnergy))
         {
-            if ((d0 < m_settings.m_d0TrackCut / 10.) && (z0 < m_settings.m_z0TrackCut / 10.) && (rInner < tpcInnerR + 50.))
+            if ((d0 < m_settings.m_d0UnmatchedVertexTrackCut) && (z0 < m_settings.m_z0UnmatchedVertexTrackCut) &&
+                (rInner < tpcInnerR + m_settings.m_maxTpcInnerRDistance))
             {
                 canFormClusterlessPfo = true;
             }
@@ -730,54 +690,6 @@ void PandoraPFANewProcessor::DefineTrackPfoUsage(const Track *const pTrack, Pand
 
     trackParameters.m_canFormPfo = canFormPfo;
     trackParameters.m_canFormClusterlessPfo = canFormClusterlessPfo;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-int PandoraPFANewProcessor::GetTrackSignPz(float zMin, float zMax, float rMin, float rMax) const
-{
-    // Need to decide track direction +ve/-ve in z. For now assume track originates from close to IP.
-    // TODO: NEED TO ADD V0, KINK, PRONG, BACK-SCATTER INFORMATION HERE
-    int signPz = 0;
-    if((fabs(zMin) < fabs(zMax)) && (rMin < rMax))
-    {
-        signPz = +1;
-    }
-    else if((fabs(zMax) < fabs(zMin)) && (rMax < rMin))
-    {
-        signPz = -1;
-    }
-
-    // Tracks that cross TPC central plane
-    if(zMin < 0 && zMax > 0)
-    {
-        if(rMin < rMax)
-            signPz = +1;
-
-        if(rMin > rMax)
-            signPz = -1;
-
-        // TODO: if this is a track from IP check momentumAtDca assignment is correct
-        streamlog_out(WARNING) << "PandoraPFANewProcessor::GetTrackSignPz CROSSES TPC check code..." << std::endl;
-    }
-
-    // If above conditions not satisfied, default is to order in z
-    if(0 == signPz)
-    {
-        if(fabs(zMin) < fabs(zMax))
-            signPz = +1;
-
-        if(fabs(zMin) > fabs(zMax))
-            signPz = -1;
-
-        // TODO: these tracks should be associated with a V0, etc... If not something could be wrong
-        streamlog_out(WARNING) << "PandoraPFANewProcessor::GetTrackSignPz DEFAULT TRACK DIRECTION..." << std::endl;
-
-        if(0 == signPz)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
-
-    return signPz;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -796,7 +708,7 @@ pandora::TrackState PandoraPFANewProcessor::GetECalProjection(HelixClass *const 
 
     // First project to endcap
     float minTime = pHelix->getPointInZ(static_cast<float>(signPz) * zOfEndCap, referencePoint, bestEcalProjection);
-std::cout << " minTime " << minTime << " signPz " << signPz << " bestEcalProjection " << bestEcalProjection[0] << ", " << bestEcalProjection[1] << ", " << bestEcalProjection[2] << std::endl;
+
     // Then project to barrel surface(s)
     float barrelProjection[3];
     static const float pi(std::acos(-1.));
@@ -869,7 +781,6 @@ StatusCode PandoraPFANewProcessor::CreateTrackToMCParticleRelationships(const LC
                     mcParticleToWeightMap.clear();
 
                     MCParticle* mcParticle = NULL;
-                    
                     const LCObjectVec &objectVec = navigate.getRelatedToObjects(*trackIter);
 
                     if (objectVec.size() > 0) 
@@ -928,8 +839,8 @@ StatusCode PandoraPFANewProcessor::CreateECalCaloHits(const LCEvent *const pLCEv
     static const unsigned int barrelSymmetryOrder(marlin::Global::GEAR->getEcalBarrelParameters().getSymmetryOrder());
     static const float barrelPhi0(marlin::Global::GEAR->getEcalBarrelParameters().getPhi0());
 
-    for (StringVector::const_iterator iter = m_settings.m_eCalCaloHitCollections.begin(),
-        iterEnd = m_settings.m_eCalCaloHitCollections.end(); iter != iterEnd; ++iter)
+    for (StringVector::const_iterator iter = m_settings.m_eCalCaloHitCollections.begin(), iterEnd = m_settings.m_eCalCaloHitCollections.end();
+        iter != iterEnd; ++iter)
     {
         try
         {
@@ -1003,8 +914,8 @@ StatusCode PandoraPFANewProcessor::CreateHCalCaloHits(const LCEvent *const pLCEv
     static const unsigned int barrelSymmetryOrder(marlin::Global::GEAR->getHcalBarrelParameters().getSymmetryOrder());
     static const float barrelPhi0(marlin::Global::GEAR->getHcalBarrelParameters().getPhi0());
 
-    for (StringVector::const_iterator iter = m_settings.m_hCalCaloHitCollections.begin(),
-        iterEnd = m_settings.m_hCalCaloHitCollections.end(); iter != iterEnd; ++iter)
+    for (StringVector::const_iterator iter = m_settings.m_hCalCaloHitCollections.begin(), iterEnd = m_settings.m_hCalCaloHitCollections.end();
+        iter != iterEnd; ++iter)
     {
         try
         {
@@ -1111,8 +1022,8 @@ void PandoraPFANewProcessor::GetEndCapCaloHitProperties(CalorimeterHit *const pC
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void PandoraPFANewProcessor::GetBarrelCaloHitProperties(CalorimeterHit *const pCaloHit, const gear::LayerLayout &layerLayout,
-    unsigned int barrelSymmetryOrder, float barrelPhi0, unsigned int staveNumber,
-    PandoraApi::CaloHit::Parameters &caloHitParameters, float &absorberCorrection) const
+    unsigned int barrelSymmetryOrder, float barrelPhi0, unsigned int staveNumber, PandoraApi::CaloHit::Parameters &caloHitParameters,
+    float &absorberCorrection) const
 {
     const int physicalLayer(std::min(static_cast<int>(caloHitParameters.m_layer.Get()), layerLayout.getNLayers() - 1));
 
@@ -1235,7 +1146,7 @@ StatusCode PandoraPFANewProcessor::ProcessParticleFlowObjects( LCEvent * pLCEven
     subDetectorNames.push_back("lhcal"); const unsigned int lhcal_Index(4);
     subDetectorNames.push_back("bcal") ; const unsigned int bcal_Index(5) ;
 
-    pClusterCollection->parameters().setValues("ClusterSubdetectorNames" , subDetectorNames);
+    pClusterCollection->parameters().setValues("ClusterSubdetectorNames", subDetectorNames);
 
     // Create lcio "reconstructed particles" from the pandora "particle flow objects"
     for (pandora::ParticleFlowObjectList::iterator itPFO = particleFlowObjectList.begin(), itPFOEnd = particleFlowObjectList.end();
@@ -1309,7 +1220,7 @@ StatusCode PandoraPFANewProcessor::ProcessParticleFlowObjects( LCEvent * pLCEven
             pReconstructedParticle->addTrack((Track*)(*itTrack));
         }
 
-        float momentum[3] = { (*itPFO)->GetMomentum().GetX(), (*itPFO)->GetMomentum().GetY(), (*itPFO)->GetMomentum().GetZ() };
+        float momentum[3] = {(*itPFO)->GetMomentum().GetX(), (*itPFO)->GetMomentum().GetY(), (*itPFO)->GetMomentum().GetZ()};
         pReconstructedParticle->setMomentum(momentum);
         pReconstructedParticle->setEnergy((*itPFO)->GetEnergy());
         pReconstructedParticle->setMass((*itPFO)->GetMass());
@@ -1475,6 +1386,11 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_settings.m_z0TrackCut,
                             float(50.));
 
+    registerProcessorParameter("MaxTpcInnerRDistance",
+                            "Track cut on distance from tpc inner r to id whether track can form pfo",
+                            m_settings.m_maxTpcInnerRDistance,
+                            float(50.));
+
     registerProcessorParameter("UseNonVertexTracks",
                             "Whether can form pfos from tracks that don't start at vertex",
                             m_settings.m_usingNonVertexTracks,
@@ -1495,9 +1411,46 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_settings.m_unmatchedVertexTrackMaxEnergy,
                             float(5.));
 
+    registerProcessorParameter("D0UnmatchedVertexTrackCut",
+                            "d0 cut used to determine whether unmatched vertex track can form pfo",
+                            m_settings.m_d0UnmatchedVertexTrackCut,
+                            float(5.));
+
+    registerProcessorParameter("Z0UnmatchedVertexTrackCut",
+                            "z0 cut used to determine whether unmatched vertex track can form pfo",
+                            m_settings.m_z0UnmatchedVertexTrackCut,
+                            float(5.));
+
+    registerProcessorParameter("ZCutForNonVertexTracks",
+                            "Non vtx track z cut to determine whether track can be used to form pfo",
+                            m_settings.m_zCutForNonVertexTracks,
+                            float(250.));
+
+    // Track "reaches ecal" parameters
+    registerProcessorParameter("ReachesECalTpcOuterDistance",
+                            "Max distance from track to tpc r max to id whether track reaches ecal",
+                            m_settings.m_reachesECalTpcOuterDistance,
+                            float(-100.));
+
+    registerProcessorParameter("ReachesECalTpcZMaxDistance",
+                            "Max distance from track to tpc z max to id whether track reaches ecal",
+                            m_settings.m_reachesECalTpcZMaxDistance,
+                            float(-50.));
+
+    registerProcessorParameter("CurvatureToMomentumFactor",
+                            "Constant relating track curvature in b field to momentum",
+                            m_settings.m_curvatureToMomentumFactor,
+                            float(0.3 / 2000.));
+
+    // Additional geometry parameters
+    registerProcessorParameter("ECalEndCapInnerSymmetryOrder",
+                            "ECal end cap inner symmetry order, (missing from ILD00 gear file)",
+                            m_settings.m_eCalEndCapInnerSymmetryOrder,
+                            int(4));
+
     // Number of events to skip
     registerProcessorParameter("NEventsToSkip",
                             "Number of events to skip at start of reconstruction job",
                             m_settings.m_nEventsToSkip,
-                            int(0.));
+                            int(0));
 }
