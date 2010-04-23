@@ -19,6 +19,7 @@
 using namespace EVENT;
 
 typedef std::vector<Track *> TrackVector;
+typedef std::set<const Track *> TrackList;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -38,6 +39,7 @@ public:
     public:
         StringVector    m_trackCollections;                     ///< The reconstructed track collections
         StringVector    m_v0VertexCollections;                  ///< The v0 vertex collections
+        StringVector    m_kinkVertexCollections;                ///< The kink vertex collections
 
         int             m_minTrackHits;                         ///< Track quality cut: the minimum number of track hits
         int             m_maxTrackHits;                         ///< Track quality cut: the maximum number of track hits
@@ -65,18 +67,18 @@ public:
     };
 
     /**
-     *  @brief  Create tracks, insert user code here
-     * 
-     *  @param  pLCEvent the lcio event
-     */
-    StatusCode CreateTracks(const LCEvent *const pLCEvent);
-
-    /**
      *  @brief  Create associations between tracks, V0s, kinks, etc
      * 
      *  @param  pLCEvent the lcio event
      */
-    StatusCode CreateTrackAssociations(const LCEvent *const pLCEvent) const;
+    StatusCode CreateTrackAssociations(const LCEvent *const pLCEvent);
+
+    /**
+     *  @brief  Create tracks, insert user code here
+     * 
+     *  @param  pLCEvent the lcio event
+     */
+    StatusCode CreateTracks(const LCEvent *const pLCEvent) const;
 
     /**
      *  @brief  Get the track vector
@@ -85,9 +87,55 @@ public:
      */
     static const TrackVector &GetTrackVector();
 
+    /**
+     *  @brief  Reset the track creator
+     */
+    void Reset();
+
     Settings                m_settings;         ///< The settings
 
 private:
+    /**
+     *  @brief  Extract v0 information from specified lcio collections
+     * 
+     *  @param  pLCEvent the lcio event
+     */
+    StatusCode ExtractV0s(const LCEvent *const pLCEvent);
+
+    /**
+     *  @brief  Extract kink information from specified lcio collections
+     * 
+     *  @param  pLCEvent the lcio event
+     */
+    StatusCode ExtractKinks(const LCEvent *const pLCEvent);
+
+    /**
+     *  @brief  Whether a track is a v0 track
+     * 
+     *  @param  pTrack the lcio track
+     * 
+     *  @return boolean
+     */
+    bool IsV0(const Track *const pTrack) const;
+
+    /**
+     *  @brief  Whether a track is a parent track
+     * 
+     *  @param  pTrack the lcio track
+     * 
+     *  @return boolean
+     */
+    bool IsParent(const Track *const pTrack) const;
+
+    /**
+     *  @brief  Whether a track is a daughter track
+     * 
+     *  @param  pTrack the lcio track
+     * 
+     *  @return boolean
+     */
+    bool IsDaughter(const Track *const pTrack) const;
+
     /**
      *  @brief  Decide whether track reaches the ecal surface
      * 
@@ -124,6 +172,10 @@ private:
     pandora::TrackState GetECalProjection(HelixClass *const pHelix, float referencePoint[3], int signPz) const;
 
     static TrackVector      m_trackVector;      ///< The track vector
+
+    TrackList               m_v0TrackList;      ///< The list of v0 tracks
+    TrackList               m_parentTrackList;  ///< The list of parent tracks
+    TrackList               m_daughterTrackList;///< The list of daughter tracks
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -131,6 +183,37 @@ private:
 inline const TrackVector &TrackCreator::GetTrackVector()
 {
     return m_trackVector;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void TrackCreator::Reset()
+{
+    m_trackVector.clear();
+    m_v0TrackList.clear();
+    m_parentTrackList.clear();
+    m_daughterTrackList.clear();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool TrackCreator::IsV0(const Track *const pTrack) const
+{
+    return (m_v0TrackList.end() != m_v0TrackList.find(pTrack));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool TrackCreator::IsParent(const Track *const pTrack) const
+{
+    return (m_parentTrackList.end() != m_parentTrackList.find(pTrack));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool TrackCreator::IsDaughter(const Track *const pTrack) const
+{
+    return (m_daughterTrackList.end() != m_daughterTrackList.find(pTrack));
 }
 
 #endif // #ifndef TRACK_CREATOR_H

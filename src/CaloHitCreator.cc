@@ -23,8 +23,6 @@ CalorimeterHitVector CaloHitCreator::m_calorimeterHitVector;
 StatusCode CaloHitCreator::CreateCaloHits(const LCEvent *const pLCEvent)
 {
     CellIDDecoder<CalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6");
-    m_calorimeterHitVector.clear();
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateECalCaloHits(pLCEvent));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateHCalCaloHits(pLCEvent));
 

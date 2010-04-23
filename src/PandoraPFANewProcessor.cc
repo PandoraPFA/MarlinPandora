@@ -88,6 +88,7 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pfoCreator.CreateParticleFlowObjects(pLCEvent));
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pPandora));
+        this->Reset();
     }
     catch (StatusCodeException &statusCodeException)
     {
@@ -157,6 +158,12 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "V0VertexCollections", 
                             "Name of external V0 Vertex collections",
                             m_trackCreator.m_settings.m_v0VertexCollections,
+                            StringVector());
+
+    registerInputCollections(LCIO::VERTEX,
+                            "KinkVertexCollections", 
+                            "Name of external kink Vertex collections",
+                            m_trackCreator.m_settings.m_kinkVertexCollections,
                             StringVector());
 
     registerInputCollections(LCIO::CALORIMETERHIT,
@@ -398,4 +405,12 @@ void PandoraPFANewProcessor::FinaliseSteeringParameters()
     m_caloHitCreator.m_settings.m_absorberInteractionLength = m_geometryCreator.m_settings.m_absorberInteractionLength;
     m_caloHitCreator.m_settings.m_hCalEndCapInnerSymmetryOrder = m_geometryCreator.m_settings.m_hCalEndCapInnerSymmetryOrder;
     m_caloHitCreator.m_settings.m_hCalEndCapInnerPhiCoordinate = m_geometryCreator.m_settings.m_hCalEndCapInnerPhiCoordinate;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PandoraPFANewProcessor::Reset()
+{
+    m_caloHitCreator.Reset();
+    m_trackCreator.Reset();
 }
