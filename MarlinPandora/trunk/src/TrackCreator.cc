@@ -30,11 +30,111 @@ TrackVector TrackCreator::m_trackVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent)
+StatusCode TrackCreator::CreateTrackAssociations(const LCEvent *const pLCEvent)
+{
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractV0s(pLCEvent));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractKinks(pLCEvent));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
 {
     // Insert user code here ...
-    m_trackVector.clear();
+    for (StringVector::const_iterator iter = m_settings.m_v0VertexCollections.begin(), iterEnd = m_settings.m_v0VertexCollections.end();
+        iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const LCCollection *pV0Collection = pLCEvent->getCollection(*iter);
 
+            for (int i = 0, iMax = pV0Collection->getNumberOfElements(); i < iMax; ++i)
+            {
+                try
+                {
+                    Vertex *pVertex = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
+
+                    ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
+                    TrackVec trackVec = pReconstructedParticle->getTracks();
+
+                    for(unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
+                    {
+                        Track *pTrack = trackVec[iTrack];
+                        TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
+                        const float nTrackHits(trackerHitVec.size());
+
+                        m_v0TrackList.insert(pTrack);
+                        streamlog_out(DEBUG) << "V0Track " << iTrack << ", nHits " << nTrackHits << ", ptrack " << pTrack << std::endl;
+                    }
+                }
+                catch (...)
+                {
+                    streamlog_out(WARNING) << "Failed to extract v0 vertex, unrecognised exception" << std::endl;
+                }
+            }
+        }
+        catch (...)
+        {
+            streamlog_out(WARNING) << "Failed to extract v0 vertex collection: " << *iter << std::endl;
+        }
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
+{
+    // Insert user code here ...
+    for (StringVector::const_iterator iter = m_settings.m_kinkVertexCollections.begin(), iterEnd = m_settings.m_kinkVertexCollections.end();
+        iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const LCCollection *pKinkCollection = pLCEvent->getCollection(*iter);
+
+            for (int i = 0, iMax = pKinkCollection->getNumberOfElements(); i < iMax; ++i)
+            {
+                try
+                {
+                    Vertex *pVertex = dynamic_cast<Vertex*>(pKinkCollection->getElementAt(i));
+
+                    ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
+                    TrackVec trackVec = pReconstructedParticle->getTracks();
+
+                    for(unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
+                    {
+                        Track *pTrack = trackVec[iTrack];
+                        TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
+                        const float nTrackHits(trackerHitVec.size());
+
+                        (0 == iTrack) ? m_parentTrackList.insert(pTrack) : m_daughterTrackList.insert(pTrack);
+                        streamlog_out(DEBUG) << "KinkTrack " << iTrack << ", nHits " << nTrackHits << ", ptrack " << pTrack << std::endl;
+                    }
+                }
+                catch (...)
+                {
+                    streamlog_out(WARNING) << "Failed to extract kink vertex, unrecognised exception" << std::endl;
+                }
+            }
+        }
+        catch (...)
+        {
+            streamlog_out(WARNING) << "Failed to extract kink vertex collection: " << *iter << std::endl;
+        }
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent) const
+{
+    // Insert user code here ...
     static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
 
     for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), iterEnd = m_settings.m_trackCollections.end();
@@ -268,7 +368,7 @@ void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Tr
     bool canFormPfo(false);
     bool canFormClusterlessPfo(false);
 
-    if (trackParameters.m_reachesECal.Get())
+    if (trackParameters.m_reachesECal.Get() && !this->IsParent(pTrack))
     {
         const float d0(std::fabs(pTrack->getD0())), z0(std::fabs(pTrack->getZ0()));
 
@@ -297,6 +397,10 @@ void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Tr
         const float zCutForNonVertexTracks(tpcInnerR * std::fabs(pZ / pT) + m_settings.m_zCutForNonVertexTracks);
         const bool passRzQualityCuts((zMin < zCutForNonVertexTracks) && (rInner < tpcInnerR + m_settings.m_maxTpcInnerRDistance));
 
+        const bool isV0(this->IsV0(pTrack));
+        const bool isDaughter(this->IsDaughter(pTrack));
+
+        // Decide whether track can be associated with a pandora cluster and used to form a charged PFO
         if ((d0 < m_settings.m_d0TrackCut) && (z0 < m_settings.m_z0TrackCut) && (rInner < tpcInnerR + m_settings.m_maxTpcInnerRDistance))
         {
             canFormPfo = true;
@@ -305,7 +409,12 @@ void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Tr
         {
             canFormPfo = true;
         }
+        else if (isV0 || isDaughter)
+        {
+            canFormPfo = true;
+        }
 
+        // Decide whether track can be used to form a charged PFO, even if track fails to be associated with a pandora cluster
         const float particleMass(trackParameters.m_mass.Get());
         const float trackEnergy(std::sqrt(momentumAtDca.GetMagnitudeSquared() + particleMass * particleMass));
 
@@ -319,6 +428,10 @@ void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Tr
             else if (passRzQualityCuts && (0 != m_settings.m_usingNonVertexTracks) && (0 != m_settings.m_usingUnmatchedNonVertexTracks))
             {
                 canFormClusterlessPfo = true;
+            }
+            else if (isV0 || isDaughter)
+            {
+                canFormPfo = true;
             }
         }
     }
@@ -391,49 +504,4 @@ pandora::TrackState TrackCreator::GetECalProjection(HelixClass *const pHelix, fl
 
     return pandora::TrackState(bestEcalProjection[0], bestEcalProjection[1], bestEcalProjection[2],
         extrapolatedMomentum[0], extrapolatedMomentum[1], extrapolatedMomentum[2]);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode TrackCreator::CreateTrackAssociations(const LCEvent *const pLCEvent) const
-{
-    // Insert user code here ...
-    for (StringVector::const_iterator iter = m_settings.m_v0VertexCollections.begin(), iterEnd = m_settings.m_v0VertexCollections.end();
-        iter != iterEnd; ++iter)
-    {
-        try
-        {
-            const LCCollection *pV0Collection = pLCEvent->getCollection(*iter);
-
-            for (int i = 0, iMax = pV0Collection->getNumberOfElements(); i < iMax; ++i)
-            {
-                Vertex *pVertex = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
-
-                ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
-                TrackVec trackVec = pReconstructedParticle->getTracks();
-
-                for(unsigned int iTrack = 0; iTrack < trackVec.size(); ++iTrack)
-                {
-                    try
-                    {
-                        Track *pTrack = trackVec[iTrack];
-                        TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
-                        const float nTrackHits(trackerHitVec.size());
-
-                        streamlog_out(DEBUG) << "  V0Track " << iTrack << ", nTrackHits " << nTrackHits << ", ptrack " << pTrack << std::endl;
-                    }
-                    catch (...)
-                    {
-                        streamlog_out(WARNING) << "Failed to extract v0 vertex, unrecognised exception" << std::endl;
-                    }
-                }
-            }
-        }
-        catch (...)
-        {
-            streamlog_out(WARNING) << "Failed to extract v0 vertex collection: " << *iter << std::endl;
-        }
-    }
-
-    return STATUS_CODE_SUCCESS;
 }

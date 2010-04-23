@@ -103,6 +103,11 @@ private:
      */
     void FinaliseSteeringParameters();
 
+    /**
+     *  @brief  Reset the pandora pfa new processor
+     */
+    void Reset();
+
     static pandora::Pandora    *m_pPandora;                 ///< Address of the pandora instance
     Settings                    m_settings;                 ///< The settings for the pandora pfa new processor
     std::string                 m_detectorName;             ///< The detector name

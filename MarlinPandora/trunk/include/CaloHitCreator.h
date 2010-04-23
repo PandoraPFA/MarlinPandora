@@ -72,6 +72,11 @@ public:
      */
     static const CalorimeterHitVector &GetCalorimeterHitVector();
 
+    /**
+     *  @brief  Reset the calo hit creator
+     */
+    void Reset();
+
     Settings                m_settings;         ///< The settings
 
 private:
@@ -150,6 +155,14 @@ private:
 inline const CalorimeterHitVector &CaloHitCreator::GetCalorimeterHitVector()
 {
     return m_calorimeterHitVector;
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void CaloHitCreator::Reset()
+{
+    m_calorimeterHitVector.clear();
 }
 
 #endif // #ifndef CALO_HIT_CREATOR_H
