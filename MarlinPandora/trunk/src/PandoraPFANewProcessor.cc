@@ -369,6 +369,12 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_trackCreator.m_settings.m_curvatureToMomentumFactor,
                             float(0.3 / 2000.));
 
+    // Track relationship parameters
+    registerProcessorParameter("ShouldFormTrackRelationships",
+                            "Whether to form pandora track relationships using v0 and kink info",
+                            m_trackCreator.m_settings.m_shouldFormTrackRelationships,
+                            int(1));
+
     // Additional geometry parameters
     registerProcessorParameter("ECalEndCapInnerSymmetryOrder",
                             "ECal end cap inner symmetry order (missing from ILD00 gear file)",

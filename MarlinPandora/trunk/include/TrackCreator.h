@@ -64,6 +64,8 @@ public:
         float           m_reachesECalTpcOuterDistance;          ///< Max distance from track to tpc r max to id whether track reaches ecal
         float           m_reachesECalTpcZMaxDistance;           ///< Max distance from track to tpc z max to id whether track reaches ecal
         float           m_curvatureToMomentumFactor;            ///< Constant relating track curvature in b field to momentum
+
+        int             m_shouldFormTrackRelationships;         ///< Whether to form pandora track relationships using v0 and kink info
     };
 
     /**
@@ -108,6 +110,13 @@ private:
      *  @param  pLCEvent the lcio event
      */
     StatusCode ExtractV0s(const LCEvent *const pLCEvent);
+
+    /**
+     *  @brief  Whether the track vertex conflicts with previously provided relationship information
+     * 
+     *  @param  trackVec the vector of tracks associated with the vertex
+     */
+    bool IsConflictingRelationship(const TrackVec &trackVec) const;
 
     /**
      *  @brief  Whether a track is a v0 track

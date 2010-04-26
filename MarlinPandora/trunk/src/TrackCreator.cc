@@ -59,36 +59,24 @@ StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
                     Vertex *pVertex = dynamic_cast<Vertex*>(pKinkCollection->getElementAt(i));
 
                     ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
-                    TrackVec trackVec = pReconstructedParticle->getTracks();
+                    const TrackVec &trackVec(pReconstructedParticle->getTracks());
 
-                    // Check kink isn't a subset of an existing relationship
-                    bool isAlreadyInUse(false);
-
-                    for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
-                    {
-                        Track *pTrack = trackVec[iTrack];
-
-                        if (this->IsDaughter(pTrack) || this->IsParent(pTrack))
-                        {
-                            isAlreadyInUse = true;
-                            break;
-                        }
-                    }
-
-                    if (isAlreadyInUse)
+                    if (this->IsConflictingRelationship(trackVec))
                         continue;
 
                     // Extract the kink vertex information
                     for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
                     {
                         Track *pTrack = trackVec[iTrack];
+                        (0 == iTrack) ? m_parentTrackList.insert(pTrack) : m_daughterTrackList.insert(pTrack);
                         streamlog_out(DEBUG) << "KinkTrack " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
+
+                        if (0 == m_settings.m_shouldFormTrackRelationships)
+                            continue;
 
                         // Make track parent-daughter relationships
                         if (0 == iTrack)
                         {
-                            m_parentTrackList.insert(pTrack);
-
                             for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
                             {
                                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackParentDaughterRelationship(*pPandora,
@@ -99,8 +87,6 @@ StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
                         // Make track sibling relationships
                         else
                         {
-                            m_daughterTrackList.insert(pTrack);
-
                             for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
                             {
                                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackSiblingRelationship(*pPandora,
@@ -145,32 +131,20 @@ StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
                     Vertex *pVertex = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
 
                     ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
-                    TrackVec trackVec(pReconstructedParticle->getTracks());
+                    const TrackVec &trackVec(pReconstructedParticle->getTracks());
 
-                    // Check v0 isn't a subset of an existing relationship
-                    bool isAlreadyInUse(false);
-
-                    for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
-                    {
-                        Track *pTrack = trackVec[iTrack];
-
-                        if (this->IsDaughter(pTrack) || this->IsParent(pTrack))
-                        {
-                            isAlreadyInUse = true;
-                            break;
-                        }
-                    }
-
-                    if (isAlreadyInUse)
+                    if (this->IsConflictingRelationship(trackVec))
                         continue;
 
                     // Extract the v0 vertex information
                     for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
                     {
                         Track *pTrack = trackVec[iTrack];
+                        m_v0TrackList.insert(pTrack);
                         streamlog_out(DEBUG) << "V0Track " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
 
-                        m_v0TrackList.insert(pTrack);
+                        if (0 == m_settings.m_shouldFormTrackRelationships)
+                            continue;
 
                         // Make track sibling relationships
                         for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
@@ -193,6 +167,21 @@ StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackCreator::IsConflictingRelationship(const TrackVec &trackVec) const
+{
+    for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
+    {
+        Track *pTrack = trackVec[iTrack];
+
+        if (this->IsDaughter(pTrack) || this->IsParent(pTrack))
+            return true;
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
