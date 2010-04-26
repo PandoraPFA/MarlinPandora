@@ -96,18 +96,18 @@ public:
 
 private:
     /**
-     *  @brief  Extract v0 information from specified lcio collections
-     * 
-     *  @param  pLCEvent the lcio event
-     */
-    StatusCode ExtractV0s(const LCEvent *const pLCEvent);
-
-    /**
      *  @brief  Extract kink information from specified lcio collections
      * 
      *  @param  pLCEvent the lcio event
      */
     StatusCode ExtractKinks(const LCEvent *const pLCEvent);
+
+    /**
+     *  @brief  Extract v0 information from specified lcio collections
+     * 
+     *  @param  pLCEvent the lcio event
+     */
+    StatusCode ExtractV0s(const LCEvent *const pLCEvent);
 
     /**
      *  @brief  Whether a track is a v0 track

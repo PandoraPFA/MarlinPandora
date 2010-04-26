@@ -32,54 +32,8 @@ TrackVector TrackCreator::m_trackVector;
 
 StatusCode TrackCreator::CreateTrackAssociations(const LCEvent *const pLCEvent)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractV0s(pLCEvent));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractKinks(pLCEvent));
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
-{
-    // Insert user code here ...
-    for (StringVector::const_iterator iter = m_settings.m_v0VertexCollections.begin(), iterEnd = m_settings.m_v0VertexCollections.end();
-        iter != iterEnd; ++iter)
-    {
-        try
-        {
-            const LCCollection *pV0Collection = pLCEvent->getCollection(*iter);
-
-            for (int i = 0, iMax = pV0Collection->getNumberOfElements(); i < iMax; ++i)
-            {
-                try
-                {
-                    Vertex *pVertex = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
-
-                    ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
-                    TrackVec trackVec = pReconstructedParticle->getTracks();
-
-                    for(unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
-                    {
-                        Track *pTrack = trackVec[iTrack];
-                        TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
-                        const float nTrackHits(trackerHitVec.size());
-
-                        m_v0TrackList.insert(pTrack);
-                        streamlog_out(DEBUG) << "V0Track " << iTrack << ", nHits " << nTrackHits << ", ptrack " << pTrack << std::endl;
-                    }
-                }
-                catch (...)
-                {
-                    streamlog_out(WARNING) << "Failed to extract v0 vertex, unrecognised exception" << std::endl;
-                }
-            }
-        }
-        catch (...)
-        {
-            streamlog_out(WARNING) << "Failed to extract v0 vertex collection: " << *iter << std::endl;
-        }
-    }
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractV0s(pLCEvent));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -89,6 +43,8 @@ StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
 StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
 {
     // Insert user code here ...
+    static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
+
     for (StringVector::const_iterator iter = m_settings.m_kinkVertexCollections.begin(), iterEnd = m_settings.m_kinkVertexCollections.end();
         iter != iterEnd; ++iter)
     {
@@ -105,14 +61,52 @@ StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
                     ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
                     TrackVec trackVec = pReconstructedParticle->getTracks();
 
-                    for(unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
+                    // Check kink isn't a subset of an existing relationship
+                    bool isAlreadyInUse(false);
+
+                    for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
                     {
                         Track *pTrack = trackVec[iTrack];
-                        TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
-                        const float nTrackHits(trackerHitVec.size());
 
-                        (0 == iTrack) ? m_parentTrackList.insert(pTrack) : m_daughterTrackList.insert(pTrack);
-                        streamlog_out(DEBUG) << "KinkTrack " << iTrack << ", nHits " << nTrackHits << ", ptrack " << pTrack << std::endl;
+                        if (this->IsDaughter(pTrack) || this->IsParent(pTrack))
+                        {
+                            isAlreadyInUse = true;
+                            break;
+                        }
+                    }
+
+                    if (isAlreadyInUse)
+                        continue;
+
+                    // Extract the kink vertex information
+                    for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
+                    {
+                        Track *pTrack = trackVec[iTrack];
+                        streamlog_out(DEBUG) << "KinkTrack " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
+
+                        // Make track parent-daughter relationships
+                        if (0 == iTrack)
+                        {
+                            m_parentTrackList.insert(pTrack);
+
+                            for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
+                            {
+                                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackParentDaughterRelationship(*pPandora,
+                                    pTrack, trackVec[jTrack]));
+                            }
+                        }
+
+                        // Make track sibling relationships
+                        else
+                        {
+                            m_daughterTrackList.insert(pTrack);
+
+                            for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
+                            {
+                                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackSiblingRelationship(*pPandora,
+                                    pTrack, trackVec[jTrack]));
+                            }
+                        }
                     }
                 }
                 catch (...)
@@ -124,6 +118,77 @@ StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
         catch (...)
         {
             streamlog_out(WARNING) << "Failed to extract kink vertex collection: " << *iter << std::endl;
+        }
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
+{
+    // Insert user code here ...
+    static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
+
+    for (StringVector::const_iterator iter = m_settings.m_v0VertexCollections.begin(), iterEnd = m_settings.m_v0VertexCollections.end();
+        iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const LCCollection *pV0Collection = pLCEvent->getCollection(*iter);
+
+            for (int i = 0, iMax = pV0Collection->getNumberOfElements(); i < iMax; ++i)
+            {
+                try
+                {
+                    Vertex *pVertex = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
+
+                    ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
+                    TrackVec trackVec(pReconstructedParticle->getTracks());
+
+                    // Check v0 isn't a subset of an existing relationship
+                    bool isAlreadyInUse(false);
+
+                    for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
+                    {
+                        Track *pTrack = trackVec[iTrack];
+
+                        if (this->IsDaughter(pTrack) || this->IsParent(pTrack))
+                        {
+                            isAlreadyInUse = true;
+                            break;
+                        }
+                    }
+
+                    if (isAlreadyInUse)
+                        continue;
+
+                    // Extract the v0 vertex information
+                    for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
+                    {
+                        Track *pTrack = trackVec[iTrack];
+                        streamlog_out(DEBUG) << "V0Track " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
+
+                        m_v0TrackList.insert(pTrack);
+
+                        // Make track sibling relationships
+                        for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
+                        {
+                            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackSiblingRelationship(*pPandora,
+                                pTrack, trackVec[jTrack]));
+                        }
+                    }
+                }
+                catch (...)
+                {
+                    streamlog_out(WARNING) << "Failed to extract v0 vertex, unrecognised exception" << std::endl;
+                }
+            }
+        }
+        catch (...)
+        {
+            streamlog_out(WARNING) << "Failed to extract v0 vertex collection: " << *iter << std::endl;
         }
     }
 
@@ -161,13 +226,14 @@ StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent) const
                     trackParameters.m_z0 = pTrack->getZ0();
                     trackParameters.m_pParentAddress = pTrack;
 
-                    // For now, assume tracks are charged pions
-                    trackParameters.m_mass = 0.140;
-
                     const float signedCurvature(pTrack->getOmega());
 
                     if (0. != signedCurvature)
                         trackParameters.m_chargeSign = static_cast<int>(signedCurvature / std::fabs(signedCurvature));
+
+                    // For now, assume tracks are charged pions
+                    trackParameters.m_mass = 0.140;
+                    trackParameters.m_particleId = (trackParameters.m_chargeSign.Get() > 0) ? 211 : -211;
 
                     this->FitTrackHelices(pTrack, trackParameters);
                     this->TrackReachesECAL(pTrack, trackParameters);
@@ -431,7 +497,7 @@ void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Tr
             }
             else if (isV0 || isDaughter)
             {
-                canFormPfo = true;
+                canFormClusterlessPfo = true;
             }
         }
     }
