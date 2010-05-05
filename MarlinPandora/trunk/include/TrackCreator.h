@@ -146,20 +146,20 @@ private:
     bool IsDaughter(const Track *const pTrack) const;
 
     /**
-     *  @brief  Decide whether track reaches the ecal surface
-     * 
-     *  @param  pTrack the lcio track
-     *  @param  trackParameters the track parameters
-     */
-    void TrackReachesECAL(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
-
-    /**
      *  @brief  Perform helix fits to calculate track parameters: momentum at dca, start and end track states
      * 
      *  @param  pTrack the lcio track
      *  @param  trackParameters the track parameters
      */
     void FitTrackHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
+
+    /**
+     *  @brief  Decide whether track reaches the ecal surface
+     * 
+     *  @param  pTrack the lcio track
+     *  @param  trackParameters the track parameters
+     */
+    void TrackReachesECAL(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
 
     /**
      *  @brief  Determine whether a track can be used to form a pfo under the following conditions:
@@ -179,6 +179,17 @@ private:
      *  @param  signPz sign w.r.t. increasing z direction
      */
     pandora::TrackState GetECalProjection(HelixClass *const pHelix, float referencePoint[3], int signPz) const;
+
+    /**
+     *  @brief  Whether track passes the quality cuts required in order to be used to form a pfo
+     * 
+     *  @param  pTrack the lcio track
+     *  @param  trackParameters the track parameters
+     *  @param  rInner the track inner radius
+     * 
+     *  @return boolean
+     */
+    bool PassesQualityCuts(const Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters, const float rInner) const;
 
     static TrackVector      m_trackVector;      ///< The track vector
 

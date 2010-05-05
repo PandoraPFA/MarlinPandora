@@ -177,7 +177,7 @@ bool TrackCreator::IsConflictingRelationship(const TrackVec &trackVec) const
     {
         Track *pTrack = trackVec[iTrack];
 
-        if (this->IsDaughter(pTrack) || this->IsParent(pTrack))
+        if (this->IsDaughter(pTrack) || this->IsParent(pTrack) || this->IsV0(pTrack))
             return true;
     }
 
@@ -248,77 +248,6 @@ StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent) const
     }
 
     return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TrackCreator::TrackReachesECAL(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
-{
-    static const gear::TPCParameters &tpcParameters = marlin::Global::GEAR->getTPCParameters();
-    static const float tpcInnerR(tpcParameters.getPadLayout().getPlaneExtent()[0]);
-    static const float tpcOuterR(tpcParameters.getPadLayout().getPlaneExtent()[1]);
-    static const float tpcZmax(tpcParameters.getMaxDriftLength());
-
-    // Examine positions of track hits ...
-    float hitZMax(-std::numeric_limits<float>::max());
-    float hitZMin(std::numeric_limits<float>::max());
-    float hitOuterR(-std::numeric_limits<float>::max());
-
-    TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
-    unsigned int nTrackHits(trackerHitVec.size());
-    int nTpcHits(0);
-
-    for (unsigned int i = 0; i < nTrackHits; ++i)
-    {
-        const float x(static_cast<float>(trackerHitVec[i]->getPosition()[0]));
-        const float y(static_cast<float>(trackerHitVec[i]->getPosition()[1]));
-        const float z(static_cast<float>(trackerHitVec[i]->getPosition()[2]));
-
-        const float r(std::sqrt(x * x + y * y));
-
-        if (z > hitZMax)
-            hitZMax = z;
-
-        if (z < hitZMin)
-            hitZMin = z;
-
-        if (r > hitOuterR)
-            hitOuterR = r;
-
-        if (r > tpcInnerR)
-            nTpcHits++;
-    }
-
-    bool reachesECal=false;
-
-    // If there are at least N hits in the TPC, then require hits in outer part of TPC
-    if (nTpcHits > m_settings.m_reachesECalNTpcHits)
-    {
-        if ((hitOuterR - tpcOuterR > m_settings.m_reachesECalTpcOuterDistance) ||
-            (fabs(hitZMax) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance) ||
-            (fabs(hitZMin) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance))
-        {
-            reachesECal=true;
-        }
-    }
-
-    if (!reachesECal)
-    {
-        // If track is lowpt, it may curl up and end inside tpc inner radius
-        static const float bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z());
-        static const float cosTpc(tpcZmax / std::sqrt(tpcZmax * tpcZmax + tpcInnerR * tpcInnerR));
-
-        const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
-
-        const float cosAngleAtDca(std::fabs(momentumAtDca.GetZ()) / momentumAtDca.GetMagnitude());
-        const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY());
-        const float pT(std::sqrt(pX * pX + pY * pY));
-
-        if ((cosAngleAtDca > cosTpc) || (pT < m_settings.m_curvatureToMomentumFactor * bField * tpcOuterR))
-            reachesECal = true;
-    }
-
-    trackParameters.m_reachesECal = reachesECal;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -418,6 +347,77 @@ void TrackCreator::FitTrackHelices(const Track *const pTrack, PandoraApi::Track:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void TrackCreator::TrackReachesECAL(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
+{
+    static const gear::TPCParameters &tpcParameters = marlin::Global::GEAR->getTPCParameters();
+    static const float tpcInnerR(tpcParameters.getPadLayout().getPlaneExtent()[0]);
+    static const float tpcOuterR(tpcParameters.getPadLayout().getPlaneExtent()[1]);
+    static const float tpcZmax(tpcParameters.getMaxDriftLength());
+
+    // Examine positions of track hits ...
+    float hitZMax(-std::numeric_limits<float>::max());
+    float hitZMin(std::numeric_limits<float>::max());
+    float hitOuterR(-std::numeric_limits<float>::max());
+
+    TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
+    unsigned int nTrackHits(trackerHitVec.size());
+    int nTpcHits(0);
+
+    for (unsigned int i = 0; i < nTrackHits; ++i)
+    {
+        const float x(static_cast<float>(trackerHitVec[i]->getPosition()[0]));
+        const float y(static_cast<float>(trackerHitVec[i]->getPosition()[1]));
+        const float z(static_cast<float>(trackerHitVec[i]->getPosition()[2]));
+
+        const float r(std::sqrt(x * x + y * y));
+
+        if (z > hitZMax)
+            hitZMax = z;
+
+        if (z < hitZMin)
+            hitZMin = z;
+
+        if (r > hitOuterR)
+            hitOuterR = r;
+
+        if (r > tpcInnerR)
+            nTpcHits++;
+    }
+
+    bool reachesECal=false;
+
+    // If there are at least N hits in the TPC, then require hits in outer part of TPC
+    if (nTpcHits > m_settings.m_reachesECalNTpcHits)
+    {
+        if ((hitOuterR - tpcOuterR > m_settings.m_reachesECalTpcOuterDistance) ||
+            (fabs(hitZMax) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance) ||
+            (fabs(hitZMin) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance))
+        {
+            reachesECal=true;
+        }
+    }
+
+    if (!reachesECal)
+    {
+        // If track is lowpt, it may curl up and end inside tpc inner radius
+        static const float bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z());
+        static const float cosTpc(tpcZmax / std::sqrt(tpcZmax * tpcZmax + tpcInnerR * tpcInnerR));
+
+        const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
+
+        const float cosAngleAtDca(std::fabs(momentumAtDca.GetZ()) / momentumAtDca.GetMagnitude());
+        const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY());
+        const float pT(std::sqrt(pX * pX + pY * pY));
+
+        if ((cosAngleAtDca > cosTpc) || (pT < m_settings.m_curvatureToMomentumFactor * bField * tpcOuterR))
+            reachesECal = true;
+    }
+
+    trackParameters.m_reachesECal = reachesECal;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
     bool canFormPfo(false);
@@ -443,50 +443,53 @@ void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Tr
                 zMin = absoluteZ;
         }
 
-        static const float tpcInnerR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[0]);
-
-        const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
-        const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY()), pZ(momentumAtDca.GetZ());
-        const float pT(std::sqrt(pX * pX + pY * pY));
-
-        const float zCutForNonVertexTracks(tpcInnerR * std::fabs(pZ / pT) + m_settings.m_zCutForNonVertexTracks);
-        const bool passRzQualityCuts((zMin < zCutForNonVertexTracks) && (rInner < tpcInnerR + m_settings.m_maxTpcInnerRDistance));
-
-        const bool isV0(this->IsV0(pTrack));
-        const bool isDaughter(this->IsDaughter(pTrack));
-
-        // Decide whether track can be associated with a pandora cluster and used to form a charged PFO
-        if ((d0 < m_settings.m_d0TrackCut) && (z0 < m_settings.m_z0TrackCut) && (rInner < tpcInnerR + m_settings.m_maxTpcInnerRDistance))
+        if (this->PassesQualityCuts(pTrack, trackParameters, rInner))
         {
-            canFormPfo = true;
-        }
-        else if (passRzQualityCuts && (0 != m_settings.m_usingNonVertexTracks))
-        {
-            canFormPfo = true;
-        }
-        else if (isV0 || isDaughter)
-        {
-            canFormPfo = true;
-        }
+            static const float tpcInnerR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[0]);
 
-        // Decide whether track can be used to form a charged PFO, even if track fails to be associated with a pandora cluster
-        const float particleMass(trackParameters.m_mass.Get());
-        const float trackEnergy(std::sqrt(momentumAtDca.GetMagnitudeSquared() + particleMass * particleMass));
+            const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
+            const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY()), pZ(momentumAtDca.GetZ());
+            const float pT(std::sqrt(pX * pX + pY * pY));
 
-        if ((0 != m_settings.m_usingUnmatchedVertexTracks) && (trackEnergy < m_settings.m_unmatchedVertexTrackMaxEnergy))
-        {
-            if ((d0 < m_settings.m_d0UnmatchedVertexTrackCut) && (z0 < m_settings.m_z0UnmatchedVertexTrackCut) &&
-                (rInner < tpcInnerR + m_settings.m_maxTpcInnerRDistance))
+            const float zCutForNonVertexTracks(tpcInnerR * std::fabs(pZ / pT) + m_settings.m_zCutForNonVertexTracks);
+            const bool passRzQualityCuts((zMin < zCutForNonVertexTracks) && (rInner < tpcInnerR + m_settings.m_maxTpcInnerRDistance));
+
+            const bool isV0(this->IsV0(pTrack));
+            const bool isDaughter(this->IsDaughter(pTrack));
+
+            // Decide whether track can be associated with a pandora cluster and used to form a charged PFO
+            if ((d0 < m_settings.m_d0TrackCut) && (z0 < m_settings.m_z0TrackCut) && (rInner < tpcInnerR + m_settings.m_maxTpcInnerRDistance))
             {
-                canFormClusterlessPfo = true;
+                canFormPfo = true;
             }
-            else if (passRzQualityCuts && (0 != m_settings.m_usingNonVertexTracks) && (0 != m_settings.m_usingUnmatchedNonVertexTracks))
+            else if (passRzQualityCuts && (0 != m_settings.m_usingNonVertexTracks))
             {
-                canFormClusterlessPfo = true;
+                canFormPfo = true;
             }
             else if (isV0 || isDaughter)
             {
-                canFormClusterlessPfo = true;
+                canFormPfo = true;
+            }
+
+            // Decide whether track can be used to form a charged PFO, even if track fails to be associated with a pandora cluster
+            const float particleMass(trackParameters.m_mass.Get());
+            const float trackEnergy(std::sqrt(momentumAtDca.GetMagnitudeSquared() + particleMass * particleMass));
+
+            if ((0 != m_settings.m_usingUnmatchedVertexTracks) && (trackEnergy < m_settings.m_unmatchedVertexTrackMaxEnergy))
+            {
+                if ((d0 < m_settings.m_d0UnmatchedVertexTrackCut) && (z0 < m_settings.m_z0UnmatchedVertexTrackCut) &&
+                    (rInner < tpcInnerR + m_settings.m_maxTpcInnerRDistance))
+                {
+                    canFormClusterlessPfo = true;
+                }
+                else if (passRzQualityCuts && (0 != m_settings.m_usingNonVertexTracks) && (0 != m_settings.m_usingUnmatchedNonVertexTracks))
+                {
+                    canFormClusterlessPfo = true;
+                }
+                else if (isV0 || isDaughter)
+                {
+                    canFormClusterlessPfo = true;
+                }
             }
         }
     }
@@ -559,4 +562,41 @@ pandora::TrackState TrackCreator::GetECalProjection(HelixClass *const pHelix, fl
 
     return pandora::TrackState(bestEcalProjection[0], bestEcalProjection[1], bestEcalProjection[2],
         extrapolatedMomentum[0], extrapolatedMomentum[1], extrapolatedMomentum[2]);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackCreator::PassesQualityCuts(const Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters, const float rInner) const
+{
+    // TODO Remove hard-coded numbers and remove track energy cuts
+    static const float tpcOuterR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[1]);
+
+    const unsigned int nTrackHits(pTrack->getTrackerHits().size());
+    const unsigned int nHitsInTrackFit(pTrack->getNdf());
+
+    bool badTrackFit = (nHitsInTrackFit < nTrackHits * 0.25) || (0 == nHitsInTrackFit);
+
+    if (!badTrackFit)
+    {
+        const float trackFitChi2(pTrack->getChi2());
+        const float sigmaChi2((trackFitChi2 - static_cast<float>(nHitsInTrackFit)) / (std::sqrt(2. * static_cast<float>(nHitsInTrackFit))));
+
+        if ((sigmaChi2 > 5.f) && (trackFitChi2 / static_cast<float>(nHitsInTrackFit) > 2.f))
+            badTrackFit = true;
+    }
+
+    const float mass(trackParameters.m_mass.Get());
+    const float momentumAtDca(trackParameters.m_momentumAtDca.Get().GetMagnitude());
+    const float trackEnergy(std::sqrt(momentumAtDca * momentumAtDca + mass * mass));
+
+    if ((badTrackFit && trackEnergy > 100.f) || (trackEnergy > 550.f))
+        return false;
+
+    if (trackParameters.m_trackStateAtECal.Get().GetPosition().GetMagnitude() < 100.f)
+        return false;
+
+    if ((rInner > tpcOuterR - 1000.f) && (trackEnergy > 150.f))
+        return false;
+
+    return true;
 }
