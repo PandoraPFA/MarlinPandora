@@ -11,8 +11,6 @@
 
 #include "EVENT/CalorimeterHit.h"
 
-#include "UTIL/CellIDDecoder.h"
-
 #include "gear/LayerLayout.h"
 
 #include "Api/PandoraApi.h"
@@ -37,6 +35,8 @@ public:
     public:
         StringVector    m_eCalCaloHitCollections;               ///< The ecal calorimeter hit collections
         StringVector    m_hCalCaloHitCollections;               ///< The hcal calorimeter hit collections
+        StringVector    m_lCalCaloHitCollections;               ///< The lcal calorimeter hit collections
+        StringVector    m_lHCalCaloHitCollections;              ///< The lhcal calorimeter hit collections
 
         float           m_absorberRadiationLength;              ///< The absorber radiation length
         float           m_absorberInteractionLength;            ///< The absorber interaction length
@@ -95,14 +95,26 @@ private:
     StatusCode CreateHCalCaloHits(const LCEvent *const pLCEvent);
 
     /**
+     *  @brief  Create lcal calo hits
+     * 
+     *  @param  pLCEvent the lcio event
+     */    
+    StatusCode CreateLCalCaloHits(const LCEvent *const pLCEvent);
+
+    /**
+     *  @brief  Create lhcal calo hits
+     * 
+     *  @param  pLCEvent the lcio event
+     */
+    StatusCode CreateLHCalCaloHits(const LCEvent *const pLCEvent);
+
+    /**
      *  @brief  Get common calo hit properties: position, parent address, input energy and time
      * 
      *  @param  pCaloHit the lcio calorimeter hit
-     *  @param  cellIdDecoder the cell id decoder
      *  @param  caloHitParameters the calo hit parameters to populate
      */
-    void GetCommonCaloHitProperties(CalorimeterHit *const pCaloHit, CellIDDecoder<CalorimeterHit> &cellIdDecoder,
-        PandoraApi::CaloHit::Parameters &caloHitParameters) const;
+    void GetCommonCaloHitProperties(CalorimeterHit *const pCaloHit, PandoraApi::CaloHit::Parameters &caloHitParameters) const;
 
     /**
      *  @brief  Get end cap specific calo hit properties: cell size, absorber radiation and interaction lengths, normal vector

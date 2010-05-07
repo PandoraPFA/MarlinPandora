@@ -178,6 +178,18 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_caloHitCreator.m_settings.m_hCalCaloHitCollections,
                             StringVector());
 
+    registerInputCollections(LCIO::CALORIMETERHIT,
+                            "LCalCaloHitCollections", 
+                            "Name of the LCAL calo hit collections",
+                            m_caloHitCreator.m_settings.m_lCalCaloHitCollections,
+                            StringVector());
+
+    registerInputCollections(LCIO::CALORIMETERHIT,
+                            "LHCalCaloHitCollections", 
+                            "Name of the LHCAL calo hit collections",
+                            m_caloHitCreator.m_settings.m_lHCalCaloHitCollections,
+                            StringVector());
+
     registerInputCollections(LCIO::MCPARTICLE,
                             "MCParticleCollections", 
                             "Name of mc particle collections",
