@@ -190,6 +190,12 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_caloHitCreator.m_settings.m_lHCalCaloHitCollections,
                             StringVector());
 
+    registerInputCollections(LCIO::CALORIMETERHIT,
+                            "MuonCaloHitCollections", 
+                            "Name of the muon calo hit collections",
+                            m_caloHitCreator.m_settings.m_muonCaloHitCollections,
+                            StringVector());
+
     registerInputCollections(LCIO::MCPARTICLE,
                             "MCParticleCollections", 
                             "Name of mc particle collections",
@@ -272,6 +278,11 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "The calibration from deposited HCal energy to hadronic energy",
                             m_caloHitCreator.m_settings.m_hCalToHadGeV,
                             float(1.));
+
+    registerProcessorParameter("MuonHitEnergy",
+                            "The energy for a digital muon calorimeter hit, units GeV",
+                            m_caloHitCreator.m_settings.m_muonHitEnergy,
+                            float(0.5));
 
     registerProcessorParameter("MaxHCalHitHadronicEnergy",
                             "The maximum hadronic energy allowed for a single hcal hit",

@@ -37,6 +37,7 @@ public:
         StringVector    m_hCalCaloHitCollections;               ///< The hcal calorimeter hit collections
         StringVector    m_lCalCaloHitCollections;               ///< The lcal calorimeter hit collections
         StringVector    m_lHCalCaloHitCollections;              ///< The lhcal calorimeter hit collections
+        StringVector    m_muonCaloHitCollections;               ///< The muon calorimeter hit collections
 
         float           m_absorberRadiationLength;              ///< The absorber radiation length
         float           m_absorberInteractionLength;            ///< The absorber interaction length
@@ -49,6 +50,8 @@ public:
         float           m_hCalToEMGeV;                          ///< The calibration from deposited HCal energy to EM energy
         float           m_eCalToHadGeV;                         ///< The calibration from deposited ECal energy to hadronic energy
         float           m_hCalToHadGeV;                         ///< The calibration from deposited HCal energy to hadronic energy
+
+        float           m_muonHitEnergy;                        ///< The energy for a digital muon calorimeter hit, units GeV
 
         float           m_maxHCalHitHadronicEnergy;             ///< The maximum hadronic energy allowed for a single hcal hit
         int             m_nOuterSamplingLayers;                 ///< Number of layers from edge for hit to be flagged as an outer layer hit
@@ -107,6 +110,13 @@ private:
      *  @param  pLCEvent the lcio event
      */
     StatusCode CreateLHCalCaloHits(const LCEvent *const pLCEvent);
+
+    /**
+     *  @brief  Create muon calo hits
+     * 
+     *  @param  pLCEvent the lcio event
+     */
+    StatusCode CreateMuonCaloHits(const LCEvent *const pLCEvent);
 
     /**
      *  @brief  Get common calo hit properties: position, parent address, input energy and time
