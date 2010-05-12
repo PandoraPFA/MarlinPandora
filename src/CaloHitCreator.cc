@@ -32,6 +32,8 @@ StatusCode CaloHitCreator::CreateCaloHits(const LCEvent *const pLCEvent)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateLCalCaloHits(pLCEvent));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateLHCalCaloHits(pLCEvent));
 
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateMuonCaloHits(pLCEvent));
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -60,6 +62,8 @@ StatusCode CaloHitCreator::CreateECalCaloHits(const LCEvent *const pLCEvent)
                 continue;
 
             CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
+            const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
+            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -69,7 +73,7 @@ StatusCode CaloHitCreator::CreateECalCaloHits(const LCEvent *const pLCEvent)
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::ECAL;
-                    caloHitParameters.m_layer = cellIdDecoder(pCaloHit)["K-1"];
+                    caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
                     caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ? pandora::BARREL : pandora::ENDCAP;
                     caloHitParameters.m_isInOuterSamplingLayer = false;
 
@@ -143,6 +147,8 @@ StatusCode CaloHitCreator::CreateHCalCaloHits(const LCEvent *const pLCEvent)
                 continue;
 
             CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
+            const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
+            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -152,7 +158,7 @@ StatusCode CaloHitCreator::CreateHCalCaloHits(const LCEvent *const pLCEvent)
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::HCAL;
-                    caloHitParameters.m_layer = cellIdDecoder(pCaloHit)["K-1"];
+                    caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
                     caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ? pandora::BARREL : pandora::ENDCAP;
                     caloHitParameters.m_isInOuterSamplingLayer = (this->GetNLayersFromEdge(pCaloHit) <= m_settings.m_nOuterSamplingLayers);
 
@@ -333,6 +339,93 @@ StatusCode CaloHitCreator::CreateLHCalCaloHits(const LCEvent *const pLCEvent)
         catch (...)
         {
             streamlog_out(WARNING) << "Failed to extract lhcal calo hit collection: " << *iter << std::endl;
+        }
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode CaloHitCreator::CreateMuonCaloHits(const LCEvent *const pLCEvent)
+{
+    static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
+
+    static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getYokeEndcapParameters().getLayerLayout());
+    static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getYokeBarrelParameters().getLayerLayout());
+
+    static const float endCapZCoordinate(marlin::Global::GEAR->getYokeEndcapParameters().getExtent()[2]);
+    static const unsigned int barrelSymmetryOrder(marlin::Global::GEAR->getYokeBarrelParameters().getSymmetryOrder());
+    static const float barrelPhi0(marlin::Global::GEAR->getYokeBarrelParameters().getPhi0());
+
+    for (StringVector::const_iterator iter = m_settings.m_muonCaloHitCollections.begin(), iterEnd = m_settings.m_muonCaloHitCollections.end();
+        iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
+            const int nElements(pCaloHitCollection->getNumberOfElements());
+
+            if (0 == nElements)
+                continue;
+
+            CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
+            const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
+            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+
+            for (int i = 0; i < nElements; ++i)
+            {
+                try
+                {
+                    CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
+
+                    PandoraApi::CaloHit::Parameters caloHitParameters;
+                    caloHitParameters.m_hitType = pandora::MUON;
+                    caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
+                    caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ? pandora::BARREL : pandora::ENDCAP;
+                    caloHitParameters.m_isInOuterSamplingLayer = true;
+
+                    const float *pCaloHitPosition(pCaloHit->getPosition());
+                    caloHitParameters.m_positionVector = pandora::CartesianVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
+
+                    caloHitParameters.m_pParentAddress = pCaloHit;
+                    caloHitParameters.m_time = pCaloHit->getTime();
+                    caloHitParameters.m_isDigital = true;
+
+                    float absorberCorrection(1.);
+
+                    if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
+                    {
+                        this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
+                    }
+                    else
+                    {
+                        const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
+                        this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0, staveNumber,
+                            caloHitParameters, absorberCorrection);
+                    }
+
+                    caloHitParameters.m_inputEnergy = m_settings.m_muonHitEnergy;
+                    caloHitParameters.m_hadronicEnergy = m_settings.m_muonHitEnergy;
+                    caloHitParameters.m_electromagneticEnergy = m_settings.m_muonHitEnergy;
+                    caloHitParameters.m_mipEquivalentEnergy = 1.;
+
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, caloHitParameters));
+                    m_calorimeterHitVector.push_back(pCaloHit);
+                }
+                catch (StatusCodeException &statusCodeException)
+                {
+                    streamlog_out(ERROR) << "Failed to extract muon hit: " << statusCodeException.ToString() << std::endl;
+                }
+                catch (...)
+                {
+                    streamlog_out(WARNING) << "Failed to extract muon hit, unrecognised exception" << std::endl;
+                }
+            }
+        }
+        catch (...)
+        {
+            streamlog_out(WARNING) << "Failed to extract muon hit collection: " << *iter << std::endl;
         }
     }
 

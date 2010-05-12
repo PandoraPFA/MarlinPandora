@@ -45,16 +45,16 @@ StatusCode GeometryCreator::CreateGeometry() const
         geometryParameters.m_nRadLengthsInRadialGap = 0;
         geometryParameters.m_nIntLengthsInRadialGap = 0;
 
-        const gear::CalorimeterParameters &eCalBarrelParameters = marlin::Global::GEAR->getEcalBarrelParameters();
-        const gear::CalorimeterParameters &eCalEndCapParameters = marlin::Global::GEAR->getEcalEndcapParameters();
         const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
         const gear::CalorimeterParameters &hCalEndCapParameters = marlin::Global::GEAR->getHcalEndcapParameters();
 
         // Initialize settings to gear defaults
-        SetDefaultSubDetectorParameters(eCalBarrelParameters, geometryParameters.m_eCalBarrelParameters);
-        SetDefaultSubDetectorParameters(eCalEndCapParameters, geometryParameters.m_eCalEndCapParameters);
+        SetDefaultSubDetectorParameters(marlin::Global::GEAR->getEcalBarrelParameters(), geometryParameters.m_eCalBarrelParameters);
+        SetDefaultSubDetectorParameters(marlin::Global::GEAR->getEcalEndcapParameters(), geometryParameters.m_eCalEndCapParameters);
         SetDefaultSubDetectorParameters(hCalBarrelParameters, geometryParameters.m_hCalBarrelParameters);
         SetDefaultSubDetectorParameters(hCalEndCapParameters, geometryParameters.m_hCalEndCapParameters);
+        SetDefaultSubDetectorParameters(marlin::Global::GEAR->getYokeBarrelParameters(), geometryParameters.m_muonBarrelParameters);
+        SetDefaultSubDetectorParameters(marlin::Global::GEAR->getYokeEndcapParameters(), geometryParameters.m_muonEndCapParameters);
 
         // Non-default values (and those missing from GEAR parameters file)...
         geometryParameters.m_eCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_eCalEndCapInnerSymmetryOrder;
@@ -109,16 +109,6 @@ void GeometryCreator::SetDefaultSubDetectorParameters(const gear::CalorimeterPar
 
 void GeometryCreator::SetAdditionalSubDetectorParameters(PandoraApi::GeometryParameters &geometryParameters) const
 {
-    PandoraApi::Geometry::Parameters::SubDetectorParameters yokeBarrelParameters;
-    const gear::CalorimeterParameters &yokeBarrelInputParameters = marlin::Global::GEAR->getYokeBarrelParameters();
-    SetDefaultSubDetectorParameters(yokeBarrelInputParameters, yokeBarrelParameters);
-    geometryParameters.m_additionalSubDetectors["YokeBarrel"] = yokeBarrelParameters;
-
-    PandoraApi::Geometry::Parameters::SubDetectorParameters yokeEndcapParameters;
-    const gear::CalorimeterParameters &yokeEndcapInputParameters = marlin::Global::GEAR->getYokeEndcapParameters();
-    SetDefaultSubDetectorParameters(yokeEndcapInputParameters, yokeEndcapParameters);
-    geometryParameters.m_additionalSubDetectors["YokeEndcap"] = yokeEndcapParameters;
-
     PandoraApi::Geometry::Parameters::SubDetectorParameters eCalPlugParameters;
     const gear::CalorimeterParameters &eCalPlugInputParameters = marlin::Global::GEAR->getEcalPlugParameters();
     SetDefaultSubDetectorParameters(eCalPlugInputParameters, eCalPlugParameters);
