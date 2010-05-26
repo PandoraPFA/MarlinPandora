@@ -103,7 +103,7 @@ StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
         }
         catch (...)
         {
-            streamlog_out(WARNING) << "Failed to extract kink vertex collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract kink vertex collection: " << *iter << std::endl;
         }
     }
 
@@ -162,7 +162,7 @@ StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
         }
         catch (...)
         {
-            streamlog_out(WARNING) << "Failed to extract v0 vertex collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract v0 vertex collection: " << *iter << std::endl;
         }
     }
 
