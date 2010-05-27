@@ -243,7 +243,7 @@ StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent) const
         }
         catch (...)
         {
-            streamlog_out(WARNING) << "Failed to extract track collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract track collection: " << *iter << std::endl;
         }
     }
 

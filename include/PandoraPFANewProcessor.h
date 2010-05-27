@@ -89,9 +89,10 @@ public:
 
 private:
     /**
-     *  @brief  Register user algorithm factories, insert user code here
+     *  @brief  Register user algorithm factories, energy correction functions and particle id functions,
+     *          insert user code here
      */
-    StatusCode RegisterUserAlgorithmFactories() const;
+    StatusCode RegisterUserComponents() const;
 
     /**
      *  @brief  Process steering file parameters, insert user code here
