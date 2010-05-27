@@ -38,7 +38,7 @@ void PandoraPFANewProcessor::init()
         m_pPandora = new pandora::Pandora();
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_geometryCreator.CreateGeometry());
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RegisterUserAlgorithmFactories());
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RegisterUserComponents());
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ReadSettings(*m_pPandora, m_settings.m_pandoraSettingsXmlFile));
     }
     catch (StatusCodeException &statusCodeException)
@@ -129,9 +129,17 @@ void PandoraPFANewProcessor::end()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PandoraPFANewProcessor::RegisterUserAlgorithmFactories() const
+StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 {
     // Insert user code here ...
+
+    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionFunction(*m_pPandora, "MyHadronicEnergyCorrection",
+    //    pandora::HADRONIC, &PandoraPFANewProcessor::MyHadronicEnergyCorrection));
+
+    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterParticleIdFunction(*m_pPandora, "MyParticleId",
+    //    &PandoraPFANewProcessor::MyParticleId));
+
+    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "MyAlgorithm", new MyAlgorithm::Factory));
 
     return STATUS_CODE_SUCCESS;
 }

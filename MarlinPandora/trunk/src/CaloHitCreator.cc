@@ -115,7 +115,7 @@ StatusCode CaloHitCreator::CreateECalCaloHits(const LCEvent *const pLCEvent)
         }
         catch (...)
         {
-            streamlog_out(WARNING) << "Failed to extract ecal calo hit collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract ecal calo hit collection: " << *iter << std::endl;
         }
     }
 
@@ -200,7 +200,7 @@ StatusCode CaloHitCreator::CreateHCalCaloHits(const LCEvent *const pLCEvent)
         }
         catch (...)
         {
-            streamlog_out(WARNING) << "Failed to extract hcal calo hit collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract hcal calo hit collection: " << *iter << std::endl;
         }
     }
 
@@ -269,7 +269,7 @@ StatusCode CaloHitCreator::CreateLCalCaloHits(const LCEvent *const pLCEvent)
         }
         catch (...)
         {
-            streamlog_out(WARNING) << "Failed to extract lcal calo hit collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract lcal calo hit collection: " << *iter << std::endl;
         }
     }
 
@@ -338,7 +338,7 @@ StatusCode CaloHitCreator::CreateLHCalCaloHits(const LCEvent *const pLCEvent)
         }
         catch (...)
         {
-            streamlog_out(WARNING) << "Failed to extract lhcal calo hit collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract lhcal calo hit collection: " << *iter << std::endl;
         }
     }
 
@@ -425,7 +425,7 @@ StatusCode CaloHitCreator::CreateMuonCaloHits(const LCEvent *const pLCEvent)
         }
         catch (...)
         {
-            streamlog_out(WARNING) << "Failed to extract muon hit collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract muon hit collection: " << *iter << std::endl;
         }
     }
 
