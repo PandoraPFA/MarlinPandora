@@ -400,6 +400,11 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_trackCreator.m_settings.m_curvatureToMomentumFactor,
                             float(0.3 / 2000.));
 
+    registerProcessorParameter("MinTrackECalDistanceFromIp",
+                            "Sanity check on separation between ip and track projected ecal position",
+                            m_trackCreator.m_settings.m_minTrackECalDistanceFromIp,
+                            float(100.));
+
     // Track relationship parameters
     registerProcessorParameter("ShouldFormTrackRelationships",
                             "Whether to form pandora track relationships using v0 and kink info",

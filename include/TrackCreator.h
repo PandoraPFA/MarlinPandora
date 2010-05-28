@@ -65,6 +65,8 @@ public:
         float           m_reachesECalTpcZMaxDistance;           ///< Max distance from track to tpc z max to id whether track reaches ecal
         float           m_curvatureToMomentumFactor;            ///< Constant relating track curvature in b field to momentum
 
+        float           m_minTrackECalDistanceFromIp;           ///< Sanity check on separation between ip and track projected ecal position
+
         int             m_shouldFormTrackRelationships;         ///< Whether to form pandora track relationships using v0 and kink info
     };
 
