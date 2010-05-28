@@ -568,34 +568,8 @@ pandora::TrackState TrackCreator::GetECalProjection(HelixClass *const pHelix, fl
 
 bool TrackCreator::PassesQualityCuts(const Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters, const float rInner) const
 {
-    // TODO Remove hard-coded numbers and remove track energy cuts
-    static const float tpcOuterR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[1]);
-
-    const unsigned int nTrackHits(pTrack->getTrackerHits().size());
-    const unsigned int nHitsInTrackFit(pTrack->getNdf());
-
-    bool badTrackFit = (nHitsInTrackFit < nTrackHits * 0.25) || (0 == nHitsInTrackFit);
-
-    if (!badTrackFit)
-    {
-        const float trackFitChi2(pTrack->getChi2());
-        const float sigmaChi2((trackFitChi2 - static_cast<float>(nHitsInTrackFit)) / (std::sqrt(2. * static_cast<float>(nHitsInTrackFit))));
-
-        if ((sigmaChi2 > 5.f) && (trackFitChi2 / static_cast<float>(nHitsInTrackFit) > 2.f))
-            badTrackFit = true;
-    }
-
-    const float mass(trackParameters.m_mass.Get());
-    const float momentumAtDca(trackParameters.m_momentumAtDca.Get().GetMagnitude());
-    const float trackEnergy(std::sqrt(momentumAtDca * momentumAtDca + mass * mass));
-
-    if ((badTrackFit && trackEnergy > 100.f) || (trackEnergy > 550.f))
-        return false;
-
-    if (trackParameters.m_trackStateAtECal.Get().GetPosition().GetMagnitude() < 100.f)
-        return false;
-
-    if ((rInner > tpcOuterR - 1000.f) && (trackEnergy > 150.f))
+    // ATTN Used to contain cuts on track chi2 values and energies. Reduced to simple sanity check for first official release.
+    if (trackParameters.m_trackStateAtECal.Get().GetPosition().GetMagnitude() < m_settings.m_minTrackECalDistanceFromIp)
         return false;
 
     return true;
