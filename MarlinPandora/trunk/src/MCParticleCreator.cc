@@ -6,6 +6,7 @@
  *  $Log: $
  */
 
+#include "marlin/Global.h"
 #include "marlin/Processor.h"
 
 #include "EVENT/LCCollection.h"
@@ -13,6 +14,8 @@
 #include "EVENT/SimCalorimeterHit.h"
 
 #include "UTIL/LCRelationNavigator.h"
+
+#include "gear/BField.h"
 
 #include "CaloHitCreator.h"
 #include "MCParticleCreator.h"
@@ -94,9 +97,7 @@ StatusCode MCParticleCreator::CreateMCParticles(const LCEvent *const pLCEvent) c
 StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(const LCEvent *const pLCEvent) const
 {
     static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
-
-    typedef std::map<MCParticle *, float> MCParticleToWeightMap;
-    MCParticleToWeightMap mcParticleToWeightMap;
+    static const float bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z());
 
     for (StringVector::const_iterator iter = m_settings.m_lcTrackRelationCollections.begin(), iterEnd = m_settings.m_lcTrackRelationCollections.end();
          iter != iterEnd; ++iter)
@@ -113,23 +114,46 @@ StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(const LCEvent
             {
                 try
                 {
-                    mcParticleToWeightMap.clear();
-
-                    MCParticle* mcParticle = NULL;
+                    Track *pTrack = *trackIter;
                     const LCObjectVec &objectVec = navigate.getRelatedToObjects(*trackIter);
 
-                    if (objectVec.size() > 0) 
+                    // Get reconstructed momentum at dca
+                    HelixClass helixFit;
+                    helixFit.Initialize_Canonical(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(),
+                        pTrack->getTanLambda(), bField);
+
+                    const float recoMomentum(pandora::CartesianVector(helixFit.getMomentum()[0], helixFit.getMomentum()[1],
+                        helixFit.getMomentum()[2]).GetMagnitude());
+
+                    // Use momentum magnitude to identify best mc particle
+                    MCParticle *pBestMCParticle = NULL;
+                    float bestDeltaMomentum(std::numeric_limits<float>::max());
+
+                    for (LCObjectVec::const_iterator itRel = objectVec.begin(), itRelEnd = objectVec.end(); itRel != itRelEnd; ++itRel)
                     {
-                        mcParticle = dynamic_cast<MCParticle*>(objectVec[0]);
-                        mcParticleToWeightMap[mcParticle] += 1.0;
+                        MCParticle *pMCParticle = NULL;
+                        pMCParticle = dynamic_cast<MCParticle *>(*itRel);
+
+                        if (NULL == pMCParticle)
+                            continue;
+
+                        const float trueMomentum(pandora::CartesianVector(pMCParticle->getMomentum()[0], pMCParticle->getMomentum()[1],
+                            pMCParticle->getMomentum()[2]).GetMagnitude());
+
+                        const float deltaMomentum(std::fabs(recoMomentum - trueMomentum));
+
+                        if (deltaMomentum < bestDeltaMomentum)
+                        {
+                            pBestMCParticle = pMCParticle;
+                            bestDeltaMomentum = deltaMomentum;
+                        }
                     }
 
-                    for (MCParticleToWeightMap::const_iterator mcParticleIter = mcParticleToWeightMap.begin(),
-                        mcParticleIterEnd = mcParticleToWeightMap.end(); mcParticleIter != mcParticleIterEnd; ++mcParticleIter)
-                    {
-                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackToMCParticleRelationship(*pPandora,
-                            *trackIter, mcParticleIter->first, mcParticleIter->second));
-                    }
+                    if (NULL == pBestMCParticle)
+                        continue;
+
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackToMCParticleRelationship(*pPandora, pTrack,
+                        pBestMCParticle));
                 }
                 catch (StatusCodeException &statusCodeException)
                 {
@@ -177,15 +201,17 @@ StatusCode MCParticleCreator::CreateCaloHitToMCParticleRelationships(const LCEve
                     mcParticleToEnergyWeightMap.clear();
                     const LCObjectVec &objectVec = navigate.getRelatedToObjects(*caloHitIter);
 
-                    for(LCObjectVec::const_iterator itRel = objectVec.begin(), itRelEnd = objectVec.end(); itRel != itRelEnd; ++itRel)
+                    for (LCObjectVec::const_iterator itRel = objectVec.begin(), itRelEnd = objectVec.end(); itRel != itRelEnd; ++itRel)
                     {
                         SimCalorimeterHit *pSimHit = dynamic_cast<SimCalorimeterHit *>(*itRel);
 
-                        if(pSimHit == NULL)
-                            return STATUS_CODE_FAILURE;
+                        if (NULL == pSimHit)
+                            continue;
 
-                        for(int iCont = 0, iEnd = pSimHit->getNMCContributions(); iCont < iEnd; ++iCont)
+                        for (int iCont = 0, iEnd = pSimHit->getNMCContributions(); iCont < iEnd; ++iCont)
+                        {
                             mcParticleToEnergyWeightMap[pSimHit->getParticleCont(iCont)] += pSimHit->getEnergyCont(iCont);
+                        }
                     }
 
                     for (MCParticleToEnergyWeightMap::const_iterator mcParticleIter = mcParticleToEnergyWeightMap.begin(),
