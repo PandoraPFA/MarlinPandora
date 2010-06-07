@@ -23,6 +23,7 @@
 #include "TrackCreator.h"
 
 #include <cmath>
+#include <limits>
 
 StatusCode MCParticleCreator::CreateMCParticles(const LCEvent *const pLCEvent) const
 {

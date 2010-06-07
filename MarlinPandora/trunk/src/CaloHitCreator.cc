@@ -17,6 +17,7 @@
 #include "PandoraPFANewProcessor.h"
 
 #include <cmath>
+#include <limits>
 
 CalorimeterHitVector CaloHitCreator::m_calorimeterHitVector;
 
