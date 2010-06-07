@@ -25,6 +25,7 @@
 #include "TrackCreator.h"
 
 #include <cmath>
+#include <limits>
 
 TrackVector TrackCreator::m_trackVector;
 

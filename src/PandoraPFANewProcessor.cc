@@ -12,6 +12,8 @@
 
 #include "PandoraPFANewProcessor.h"
 
+#include <cstdlib>
+
 PandoraPFANewProcessor pandoraPFANewProcessor;
 
 pandora::Pandora *PandoraPFANewProcessor::m_pPandora = NULL;
