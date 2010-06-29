@@ -16,10 +16,12 @@
 #include "IMPL/LCFlagImpl.h"
 #include "IMPL/ReconstructedParticleImpl.h"
 
-#include "Api/PandoraApi.h"
-
 #include "CalorimeterHitType.h"
 #include "ClusterShapes.h"
+
+#include "Api/PandoraApi.h"
+
+#include "Objects/ParticleFlowObject.h"
 
 #include "PandoraPFANewProcessor.h"
 #include "PfoCreator.h"
