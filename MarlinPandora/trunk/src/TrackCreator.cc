@@ -391,8 +391,8 @@ void TrackCreator::TrackReachesECAL(const Track *const pTrack, PandoraApi::Track
     if (nTpcHits > m_settings.m_reachesECalNTpcHits)
     {
         if ((hitOuterR - tpcOuterR > m_settings.m_reachesECalTpcOuterDistance) ||
-            (fabs(hitZMax) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance) ||
-            (fabs(hitZMin) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance))
+            (std::fabs(hitZMax) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance) ||
+            (std::fabs(hitZMin) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance))
         {
             reachesECal=true;
         }
