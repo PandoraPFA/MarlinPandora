@@ -20,7 +20,7 @@
         <algorithm type = "Clustering" description = "ClusterFormation">
             <TanConeAngleHCal>0.75</TanConeAngleHCal>
             <AdditionalPadWidthsHCal>12.5</AdditionalPadWidthsHCal>
-            <SameLayerPadWidthsHCal>45</SameLayerPadWidthsHCal>
+            <SameLayerPadWidthsHCal>14</SameLayerPadWidthsHCal>
             <ShouldUseTrackSeed>false</ShouldUseTrackSeed>
             <MaxTrackSeedSeparation>0</MaxTrackSeedSeparation>
             <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
@@ -306,6 +306,9 @@
         </reclusteringAlgorithms>
     </algorithm>
 
+    <!-- Add muon clusters to primary clusters -->
+    <algorithm type = "MuonClusterAssociation"/>
+
     <!-- Photon recovery -->
     <algorithm type = "PhotonRecovery">
         <algorithm type = "TrackClusterAssociation"/>
@@ -333,8 +336,6 @@
             <algorithm type = "NeutralFragmentRemoval"/>
         </fragmentRemovalAlgorithms>
     </algorithm>
-
-    <algorithm type = "MuonClusterAssociation"/>
 
     <!-- Create the final particle flow objects -->
     <algorithm type = "ForceSplitTrackAssociations"/>
