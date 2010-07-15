@@ -24,6 +24,7 @@
 #include "PandoraPFANewProcessor.h"
 #include "TrackCreator.h"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -216,14 +217,13 @@ StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent) const
                     trackParameters.m_z0 = pTrack->getZ0();
                     trackParameters.m_pParentAddress = pTrack;
 
+                    // For now, assume tracks are charged pions
                     const float signedCurvature(pTrack->getOmega());
+                    trackParameters.m_particleId = (signedCurvature > 0) ? 211 : -211; 
+                    trackParameters.m_mass = 1.3957018E-01f;
 
                     if (0. != signedCurvature)
-                        trackParameters.m_chargeSign = static_cast<int>(signedCurvature / std::fabs(signedCurvature));
-
-                    // For now, assume tracks are charged pions
-                    trackParameters.m_mass = 0.140;
-                    trackParameters.m_particleId = (trackParameters.m_chargeSign.Get() > 0) ? 211 : -211;
+                        trackParameters.m_charge = static_cast<int>(signedCurvature / std::fabs(signedCurvature));
 
                     this->FitTrackHelices(pTrack, trackParameters);
                     this->TrackReachesECAL(pTrack, trackParameters);
@@ -350,71 +350,128 @@ void TrackCreator::FitTrackHelices(const Track *const pTrack, PandoraApi::Track:
 
 void TrackCreator::TrackReachesECAL(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
-    static const gear::TPCParameters &tpcParameters = marlin::Global::GEAR->getTPCParameters();
-    static const float tpcInnerR(tpcParameters.getPadLayout().getPlaneExtent()[0]);
-    static const float tpcOuterR(tpcParameters.getPadLayout().getPlaneExtent()[1]);
-    static const float tpcZmax(tpcParameters.getMaxDriftLength());
-
-    // Examine positions of track hits ...
-    float hitZMax(-std::numeric_limits<float>::max());
-    float hitZMin(std::numeric_limits<float>::max());
-    float hitOuterR(-std::numeric_limits<float>::max());
-
-    TrackerHitVec trackerHitVec = pTrack->getTrackerHits();
-    unsigned int nTrackHits(trackerHitVec.size());
-    int nTpcHits(0);
-
-    for (unsigned int i = 0; i < nTrackHits; ++i)
+    try
     {
-        const float x(static_cast<float>(trackerHitVec[i]->getPosition()[0]));
-        const float y(static_cast<float>(trackerHitVec[i]->getPosition()[1]));
-        const float z(static_cast<float>(trackerHitVec[i]->getPosition()[2]));
+        // Extract tracking subdetector parameters
+        static const gear::TPCParameters &tpcParameters = marlin::Global::GEAR->getTPCParameters();
+        static const float tpcInnerR(tpcParameters.getPadLayout().getPlaneExtent()[0]);
+        static const float tpcOuterR(tpcParameters.getPadLayout().getPlaneExtent()[1]);
+        static const float tpcZmax(tpcParameters.getMaxDriftLength());
 
-        const float r(std::sqrt(x * x + y * y));
+        static const gear::GearParameters &ftdParameters = marlin::Global::GEAR->getGearParameters("FTD");
+        static const DoubleVector ftdInnerRadii(ftdParameters.getDoubleVals("FTDInnerRadius"));
+        static const DoubleVector ftdOuterRadii(ftdParameters.getDoubleVals("FTDOuterRadius"));
+        static const DoubleVector ftdZPositions(ftdParameters.getDoubleVals("FTDZCoordinate"));
+        static const unsigned int nFtdLayers(ftdZPositions.size());
 
-        if (z > hitZMax)
-            hitZMax = z;
+        static const gear::GearParameters &etdParameters = marlin::Global::GEAR->getGearParameters("ETD");
+        static const DoubleVector etdZPositions(etdParameters.getDoubleVals("ETDLayerZ"));
+        static const gear::GearParameters &setParameters = marlin::Global::GEAR->getGearParameters("SET");
+        static const DoubleVector setInnerRadii(setParameters.getDoubleVals("SETLayerRadius"));
 
-        if (z < hitZMin)
-            hitZMin = z;
+        // First pass validation of tracking geometry
+        static bool isFirstPass(true);
 
-        if (r > hitOuterR)
-            hitOuterR = r;
-
-        if (r > tpcInnerR)
-            nTpcHits++;
-    }
-
-    bool reachesECal=false;
-
-    // If there are at least N hits in the TPC, then require hits in outer part of TPC
-    if (nTpcHits > m_settings.m_reachesECalNTpcHits)
-    {
-        if ((hitOuterR - tpcOuterR > m_settings.m_reachesECalTpcOuterDistance) ||
-            (std::fabs(hitZMax) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance) ||
-            (std::fabs(hitZMin) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance))
+        if (isFirstPass)
         {
-            reachesECal=true;
-        }
-    }
+            isFirstPass = false;
 
-    if (!reachesECal)
-    {
+            if ((0 == nFtdLayers) || etdZPositions.empty() || setInnerRadii.empty())
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+            if ((nFtdLayers != ftdInnerRadii.size()) || (nFtdLayers != ftdOuterRadii.size()))
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        }
+
+        static const double minEtdZPosition(*(std::min_element(etdZPositions.begin(), etdZPositions.end())));
+        static const double minSetRadius(*(std::min_element(setInnerRadii.begin(), setInnerRadii.end())));
+
+        // Calculate hit position information
+        float hitZMin(std::numeric_limits<float>::max());
+        float hitZMax(-std::numeric_limits<float>::max());
+        float hitOuterR(-std::numeric_limits<float>::max());
+
+        int nTpcHits(0);
+        int nFtdHits(0);
+
+        const TrackerHitVec &trackerHitVec(pTrack->getTrackerHits());
+        const unsigned int nTrackHits(trackerHitVec.size());
+
+        for (unsigned int i = 0; i < nTrackHits; ++i)
+        {
+            const float x(static_cast<float>(trackerHitVec[i]->getPosition()[0]));
+            const float y(static_cast<float>(trackerHitVec[i]->getPosition()[1]));
+            const float z(static_cast<float>(trackerHitVec[i]->getPosition()[2]));
+            const float r(std::sqrt(x * x + y * y));
+
+            if (z > hitZMax)
+                hitZMax = z;
+
+            if (z < hitZMin)
+                hitZMin = z;
+
+            if (r > hitOuterR)
+                hitOuterR = r;
+
+            if (r > tpcInnerR)
+            {
+                nTpcHits++;
+                continue;
+            }
+
+            for (unsigned int j = 0; j < nFtdLayers; ++j)
+            {
+                if ((r > ftdInnerRadii[j]) && (r < ftdOuterRadii[j]) &&
+                    (std::fabs(z) - m_settings.m_reachesECalFtdZMaxDistance < ftdZPositions[j]) &&
+                    (std::fabs(z) + m_settings.m_reachesECalFtdZMaxDistance > ftdZPositions[j]))
+                {
+                    nFtdHits++;
+                    break;
+                }
+            }
+        }
+
+        // Look to see if there are hits in etd or set, implying track has reached edge of ecal
+        if ((hitOuterR > minSetRadius) || (hitZMax > minEtdZPosition))
+        {
+            trackParameters.m_reachesECal = true;
+            return;
+        }
+
+        // Require sufficient hits in tpc or ftd, then compare extremal hit positions with tracker dimensions
+        if ((nTpcHits >= m_settings.m_reachesECalNTpcHits) || (nFtdHits >= m_settings.m_reachesECalNFtdHits))
+        {
+            if ((hitOuterR - tpcOuterR > m_settings.m_reachesECalTpcOuterDistance) ||
+                (std::fabs(hitZMax) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance) ||
+                (std::fabs(hitZMin) - tpcZmax > m_settings.m_reachesECalTpcZMaxDistance))
+            {
+                trackParameters.m_reachesECal = true;
+                return;
+            }
+        }
+
         // If track is lowpt, it may curl up and end inside tpc inner radius
         static const float bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z());
         static const float cosTpc(tpcZmax / std::sqrt(tpcZmax * tpcZmax + tpcInnerR * tpcInnerR));
 
         const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
-
         const float cosAngleAtDca(std::fabs(momentumAtDca.GetZ()) / momentumAtDca.GetMagnitude());
         const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY());
         const float pT(std::sqrt(pX * pX + pY * pY));
 
         if ((cosAngleAtDca > cosTpc) || (pT < m_settings.m_curvatureToMomentumFactor * bField * tpcOuterR))
-            reachesECal = true;
-    }
+        {
+            trackParameters.m_reachesECal = true;
+            return;
+        }
 
-    trackParameters.m_reachesECal = reachesECal;
+        trackParameters.m_reachesECal = false;
+    }
+    catch (...)
+    {
+        streamlog_out(ERROR) << "TrackCreator::TrackReachesECAL - Failed to extract tracking subdetector parameters. " << std::endl;
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

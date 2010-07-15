@@ -29,6 +29,7 @@ typedef std::set<const Track *> TrackList;
 class TrackCreator
 {
 public:
+    typedef std::vector<double> DoubleVector;
     typedef std::vector<std::string> StringVector;
 
     /**
@@ -61,8 +62,10 @@ public:
         float           m_zCutForNonVertexTracks;               ///< Non vtx track z cut to determine whether track can be used to form pfo
 
         int             m_reachesECalNTpcHits;                  ///< Minimum number of tpc hits to consider track as reaching ecal
+        int             m_reachesECalNFtdHits;                  ///< Minimum number of ftd hits to consider track as reaching ecal
         float           m_reachesECalTpcOuterDistance;          ///< Max distance from track to tpc r max to id whether track reaches ecal
         float           m_reachesECalTpcZMaxDistance;           ///< Max distance from track to tpc z max to id whether track reaches ecal
+        float           m_reachesECalFtdZMaxDistance;           ///< Max distance from track hit to ftd z position to identify ftd hits
         float           m_curvatureToMomentumFactor;            ///< Constant relating track curvature in b field to momentum
 
         float           m_minTrackECalDistanceFromIp;           ///< Sanity check on separation between ip and track projected ecal position

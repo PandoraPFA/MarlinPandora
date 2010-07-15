@@ -385,7 +385,12 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     registerProcessorParameter("ReachesECalNTpcHits",
                             "Minimum number of tpc hits to consider track as reaching ecal",
                             m_trackCreator.m_settings.m_reachesECalNTpcHits,
-                            int(10));
+                            int(11));
+
+    registerProcessorParameter("ReachesECalNFtdHits",
+                            "Minimum number of ftd hits to consider track as reaching ecal",
+                            m_trackCreator.m_settings.m_reachesECalNFtdHits,
+                            int(4));
 
     registerProcessorParameter("ReachesECalTpcOuterDistance",
                             "Max distance from track to tpc r max to id whether track reaches ecal",
@@ -396,6 +401,11 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "Max distance from track to tpc z max to id whether track reaches ecal",
                             m_trackCreator.m_settings.m_reachesECalTpcZMaxDistance,
                             float(-50.));
+
+    registerProcessorParameter("ReachesECalFtdZMaxDistance",
+                            "Max distance from track hit to ftd z position to identify ftd hits",
+                            m_trackCreator.m_settings.m_reachesECalFtdZMaxDistance,
+                            float(1.));
 
     registerProcessorParameter("CurvatureToMomentumFactor",
                             "Constant relating track curvature in b field to momentum",
