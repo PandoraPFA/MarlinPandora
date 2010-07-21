@@ -22,6 +22,7 @@
             <AdditionalPadWidthsHCal>12.5</AdditionalPadWidthsHCal>
             <SameLayerPadWidthsHCal>14</SameLayerPadWidthsHCal>
             <ShouldUseTrackSeed>false</ShouldUseTrackSeed>
+            <MaxClusterDirProjection>1000</MaxClusterDirProjection>
             <MaxTrackSeedSeparation>0</MaxTrackSeedSeparation>
             <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
             <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
