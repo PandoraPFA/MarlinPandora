@@ -74,6 +74,7 @@ StatusCode CaloHitCreator::CreateECalCaloHits(const LCEvent *const pLCEvent)
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::ECAL;
+                    caloHitParameters.m_isDigital = false;
                     caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
                     caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ? pandora::BARREL : pandora::ENDCAP;
                     caloHitParameters.m_isInOuterSamplingLayer = false;
@@ -159,6 +160,7 @@ StatusCode CaloHitCreator::CreateHCalCaloHits(const LCEvent *const pLCEvent)
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::HCAL;
+                    caloHitParameters.m_isDigital = false;
                     caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
                     caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ? pandora::BARREL : pandora::ENDCAP;
                     caloHitParameters.m_isInOuterSamplingLayer = (this->GetNLayersFromEdge(pCaloHit) <= m_settings.m_nOuterSamplingLayers);
@@ -238,6 +240,7 @@ StatusCode CaloHitCreator::CreateLCalCaloHits(const LCEvent *const pLCEvent)
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::ECAL;
+                    caloHitParameters.m_isDigital = false;
                     caloHitParameters.m_detectorRegion = pandora::ENDCAP;
                     caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
                     caloHitParameters.m_isInOuterSamplingLayer = false;
@@ -307,6 +310,7 @@ StatusCode CaloHitCreator::CreateLHCalCaloHits(const LCEvent *const pLCEvent)
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::HCAL;
+                    caloHitParameters.m_isDigital = false;
                     caloHitParameters.m_detectorRegion = pandora::ENDCAP;
                     caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
                     caloHitParameters.m_isInOuterSamplingLayer = (this->GetNLayersFromEdge(pCaloHit) <= m_settings.m_nOuterSamplingLayers);
@@ -382,16 +386,12 @@ StatusCode CaloHitCreator::CreateMuonCaloHits(const LCEvent *const pLCEvent)
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::MUON;
+                    caloHitParameters.m_isDigital = true;
                     caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
                     caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ? pandora::BARREL : pandora::ENDCAP;
                     caloHitParameters.m_isInOuterSamplingLayer = true;
 
-                    const float *pCaloHitPosition(pCaloHit->getPosition());
-                    caloHitParameters.m_positionVector = pandora::CartesianVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
-
-                    caloHitParameters.m_pParentAddress = pCaloHit;
-                    caloHitParameters.m_time = pCaloHit->getTime();
-                    caloHitParameters.m_isDigital = true;
+                    this->GetCommonCaloHitProperties(pCaloHit, caloHitParameters);
 
                     float absorberCorrection(1.);
 
@@ -441,7 +441,9 @@ void CaloHitCreator::GetCommonCaloHitProperties(CalorimeterHit *const pCaloHit, 
     caloHitParameters.m_positionVector = pandora::CartesianVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
 
     caloHitParameters.m_pParentAddress = pCaloHit;
-    caloHitParameters.m_isDigital = false;
+
+    // TODO Calculate number of interaction lengths between cell position and IP
+    caloHitParameters.m_nInteractionLengthsFromIp = 0.f;
 
     caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
     caloHitParameters.m_time = pCaloHit->getTime();
