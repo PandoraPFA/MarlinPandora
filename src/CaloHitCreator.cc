@@ -386,7 +386,6 @@ StatusCode CaloHitCreator::CreateMuonCaloHits(const LCEvent *const pLCEvent)
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::MUON;
-                    caloHitParameters.m_isDigital = true;
                     caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
                     caloHitParameters.m_detectorRegion = (fabs(pCaloHit->getPosition()[2]) < endCapZCoordinate) ? pandora::BARREL : pandora::ENDCAP;
                     caloHitParameters.m_isInOuterSamplingLayer = true;
@@ -406,10 +405,22 @@ StatusCode CaloHitCreator::CreateMuonCaloHits(const LCEvent *const pLCEvent)
                             caloHitParameters, absorberCorrection);
                     }
 
-                    caloHitParameters.m_inputEnergy = m_settings.m_muonHitEnergy;
-                    caloHitParameters.m_hadronicEnergy = m_settings.m_muonHitEnergy;
-                    caloHitParameters.m_electromagneticEnergy = m_settings.m_muonHitEnergy;
-                    caloHitParameters.m_mipEquivalentEnergy = 1.;
+		    if(m_settings.m_muonDigitalHits>0)
+                    {
+		        caloHitParameters.m_isDigital = true;
+		        caloHitParameters.m_inputEnergy = m_settings.m_muonHitEnergy;
+			caloHitParameters.m_hadronicEnergy = m_settings.m_muonHitEnergy;
+			caloHitParameters.m_electromagneticEnergy = m_settings.m_muonHitEnergy;
+			caloHitParameters.m_mipEquivalentEnergy = 1.;
+		    }
+                    else
+		    {
+		        caloHitParameters.m_isDigital = false;
+			caloHitParameters.m_inputEnergy    = pCaloHit->getEnergy();
+			caloHitParameters.m_hadronicEnergy = pCaloHit->getEnergy();
+			caloHitParameters.m_electromagneticEnergy = pCaloHit->getEnergy();
+			caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy()* m_settings.m_muonToMip;
+		    }
 
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, caloHitParameters));
                     m_calorimeterHitVector.push_back(pCaloHit);

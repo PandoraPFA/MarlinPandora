@@ -43,14 +43,16 @@ public:
         float           m_absorberInteractionLength;            ///< The absorber interaction length
         float           m_eCalToMip;                            ///< The calibration from deposited ECal energy to mip
         float           m_hCalToMip;                            ///< The calibration from deposited HCal energy to mip
+        float           m_muonToMip;                            ///< The calibration from deposited Muon energy to mip
         float           m_eCalMipThreshold;                     ///< Threshold for creating calo hits in the ECal, units mip
         float           m_hCalMipThreshold;                     ///< Threshold for creating calo hits in the HCal, units mip
+        float           m_muonMipThreshold;                     ///< Threshold for creating calo hits in the HCal, units mip
 
         float           m_eCalToEMGeV;                          ///< The calibration from deposited ECal energy to EM energy
         float           m_hCalToEMGeV;                          ///< The calibration from deposited HCal energy to EM energy
         float           m_eCalToHadGeV;                         ///< The calibration from deposited ECal energy to hadronic energy
         float           m_hCalToHadGeV;                         ///< The calibration from deposited HCal energy to hadronic energy
-
+        int             m_muonDigitalHits;                      ///< Muon hits are treated as digital (energy from hit count)
         float           m_muonHitEnergy;                        ///< The energy for a digital muon calorimeter hit, units GeV
 
         float           m_maxHCalHitHadronicEnergy;             ///< The maximum hadronic energy allowed for a single hcal hit
