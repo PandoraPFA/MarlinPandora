@@ -10,6 +10,11 @@
 
 #include "Api/PandoraApi.h"
 
+#include "KinkPfoAlgorithm.h"
+#include "V0PfoAlgorithm.h"
+#include "DecayPfoAlgorithm.h"
+#include "ProngPfoAlgorithm.h"
+#include "CalibrationMonitorAlgorithm.h"
 #include "PandoraPFANewProcessor.h"
 
 #include <cstdlib>
@@ -141,7 +146,12 @@ StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
     //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterParticleIdFunction(*m_pPandora, "MyParticleId",
     //    &PandoraPFANewProcessor::MyParticleId));
 
-    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "MyAlgorithm", new MyAlgorithm::Factory));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "KinkPfoAlgorithm", new KinkPfoAlgorithm::Factory));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "V0PfoAlgorithm", new V0PfoAlgorithm::Factory));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "DecayPfoAlgorithm", new DecayPfoAlgorithm::Factory));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ProngPfoAlgorithm", new ProngPfoAlgorithm::Factory));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "CalibrationMonitorAlgorithm", new CalibrationMonitorAlgorithm::Factory));
+
 
     return STATUS_CODE_SUCCESS;
 }
@@ -264,6 +274,12 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_caloHitCreator.m_settings.m_eCalMipThreshold,
                             float(0.));
 
+    registerProcessorParameter("MuonToMipCalibration",
+                            "The calibration from deposited Muon energy to mip",
+                            m_caloHitCreator.m_settings.m_muonToMip,
+                            float(10.));
+
+
     registerProcessorParameter("HCalMipThreshold",
                             "Threshold for creating calo hits in the HCal, units mip",
                             m_caloHitCreator.m_settings.m_hCalMipThreshold,
@@ -288,6 +304,11 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "The calibration from deposited HCal energy to hadronic energy",
                             m_caloHitCreator.m_settings.m_hCalToHadGeV,
                             float(1.));
+
+    registerProcessorParameter("DigitalMuonHits",
+                            "Treat muon hits as digital",
+                            m_caloHitCreator.m_settings.m_muonDigitalHits,
+                            int(1));
 
     registerProcessorParameter("MuonHitEnergy",
                             "The energy for a digital muon calorimeter hit, units GeV",

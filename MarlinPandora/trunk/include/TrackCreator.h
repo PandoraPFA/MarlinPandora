@@ -20,6 +20,7 @@ using namespace EVENT;
 
 typedef std::vector<Track *> TrackVector;
 typedef std::set<const Track *> TrackList;
+typedef std::map<Track *, int> TrackToPidMap; 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -201,6 +202,7 @@ private:
     TrackList               m_v0TrackList;      ///< The list of v0 tracks
     TrackList               m_parentTrackList;  ///< The list of parent tracks
     TrackList               m_daughterTrackList;///< The list of daughter tracks
+    TrackToPidMap           m_trackToPidMap;    ///< The map of Track* to particle ID where set by Kinks/V0s
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -218,6 +220,7 @@ inline void TrackCreator::Reset()
     m_v0TrackList.clear();
     m_parentTrackList.clear();
     m_daughterTrackList.clear();
+    m_trackToPidMap.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
