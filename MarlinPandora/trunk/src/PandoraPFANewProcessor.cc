@@ -10,11 +10,6 @@
 
 #include "Api/PandoraApi.h"
 
-#include "KinkPfoAlgorithm.h"
-#include "V0PfoAlgorithm.h"
-#include "DecayPfoAlgorithm.h"
-#include "ProngPfoAlgorithm.h"
-#include "CalibrationMonitorAlgorithm.h"
 #include "PandoraPFANewProcessor.h"
 
 #include <cstdlib>
@@ -146,12 +141,7 @@ StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
     //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterParticleIdFunction(*m_pPandora, "MyParticleId",
     //    &PandoraPFANewProcessor::MyParticleId));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "KinkPfoAlgorithm", new KinkPfoAlgorithm::Factory));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "V0PfoAlgorithm", new V0PfoAlgorithm::Factory));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "DecayPfoAlgorithm", new DecayPfoAlgorithm::Factory));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ProngPfoAlgorithm", new ProngPfoAlgorithm::Factory));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "CalibrationMonitorAlgorithm", new CalibrationMonitorAlgorithm::Factory));
-
+    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "MyAlgorithm", new MyAlgorithm::Factory));
 
     return STATUS_CODE_SUCCESS;
 }
