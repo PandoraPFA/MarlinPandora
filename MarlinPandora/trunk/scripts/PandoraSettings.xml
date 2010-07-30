@@ -15,26 +15,6 @@
     <!-- Select the tracks to use for clustering -->
     <algorithm type = "TrackSelection"/>
 
-    <!-- Muon clustering -->
-    <algorithm type = "PrimaryClustering">
-        <algorithm type = "Clustering" description = "ClusterFormation">
-            <TanConeAngleHCal>0.75</TanConeAngleHCal>
-            <AdditionalPadWidthsHCal>12.5</AdditionalPadWidthsHCal>
-            <SameLayerPadWidthsHCal>14</SameLayerPadWidthsHCal>
-            <ShouldUseTrackSeed>false</ShouldUseTrackSeed>
-            <MaxClusterDirProjection>1000</MaxClusterDirProjection>
-            <MaxTrackSeedSeparation>0</MaxTrackSeedSeparation>
-            <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
-            <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
-            <TrackPathWidth>0</TrackPathWidth>
-        </algorithm>
-
-        <InputCaloHitListName> Muon </InputCaloHitListName>
-        <RestoreOriginalCaloHitList> true </RestoreOriginalCaloHitList>
-        <ClusterListName> MuonClusterList </ClusterListName>
-        <ReplaceCurrentClusterList> false </ReplaceCurrentClusterList>
-    </algorithm>
-
     <!-- Primary clustering algorithm runs Clustering algorithm -->
     <algorithm type = "PrimaryClustering">
         <algorithm type = "Clustering" description = "ClusterFormation" instance = "mainClustering"/>
@@ -307,11 +287,35 @@
         </reclusteringAlgorithms>
     </algorithm>
 
+    <!-- Muon clustering -->
+    <algorithm type = "PrimaryClustering">
+        <algorithm type = "Clustering" description = "ClusterFormation">
+            <TanConeAngleHCal>0.75</TanConeAngleHCal>
+            <AdditionalPadWidthsHCal>12.5</AdditionalPadWidthsHCal>
+            <SameLayerPadWidthsHCal>14</SameLayerPadWidthsHCal>
+            <ShouldUseTrackSeed>false</ShouldUseTrackSeed>
+            <MaxClusterDirProjection>1000</MaxClusterDirProjection>
+            <MaxTrackSeedSeparation>0</MaxTrackSeedSeparation>
+            <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
+            <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
+            <TrackPathWidth>0</TrackPathWidth>
+        </algorithm>
+
+        <InputCaloHitListName> Muon </InputCaloHitListName>
+        <RestoreOriginalCaloHitList> true </RestoreOriginalCaloHitList>
+        <ClusterListName> MuonClusterList </ClusterListName>
+        <ReplaceCurrentClusterList> false </ReplaceCurrentClusterList>
+    </algorithm>
+
     <!-- Add muon clusters to primary clusters -->
     <algorithm type = "MuonClusterAssociation"/>
 
     <!-- Photon recovery -->
     <algorithm type = "PhotonRecovery">
+        <algorithm type = "TrackClusterAssociation"/>
+    </algorithm>
+
+    <algorithm type = "MuonPhotonSeparation">
         <algorithm type = "TrackClusterAssociation"/>
     </algorithm>
 
@@ -344,4 +348,6 @@
 
     <!-- Final particle id for particle flow objects -->
     <algorithm type = "FinalParticleId"/>
+
+    <algorithm type = "V0PfoCreation"/>
 </pandora>

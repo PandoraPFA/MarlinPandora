@@ -175,8 +175,9 @@ StatusCode CaloHitCreator::CreateHCalCaloHits(const LCEvent *const pLCEvent)
                     }
                     else
                     {
+                        // TODO Proper fix for barrel normal vectors
                         const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
-                        this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0, staveNumber,
+                        this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, barrelSymmetryOrder, barrelPhi0, barrelSymmetryOrder - int(staveNumber / 2),
                             caloHitParameters, absorberCorrection);
                     }
 
@@ -405,22 +406,22 @@ StatusCode CaloHitCreator::CreateMuonCaloHits(const LCEvent *const pLCEvent)
                             caloHitParameters, absorberCorrection);
                     }
 
-		    if(m_settings.m_muonDigitalHits>0)
+                    if (m_settings.m_muonDigitalHits > 0)
                     {
-		        caloHitParameters.m_isDigital = true;
-		        caloHitParameters.m_inputEnergy = m_settings.m_muonHitEnergy;
-			caloHitParameters.m_hadronicEnergy = m_settings.m_muonHitEnergy;
-			caloHitParameters.m_electromagneticEnergy = m_settings.m_muonHitEnergy;
-			caloHitParameters.m_mipEquivalentEnergy = 1.;
-		    }
+                        caloHitParameters.m_isDigital = true;
+                        caloHitParameters.m_inputEnergy = m_settings.m_muonHitEnergy;
+                        caloHitParameters.m_hadronicEnergy = m_settings.m_muonHitEnergy;
+                        caloHitParameters.m_electromagneticEnergy = m_settings.m_muonHitEnergy;
+                        caloHitParameters.m_mipEquivalentEnergy = 1.f;
+                    }
                     else
-		    {
-		        caloHitParameters.m_isDigital = false;
-			caloHitParameters.m_inputEnergy    = pCaloHit->getEnergy();
-			caloHitParameters.m_hadronicEnergy = pCaloHit->getEnergy();
-			caloHitParameters.m_electromagneticEnergy = pCaloHit->getEnergy();
-			caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy()* m_settings.m_muonToMip;
-		    }
+                    {
+                        caloHitParameters.m_isDigital = false;
+                        caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
+                        caloHitParameters.m_hadronicEnergy = pCaloHit->getEnergy();
+                        caloHitParameters.m_electromagneticEnergy = pCaloHit->getEnergy();
+                        caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_muonToMip;
+                    }
 
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, caloHitParameters));
                     m_calorimeterHitVector.push_back(pCaloHit);
