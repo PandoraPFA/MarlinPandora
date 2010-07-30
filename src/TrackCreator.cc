@@ -37,6 +37,7 @@ TrackVector TrackCreator::m_trackVector;
 StatusCode TrackCreator::CreateTrackAssociations(const LCEvent *const pLCEvent)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractKinks(pLCEvent));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractProngsAndSplits(pLCEvent));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractV0s(pLCEvent));
 
     return STATUS_CODE_SUCCESS;
@@ -46,7 +47,6 @@ StatusCode TrackCreator::CreateTrackAssociations(const LCEvent *const pLCEvent)
 
 StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
 {
-    // Insert user code here ...
     static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
 
     for (StringVector::const_iterator iter = m_settings.m_kinkVertexCollections.begin(), iterEnd = m_settings.m_kinkVertexCollections.end();
@@ -68,7 +68,7 @@ StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
                     if (this->IsConflictingRelationship(trackVec))
                         continue;
 
-		    int vertexPdgCode = pReconstructedParticle->getType();
+                    const int vertexPdgCode(pReconstructedParticle->getType());
 
                     // Extract the kink vertex information
                     for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
@@ -76,36 +76,40 @@ StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
                         Track *pTrack = trackVec[iTrack];
                         (0 == iTrack) ? m_parentTrackList.insert(pTrack) : m_daughterTrackList.insert(pTrack);
                         streamlog_out(DEBUG) << "KinkTrack " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
-			int trackPdgCode = pandora::UNKNOWN;
-			if(iTrack==0)trackPdgCode = vertexPdgCode;
-			if(iTrack==1){
-			  switch(vertexPdgCode){
-			  case pandora::PI_PLUS:
-			  case pandora::K_PLUS:
-			    trackPdgCode = pandora::MU_PLUS;
-			    break;
-			  case pandora::PI_MINUS:
-			  case pandora::K_MINUS:
-			    trackPdgCode = pandora::MU_MINUS;
-			  break;
-			  case pandora::HYPERON_MINUS_BAR:
-			  case pandora::SIGMA_PLUS:
-			    trackPdgCode = pandora::PI_PLUS;
-			    break;
-			  case pandora::SIGMA_MINUS:
-			  case pandora::HYPERON_MINUS:
-			    trackPdgCode = pandora::PI_PLUS;
-			    break;
-			  default:
-			    (pTrack->getOmega()>0) ? trackPdgCode = pandora::PI_PLUS : trackPdgCode = pandora::PI_MINUS;
-			    break;
-			  }
-			}
 
-			m_trackToPidMap.insert(
-			  std::map<Track*,int>::value_type(pTrack,trackPdgCode)
-                        );
+                        int trackPdgCode = pandora::UNKNOWN;
 
+                        if (0 == iTrack)
+                        {
+                            trackPdgCode = vertexPdgCode;
+                        }
+                        else
+                        {
+                            switch (vertexPdgCode)
+                            {
+                            case pandora::PI_PLUS :
+                            case pandora::K_PLUS :
+                                trackPdgCode = pandora::MU_PLUS;
+                                break;
+                            case pandora::PI_MINUS :
+                            case pandora::K_MINUS :
+                                trackPdgCode = pandora::MU_MINUS;
+                                break;
+                            case pandora::HYPERON_MINUS_BAR :
+                            case pandora::SIGMA_PLUS :
+                                trackPdgCode = pandora::PI_PLUS;
+                                break;
+                            case pandora::SIGMA_MINUS :
+                            case pandora::HYPERON_MINUS :
+                                trackPdgCode = pandora::PI_PLUS;
+                                break;
+                            default :
+                                (pTrack->getOmega() > 0) ? trackPdgCode = pandora::PI_PLUS : trackPdgCode = pandora::PI_MINUS;
+                                break;
+                            }
+                        }
+
+                        m_trackToPidMap.insert(TrackToPidMap::value_type(pTrack, trackPdgCode));
 
                         if (0 == m_settings.m_shouldFormTrackRelationships)
                             continue;
@@ -148,9 +152,79 @@ StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+StatusCode TrackCreator::ExtractProngsAndSplits(const LCEvent *const pLCEvent)
+{
+    static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
+
+    for (StringVector::const_iterator iter = m_settings.m_prongSplitVertexCollections.begin(), iterEnd = m_settings.m_prongSplitVertexCollections.end();
+        iter != iterEnd; ++iter)
+    {
+        try
+        {
+            const LCCollection *pProngOrSplitCollection = pLCEvent->getCollection(*iter);
+
+            for (int i = 0, iMax = pProngOrSplitCollection->getNumberOfElements(); i < iMax; ++i)
+            {
+                try
+                {
+                    Vertex *pVertex = dynamic_cast<Vertex*>(pProngOrSplitCollection->getElementAt(i));
+
+                    ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
+                    const TrackVec &trackVec(pReconstructedParticle->getTracks());
+
+                    if (this->IsConflictingRelationship(trackVec))
+                        continue;
+
+                    // Extract the prong/split vertex information
+                    for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
+                    {
+                        Track *pTrack = trackVec[iTrack];
+                        (0 == iTrack) ? m_parentTrackList.insert(pTrack) : m_daughterTrackList.insert(pTrack);
+                        streamlog_out(DEBUG) << "Prong or Split Track " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
+
+                        if (0 == m_settings.m_shouldFormTrackRelationships)
+                            continue;
+
+                        // Make track parent-daughter relationships
+                        if (0 == iTrack)
+                        {
+                            for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
+                            {
+                                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackParentDaughterRelationship(*pPandora,
+                                    pTrack, trackVec[jTrack]));
+                            }
+                        }
+
+                        // Make track sibling relationships
+                        else
+                        {
+                            for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
+                            {
+                                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackSiblingRelationship(*pPandora,
+                                    pTrack, trackVec[jTrack]));
+                            }
+                        }
+                    }
+                }
+                catch (...)
+                {
+                    streamlog_out(WARNING) << "Failed to extract prong/split vertex, unrecognised exception" << std::endl;
+                }
+            }
+        }
+        catch (...)
+        {
+            streamlog_out(MESSAGE) << "Failed to extract prong/split vertex collection: " << *iter << std::endl;
+        }
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
 {
-    // Insert user code here ...
     static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
 
     for (StringVector::const_iterator iter = m_settings.m_v0VertexCollections.begin(), iterEnd = m_settings.m_v0VertexCollections.end();
@@ -173,35 +247,36 @@ StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
                         continue;
 
                     // Extract the v0 vertex information
-		    int vertexPdgCode = pReconstructedParticle->getType();
+                    const int vertexPdgCode(pReconstructedParticle->getType());
+
                     for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
                     {
                         Track *pTrack = trackVec[iTrack];
                         m_v0TrackList.insert(pTrack);
                         streamlog_out(DEBUG) << "V0Track " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
 
-			int trackPdgCode = pandora::UNKNOWN;
-			switch(vertexPdgCode){
-			case pandora::PHOTON:
-			  (pTrack->getOmega()>0) ? trackPdgCode = pandora::E_PLUS : trackPdgCode = pandora::E_MINUS;
-			  break;
-			case pandora::LAMBDA:
-			  (pTrack->getOmega()>0) ? trackPdgCode = pandora::PROTON : trackPdgCode = pandora::PI_MINUS;
-			  break;
-			case pandora::LAMBDA_BAR:
-			  (pTrack->getOmega()>0) ? trackPdgCode = pandora::PI_PLUS : trackPdgCode = pandora::PROTON_BAR;
-			  break;
-			case pandora::K_SHORT:
-			  (pTrack->getOmega()>0) ? trackPdgCode = pandora::PI_PLUS : trackPdgCode = pandora::PI_MINUS;
-			  break;
-			default:
-			  (pTrack->getOmega()>0) ? trackPdgCode = pandora::PI_PLUS : trackPdgCode = pandora::PI_MINUS;
-			  break;
-			}
+                        int trackPdgCode = pandora::UNKNOWN;
 
-			m_trackToPidMap.insert(
-			  std::map<Track*,int>::value_type(pTrack,trackPdgCode)
-                        );
+                        switch (vertexPdgCode)
+                        {
+                        case pandora::PHOTON :
+                            (pTrack->getOmega() > 0) ? trackPdgCode = pandora::E_PLUS : trackPdgCode = pandora::E_MINUS;
+                            break;
+                        case pandora::LAMBDA :
+                            (pTrack->getOmega() > 0) ? trackPdgCode = pandora::PROTON : trackPdgCode = pandora::PI_MINUS;
+                            break;
+                        case pandora::LAMBDA_BAR :
+                            (pTrack->getOmega() > 0) ? trackPdgCode = pandora::PI_PLUS : trackPdgCode = pandora::PROTON_BAR;
+                            break;
+                        case pandora::K_SHORT :
+                            (pTrack->getOmega() > 0) ? trackPdgCode = pandora::PI_PLUS : trackPdgCode = pandora::PI_MINUS;
+                            break;
+                        default :
+                            (pTrack->getOmega() > 0) ? trackPdgCode = pandora::PI_PLUS : trackPdgCode = pandora::PI_MINUS;
+                            break;
+                        }
+
+                        m_trackToPidMap.insert(TrackToPidMap::value_type(pTrack, trackPdgCode));
 
                         if (0 == m_settings.m_shouldFormTrackRelationships)
                             continue;
@@ -275,19 +350,19 @@ StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent) const
                     trackParameters.m_z0 = pTrack->getZ0();
                     trackParameters.m_pParentAddress = pTrack;
 
-                    // For now, assume tracks are charged pions
-
-
+                    // By default, assume tracks are charged pions
                     const float signedCurvature(pTrack->getOmega());
                     trackParameters.m_particleId = (signedCurvature > 0) ? pandora::PI_PLUS : pandora::PI_MINUS;
-		    trackParameters.m_mass = pandora::PdgTable::GetParticleMass(pandora::PI_PLUS);
+                    trackParameters.m_mass = pandora::PdgTable::GetParticleMass(pandora::PI_PLUS);
 
-		    // overwrite with value in map from V0s and Kinks
-		    TrackToPidMap::const_iterator iter = m_trackToPidMap.find(pTrack);
-		    if(iter!=m_trackToPidMap.end()){
-		      trackParameters.m_particleId = (*iter).second;
-		      trackParameters.m_mass = pandora::PdgTable::GetParticleMass((*iter).second);
-		    }
+                    // Use particle id information from V0 and Kink finders
+                    TrackToPidMap::const_iterator iter = m_trackToPidMap.find(pTrack);
+
+                    if(iter != m_trackToPidMap.end())
+                    {
+                        trackParameters.m_particleId = (*iter).second;
+                        trackParameters.m_mass = pandora::PdgTable::GetParticleMass((*iter).second);
+                    }
 
                     if (0. != signedCurvature)
                         trackParameters.m_charge = static_cast<int>(signedCurvature / std::fabs(signedCurvature));

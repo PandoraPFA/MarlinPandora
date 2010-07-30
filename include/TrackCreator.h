@@ -20,7 +20,7 @@ using namespace EVENT;
 
 typedef std::vector<Track *> TrackVector;
 typedef std::set<const Track *> TrackList;
-typedef std::map<Track *, int> TrackToPidMap; 
+typedef std::map<Track *, int> TrackToPidMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -40,8 +40,12 @@ public:
     {
     public:
         StringVector    m_trackCollections;                     ///< The reconstructed track collections
-        StringVector    m_v0VertexCollections;                  ///< The v0 vertex collections
         StringVector    m_kinkVertexCollections;                ///< The kink vertex collections
+        StringVector    m_prongVertexCollections;               ///< The prong vertex collections
+        StringVector    m_splitVertexCollections;               ///< The split vertex collections
+        StringVector    m_v0VertexCollections;                  ///< The v0 vertex collections
+
+        StringVector    m_prongSplitVertexCollections;          ///< Concatenated list of prong and split vertex collections
 
         int             m_minTrackHits;                         ///< Track quality cut: the minimum number of track hits
         int             m_maxTrackHits;                         ///< Track quality cut: the maximum number of track hits
@@ -109,6 +113,13 @@ private:
      *  @param  pLCEvent the lcio event
      */
     StatusCode ExtractKinks(const LCEvent *const pLCEvent);
+
+    /**
+     *  @brief  Extract prong and split information from specified lcio collections
+     * 
+     *  @param  pLCEvent the lcio event
+     */
+    StatusCode ExtractProngsAndSplits(const LCEvent *const pLCEvent);
 
     /**
      *  @brief  Extract v0 information from specified lcio collections

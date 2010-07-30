@@ -165,15 +165,27 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             StringVector());
 
     registerInputCollections(LCIO::VERTEX,
-                            "V0VertexCollections", 
-                            "Name of external V0 Vertex collections",
-                            m_trackCreator.m_settings.m_v0VertexCollections,
-                            StringVector());
-
-    registerInputCollections(LCIO::VERTEX,
                             "KinkVertexCollections", 
                             "Name of external kink Vertex collections",
                             m_trackCreator.m_settings.m_kinkVertexCollections,
+                            StringVector());
+
+    registerInputCollections(LCIO::VERTEX,
+                            "ProngVertexCollections", 
+                            "Name of external prong Vertex collections",
+                            m_trackCreator.m_settings.m_prongVertexCollections,
+                            StringVector());
+
+    registerInputCollections(LCIO::VERTEX,
+                            "SplitVertexCollections", 
+                            "Name of external split Vertex collections",
+                            m_trackCreator.m_settings.m_splitVertexCollections,
+                            StringVector());
+
+    registerInputCollections(LCIO::VERTEX,
+                            "V0VertexCollections", 
+                            "Name of external V0 Vertex collections",
+                            m_trackCreator.m_settings.m_v0VertexCollections,
                             StringVector());
 
     registerInputCollections(LCIO::CALORIMETERHIT,
@@ -324,7 +336,7 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
    registerProcessorParameter("MinTrackHits",
                             "Track quality cut: the minimum number of track hits",
                             m_trackCreator.m_settings.m_minTrackHits,
-                            int(5));
+                            int(4));
 
    registerProcessorParameter("MaxTrackHits",
                             "Track quality cut: the maximum number of track hits",
@@ -470,6 +482,10 @@ void PandoraPFANewProcessor::FinaliseSteeringParameters()
     m_caloHitCreator.m_settings.m_absorberInteractionLength = m_geometryCreator.m_settings.m_absorberInteractionLength;
     m_caloHitCreator.m_settings.m_hCalEndCapInnerSymmetryOrder = m_geometryCreator.m_settings.m_hCalEndCapInnerSymmetryOrder;
     m_caloHitCreator.m_settings.m_hCalEndCapInnerPhiCoordinate = m_geometryCreator.m_settings.m_hCalEndCapInnerPhiCoordinate;
+
+    m_trackCreator.m_settings.m_prongSplitVertexCollections = m_trackCreator.m_settings.m_prongVertexCollections;
+    m_trackCreator.m_settings.m_prongSplitVertexCollections.insert(m_trackCreator.m_settings.m_prongSplitVertexCollections.end(),
+        m_trackCreator.m_settings.m_splitVertexCollections.begin(), m_trackCreator.m_settings.m_splitVertexCollections.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
