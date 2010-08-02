@@ -325,13 +325,31 @@ StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent) const
 {
     // Insert user code here ...
     static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
+
     static const gear::GearParameters &ftdParameters = marlin::Global::GEAR->getGearParameters("FTD");
     static const DoubleVector ftdInnerRadii(ftdParameters.getDoubleVals("FTDInnerRadius"));
     static const DoubleVector ftdOuterRadii(ftdParameters.getDoubleVals("FTDOuterRadius"));
     static const DoubleVector ftdZPositions(ftdParameters.getDoubleVals("FTDZCoordinate"));
     static const unsigned int nFtdLayers(ftdZPositions.size());
-    static const float tanLambdaFtd = ftdZPositions[0]/ftdOuterRadii[0];
-    
+    static const float tanLambdaFtd(ftdZPositions[0] / ftdOuterRadii[0]);
+
+    // First pass validation of tracking geometry
+    static bool isFirstPass(true);
+
+    if (isFirstPass)
+    {
+        isFirstPass = false;
+
+        if ((0 == nFtdLayers) || (nFtdLayers != ftdInnerRadii.size()) || (nFtdLayers != ftdOuterRadii.size()))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        for(unsigned int iFtdLayer = 0; iFtdLayer < nFtdLayers; ++iFtdLayer)
+        {
+            if ((0.f == ftdOuterRadii[iFtdLayer]) || (0.f == ftdInnerRadii[iFtdLayer]))
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        }
+    }
+
     for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), iterEnd = m_settings.m_trackCollections.end();
         iter != iterEnd; ++iter)
     {
@@ -345,18 +363,24 @@ StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent) const
                 {
                     Track *pTrack = dynamic_cast<Track*>(pTrackCollection->getElementAt(i));
 
-		    int minTrackHits = m_settings.m_minTrackHits; 
-		    float tanLambda = fabs(pTrack->getTanLambda()); 
-		    if(tanLambda>tanLambdaFtd)
-		    {
-		        int expectedFtdHits(0);
-		        for(unsigned int iFtdLayer = 0; iFtdLayer< nFtdLayers; iFtdLayer++)
+                    int minTrackHits = m_settings.m_minTrackHits;
+                    const float tanLambda(std::fabs(pTrack->getTanLambda()));
+
+                    if (tanLambda > tanLambdaFtd)
+                    {
+                        int expectedFtdHits(0);
+
+                        for(unsigned int iFtdLayer = 0; iFtdLayer < nFtdLayers; ++iFtdLayer)
                         {
-			    if( (tanLambda > ftdZPositions[iFtdLayer]/ftdOuterRadii[iFtdLayer]  ) &&
-			        (tanLambda < ftdZPositions[iFtdLayer]/ftdInnerRadii[iFtdLayer]  ) )expectedFtdHits++;
-			}
-			minTrackHits = std::max(m_settings.m_minFtdTrackHits,expectedFtdHits); 
-		    }
+                            if ((tanLambda > ftdZPositions[iFtdLayer] / ftdOuterRadii[iFtdLayer]) &&
+                                (tanLambda < ftdZPositions[iFtdLayer] / ftdInnerRadii[iFtdLayer]))
+                            {
+                                expectedFtdHits++;
+                            }
+                        }
+
+                        minTrackHits = std::max(m_settings.m_minFtdTrackHits, expectedFtdHits);
+                    }
 
                     const int nTrackHits(static_cast<int>(pTrack->getTrackerHits().size()));
 
