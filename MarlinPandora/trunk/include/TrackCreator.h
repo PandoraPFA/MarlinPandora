@@ -48,6 +48,7 @@ public:
         StringVector    m_prongSplitVertexCollections;          ///< Concatenated list of prong and split vertex collections
 
         int             m_minTrackHits;                         ///< Track quality cut: the minimum number of track hits
+        int             m_minFtdTrackHits;                      ///< Track quality cut: the minimum number of FTD track hits for FTD only tracks
         int             m_maxTrackHits;                         ///< Track quality cut: the maximum number of track hits
         int             m_nHitsForHelixFits;                    ///< The number of hits to be used in helix fits at start/end of tracks
 
