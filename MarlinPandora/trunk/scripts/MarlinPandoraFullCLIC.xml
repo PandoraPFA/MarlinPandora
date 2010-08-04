@@ -13,7 +13,7 @@
    <processor name="MySimpleLHCalDigi"/>
    <processor name="MyLEPTrackingProcessor"/>
    <processor name="MySiliconTracking"/>
-   <processor name="MyFullLDCTracking"/>
+   <processor name="MyFullLDCTrackingCLIC"/>
    <processor name="MyV0Finder"/>
    <processor name="MyKinkFinder"/>
    <processor name="MyMarlinPandora"/>
@@ -152,7 +152,7 @@
 </processor>
 
 
-<processor name="MyFullLDCTracking" type="FullLDCTracking">
+<processor name="MyFullLDCTrackingCLIC" type="FullLDCTrackingCLIC">
   <!--Assign ETD Hits-->
   <parameter name="AssignETDHits" type="int"> 1 </parameter>
   <!--Assign left over FTD hits-->
@@ -186,15 +186,15 @@
   <!--Activate debugging?-->
   <parameter name="Debug" type="int"> 0 </parameter>
   <!--Cut on Omega difference for forced merging of Si and TPC segments-->
-  <parameter name="OmegaCutForForcedMerging" type="float">0.15 </parameter>
+  <parameter name="CLICOmegaCutForForcedMerging" type="float">2.5 </parameter>
   <!--Cut on Omega difference for merging Si and TPC segments-->
-  <parameter name="OmegaCutForMerging" type="float">0.25 </parameter>
+  <parameter name="CLICOmegaCutForMerging" type="float">2.5 </parameter>
   <!--Cut on Opening Angle for forced merging of Si and TPC segments-->
-  <parameter name="AngleCutForForcedMerging" type="float">0.05 </parameter>
+  <parameter name="CLICAngleCutForForcedMerging" type="float">3 </parameter>
   <!--Cut on Opening Angle for merging Si and TPC segments-->
-  <parameter name="AngleCutForMerging" type="float">0.1 </parameter>
+  <parameter name="CLICAngleCutForMerging" type="float">3 </parameter>
   <!--Cut on dP/P difference for merging TPC segments-->
-  <parameter name="DeltaPCutToMergeTPCSegments" type="float">0.06 </parameter>
+  <parameter name="CLICDeltaPCutToMergeTPCSegments" type="float">0.15 </parameter>
   <!--ETD Hit Collection Name-->
   <parameter name="ETDHitCollection" type="string" lcioInType="TrackerHit">ETDTrackerHits </parameter>
   <!--Cut on distance between track and ETD hits-->
@@ -269,7 +269,7 @@
   <!--Calibration coefficients for ECAL-->
   <parameter name="CalibrECAL" type="FloatVec">40.91 81.81  </parameter>
   <!--Calibration coefficients for HCAL-->
-  <parameter name="CalibrHCAL" type="FloatVec">34.8  </parameter>
+  <parameter name="CalibrHCAL" type="FloatVec">29.3  </parameter>
   <!--ECAL Collection Names-->
   <parameter name="ECALCollections" type="StringVec">EcalBarrelCollection EcalEndcapCollection EcalEndcapRingCollection </parameter>
   <!--Index of ECal Layers-->
@@ -402,10 +402,11 @@
   <parameter name="HCalMipThreshold" type="float">0.3</parameter>
   <parameter name="ECalToEMGeVCalibration" type="float">1.0</parameter>
   <parameter name="HCalToEMGeVCalibration" type="float">1.0</parameter>
-  <parameter name="ECalToHadGeVCalibration" type="float">1.16></parameter>
+  <parameter name="ECalToHadGeVCalibration" type="float">1.03></parameter>
   <parameter name="HCalToHadGeVCalibration" type="float">1.0</parameter>
   <parameter name="MuonToMipCalibration" type="float">5.0</parameter>
   <parameter name="DigitalMuonHits" type="int">0</parameter>
+  <parameter name="MaxHCalHitHadronicEnergy" type="float">10000.</parameter>
   <parameter name="AbsorberRadiationLength" type="float">0.2857</parameter>
   <!--<parameter name="NEventsToSkip" type="int">0</parameter>-->
 </processor>
