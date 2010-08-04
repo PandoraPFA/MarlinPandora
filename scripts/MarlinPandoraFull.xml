@@ -390,8 +390,10 @@
   <parameter name="MCParticleCollections" type="StringVec">MCParticle</parameter>
   <parameter name="RelCaloHitCollections" type="StringVec">RelationCaloHit</parameter> 
   <parameter name="RelTrackCollections" type="StringVec">LDCTracksMCP</parameter>
+  <parameter name="KinkVertexCollections" type="StringVec">KinkVertices</parameter>
+  <parameter name="ProngVertexCollections" type="StringVec">ProngVertices</parameter>
+  <parameter name="SplitVertexCollections" type="StringVec">SplitVertices</parameter>
   <parameter name="V0VertexCollections" type="StringVec">V0Vertices</parameter>
-  <parameter name="KinkVertexCollections" type="StringVec">KinkVertices ProngVertices SplitVertices</parameter>
   <parameter name="PFOCollectionName" type="String">PandoraPFANewPFOs</parameter>
   <!-- Calibration constants -->
   <parameter name="ECalToMipCalibration" type="float">160.0</parameter>
@@ -402,6 +404,8 @@
   <parameter name="HCalToEMGeVCalibration" type="float">1.0</parameter>
   <parameter name="ECalToHadGeVCalibration" type="float">1.16></parameter>
   <parameter name="HCalToHadGeVCalibration" type="float">1.0</parameter>
+  <parameter name="MuonToMipCalibration" type="float">5.0</parameter>
+  <parameter name="DigitalMuonHits" type="int">0</parameter>
   <parameter name="AbsorberRadiationLength" type="float">0.2857</parameter>
   <!--<parameter name="NEventsToSkip" type="int">0</parameter>-->
 </processor>

@@ -12,7 +12,7 @@
     <ElectronFastFunction> ElectronFastDefault </ElectronFastFunction>
     <MuonFastFunction> MuonFastDefault </MuonFastFunction>
 
-    <!-- Select the tracks to use for clustering -->
+    <!-- Select tracks to use for clustering -->
     <algorithm type = "TrackSelection"/>
 
     <!-- Primary clustering algorithm runs Clustering algorithm -->
@@ -307,7 +307,6 @@
         <ReplaceCurrentClusterList> false </ReplaceCurrentClusterList>
     </algorithm>
 
-    <!-- Add muon clusters to primary clusters -->
     <algorithm type = "MuonClusterAssociation"/>
 
     <!-- Photon recovery -->
@@ -319,7 +318,7 @@
         <algorithm type = "TrackClusterAssociation"/>
     </algorithm>
 
-    <!-- Prepare the final particle flow objects -->
+    <!-- Prepare particle flow objects -->
     <algorithm type = "ClusterPreparation">
         <CandidateListNames>PrimaryClusterList</CandidateListNames>
     </algorithm>
@@ -342,12 +341,11 @@
         </fragmentRemovalAlgorithms>
     </algorithm>
 
-    <!-- Create the final particle flow objects -->
+    <!-- Create particle flow objects -->
     <algorithm type = "ForceSplitTrackAssociations"/>
     <algorithm type = "PfoCreation"/>
 
-    <!-- Final particle id for particle flow objects -->
+    <!-- Particle flow object modification algorithms -->
     <algorithm type = "FinalParticleId"/>
-
     <algorithm type = "V0PfoCreation"/>
 </pandora>
