@@ -184,6 +184,8 @@
                 <algorithm type = "TopologicalAssociation" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
+                <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
+                <algorithm type = "ForcedClustering" description = "ForcedClustering"/>
             </algorithm>
 
             <algorithm type = "SplitMergedClusters" instance = "SplitMergedClusters1">
@@ -204,14 +206,8 @@
                 <algorithm type = "TopologicalAssociation" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
-
                 <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
-                <algorithm type = "ForcedClustering" description = "ForcedClustering">
-                    <ShouldRunStandardClusteringAlgorithm>true</ShouldRunStandardClusteringAlgorithm>
-                    <algorithm type = "Clustering" description = "StandardClustering" instance = "mainClustering"/>
-                    <ShouldAssociateIsolatedHits>true</ShouldAssociateIsolatedHits>
-                    <algorithm type = "IsolatedHitMerging" description = "IsolatedHitAssociation"/>
-                </algorithm>
+                <algorithm type = "ForcedClustering" description = "ForcedClustering"/>
             </algorithm>
 
             <algorithm type = "TrackDrivenMerging">
@@ -236,6 +232,8 @@
                 <algorithm type = "TopologicalAssociation" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
+                <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
+                <algorithm type = "ForcedClustering" description = "ForcedClustering"/>
             </algorithm>
 
             <algorithm type = "SplitTrackAssociations" instance = "SplitTrackAssociations1"/>
@@ -282,6 +280,8 @@
                 <algorithm type = "TopologicalAssociation" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
+                <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
+                <algorithm type = "ForcedClustering" description = "ForcedClustering"/>
             </algorithm>
 
         </reclusteringAlgorithms>
