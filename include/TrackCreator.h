@@ -12,9 +12,8 @@
 #include "EVENT/LCEvent.h"
 #include "EVENT/Track.h"
 
-#include "HelixClass.h"
-
 #include "Api/PandoraApi.h"
+#include "Objects/Helix.h"
 
 using namespace EVENT;
 
@@ -50,9 +49,6 @@ public:
         int             m_minTrackHits;                         ///< Track quality cut: the minimum number of track hits
         int             m_minFtdTrackHits;                      ///< Track quality cut: the minimum number of FTD track hits for FTD only tracks
         int             m_maxTrackHits;                         ///< Track quality cut: the maximum number of track hits
-        int             m_nHitsForHelixFits;                    ///< The number of hits to be used in helix fits at start/end of tracks
-
-        int             m_useEndTrackHelixForECalProjection;    ///< Use end track fit or full track helix for ECal projection
 
         float           m_d0TrackCut;                           ///< Track d0 cut used to determine whether track can be used to form pfo
         float           m_z0TrackCut;                           ///< Track z0 cut used to determine whether track can be used to form pfo
@@ -172,6 +168,15 @@ private:
     void FitTrackHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
 
     /**
+     *  @brief  Project helix to the surface of the ecal
+     * 
+     *  @param  pHelix helix fit to be projected to ecal surface
+     *  @param  referencePoint helix reference point
+     *  @param  signPz sign w.r.t. increasing z direction
+     */
+    pandora::TrackState GetECalProjection(pandora::Helix *const pHelix, const pandora::CartesianVector &referencePoint, int signPz) const;
+
+    /**
      *  @brief  Decide whether track reaches the ecal surface
      * 
      *  @param  pTrack the lcio track
@@ -188,15 +193,6 @@ private:
      *  @param  trackParameters the track parameters
      */
     void DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
-
-    /**
-     *  @brief  Project helix to the surface of the ecal
-     * 
-     *  @param  pHelix helix fit to be projected to ecal surface
-     *  @param  referencePoint helix reference point
-     *  @param  signPz sign w.r.t. increasing z direction
-     */
-    pandora::TrackState GetECalProjection(HelixClass *const pHelix, float referencePoint[3], int signPz) const;
 
     /**
      *  @brief  Whether track passes the quality cuts required in order to be used to form a pfo

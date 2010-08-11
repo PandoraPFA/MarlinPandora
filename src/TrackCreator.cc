@@ -18,9 +18,6 @@
 #include "gear/PadRowLayout2D.h"
 #include "gear/TPCParameters.h"
 
-#include "ClusterShapes.h"
-#include "HelixClass.h"
-
 #include "PandoraPFANewProcessor.h"
 #include "TrackCreator.h"
 #include "Pandora/PdgTable.h"
@@ -28,7 +25,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-
 
 TrackVector TrackCreator::m_trackVector;
 
@@ -443,93 +439,100 @@ void TrackCreator::FitTrackHelices(const Track *const pTrack, PandoraApi::Track:
 {
     static const float bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z());
 
-    // Fit from track parameters to determine momentum at dca
-    HelixClass *pHelixFit = new HelixClass();
-    pHelixFit->Initialize_Canonical(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), bField);
-    trackParameters.m_momentumAtDca = pandora::CartesianVector(pHelixFit->getMomentum()[0], pHelixFit->getMomentum()[1], pHelixFit->getMomentum()[2]);
+    pandora::Helix *pHelixFit = new pandora::Helix(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), bField);
+    trackParameters.m_momentumAtDca = pHelixFit->GetMomentum();
 
-    // Fit start and end of tracks
     TrackerHitVec trackerHitvec(pTrack->getTrackerHits());
-    const int nTrackHits = trackerHitvec.size();
-    const int nTrackHitsForFit = std::min(m_settings.m_nHitsForHelixFits, nTrackHits);
+    float zMin(std::numeric_limits<float>::max()), zMax(-std::numeric_limits<float>::max());
 
-    // Order hits by increasing z
-    for (int iz = 0 ; iz < nTrackHits - 1; ++iz)
+    for (int iz = 0, nTrackHits = trackerHitvec.size(); iz < nTrackHits - 1; ++iz)
     {
-        for (int jz = 0; jz < nTrackHits - iz - 1; ++jz)
+        const float hitZ(trackerHitvec[iz]->getPosition()[2]);
+
+        if (hitZ > zMax)
+            zMax = hitZ;
+
+        if (hitZ < zMin)
+            zMin = hitZ;
+    }
+
+    const int signPz(std::fabs(zMin) < std::fabs(zMax) ? 1 : -1);
+    const float zStart((signPz > 0) ? zMin : zMax);
+    const float zEnd((signPz > 0) ? zMax : zMin);
+
+    pandora::CartesianVector startPosition, startMomentum;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, pHelixFit->GetPointInZ(zStart, pHelixFit->GetReferencePoint(), startPosition));
+    startMomentum = pHelixFit->GetExtrapolatedMomentum(startPosition);
+    trackParameters.m_trackStateAtStart = pandora::TrackState(startPosition, startMomentum);
+
+    pandora::CartesianVector endPosition, endMomentum;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, pHelixFit->GetPointInZ(zEnd, pHelixFit->GetReferencePoint(), endPosition));
+    endMomentum = pHelixFit->GetExtrapolatedMomentum(endPosition);
+    trackParameters.m_trackStateAtEnd = pandora::TrackState(endPosition, endMomentum);
+
+    trackParameters.m_trackStateAtECal = this->GetECalProjection(pHelixFit, pHelixFit->GetReferencePoint(), signPz);
+
+    delete pHelixFit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::TrackState TrackCreator::GetECalProjection(pandora::Helix *const pHelix, const pandora::CartesianVector &referencePoint, int signPz) const
+{
+    static const gear::CalorimeterParameters &ecalBarrelParameters = marlin::Global::GEAR->getEcalBarrelParameters();
+    static const gear::CalorimeterParameters &ecalEndCapParameters = marlin::Global::GEAR->getEcalEndcapParameters();
+
+    static const float phi0(ecalBarrelParameters.getPhi0());
+    static const int ecalSymmetryOrder(ecalBarrelParameters.getSymmetryOrder());
+    static const float rOfBarrel(ecalBarrelParameters.getExtent()[0]);
+    static const float zOfEndCap(ecalEndCapParameters.getExtent()[2]);
+
+    // First project to endcap
+    float minTime(std::numeric_limits<float>::max());
+    pandora::CartesianVector bestECalProjection;
+    (void) pHelix->GetPointInZ(static_cast<float>(signPz) * zOfEndCap, referencePoint, bestECalProjection, minTime);
+
+    // Then project to barrel surface(s)
+    static const float pi(std::acos(-1.));
+    pandora::CartesianVector barrelProjection;
+
+    if (ecalSymmetryOrder > 0)
+    {
+        // Polygon
+        float twopi_n = 2. * pi / (static_cast<float>(ecalSymmetryOrder));
+
+        for (int i = 0; i < ecalSymmetryOrder; ++i)
         {
-            if (trackerHitvec[jz]->getPosition()[2] > trackerHitvec[jz + 1]->getPosition()[2])
+            float time(std::numeric_limits<float>::max());
+            const float phi(twopi_n * static_cast<float>(i) + phi0);
+
+            const StatusCode statusCode(pHelix->GetPointInXY(rOfBarrel * cos(phi), rOfBarrel * sin(phi), cos(phi + 0.5 * pi),
+                sin(phi + 0.5 * pi), referencePoint, barrelProjection, time));
+
+            if ((STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
             {
-                TrackerHit *pTempTrackerHit = trackerHitvec[jz];
-                trackerHitvec[jz] = trackerHitvec[jz + 1];
-                trackerHitvec[jz + 1] = pTempTrackerHit;
+                minTime = time;
+                bestECalProjection = barrelProjection;
             }
         }
     }
-
-    const float zMin(trackerHitvec[0]->getPosition()[2]);
-    const float zMax(trackerHitvec[nTrackHits - 1]->getPosition()[2]);
-    const int signPz(std::fabs(zMin) < std::fabs(zMax) ? 1 : -1);
-
-    // Arrays for helix fits
-    float xf[nTrackHitsForFit], yf[nTrackHitsForFit], zf[nTrackHitsForFit], af[nTrackHitsForFit];
-    float xb[nTrackHitsForFit], yb[nTrackHitsForFit], zb[nTrackHitsForFit], ab[nTrackHitsForFit];
-
-    for (int i = 0; i < nTrackHitsForFit; ++i)
+    else
     {
-        xf[i] = trackerHitvec[i]->getPosition()[0];
-        yf[i] = trackerHitvec[i]->getPosition()[1];
-        zf[i] = trackerHitvec[i]->getPosition()[2];
-        af[i] = 0;
+        // Cylinder
+        float time(std::numeric_limits<float>::max());
+        const StatusCode statusCode(pHelix->GetPointOnCircle(rOfBarrel, referencePoint, barrelProjection, time));
 
-        int j = nTrackHits - 1 - i;
-        xb[i] = trackerHitvec[j]->getPosition()[0];
-        yb[i] = trackerHitvec[j]->getPosition()[1];
-        zb[i] = trackerHitvec[j]->getPosition()[2];
-        ab[i] = 0;
+        if ((STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
+        {
+            minTime = time;
+            bestECalProjection = barrelProjection;
+        }
     }
 
-    // Helix from first nTrackHitsForFit (i.e. lowest z)
-    float par[5], dpar[5], chi2, distmax;
-    ClusterShapes clusterShapesF(nTrackHitsForFit, af, xf, yf, zf);
-    clusterShapesF.FitHelix(500, 0, 1, par, dpar, chi2, distmax);
-    HelixClass *pHelix1 = new HelixClass();
-    pHelix1->Initialize_BZ(par[0], par[1], par[2], par[3], par[4], bField, signPz, zMin);
+    if (!bestECalProjection.IsInitialized())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    // Helix from last nTrackHitsForFit (i.e. highest z)
-    ClusterShapes clusterShapesB(nTrackHitsForFit, ab, xb, yb, zb);
-    clusterShapesB.FitHelix(500, 0, 1, par, dpar, chi2, distmax);
-    HelixClass *pHelix2 = new HelixClass();
-    pHelix2->Initialize_BZ(par[0], par[1], par[2], par[3], par[4], bField, signPz, zMax);
-
-    // Label as start and end depending on assigned sign of Pz
-    HelixClass *const pHelixStart = (signPz > 0) ? pHelix1 : pHelix2;
-    HelixClass *const pHelixEnd   = (signPz > 0) ? pHelix2 : pHelix1;
-
-    trackParameters.m_trackStateAtStart = pandora::TrackState(pHelixStart->getReferencePoint()[0], pHelixStart->getReferencePoint()[1],
-        pHelixStart->getReferencePoint()[2], pHelixStart->getMomentum()[0], pHelixStart->getMomentum()[1], pHelixStart->getMomentum()[2]);
-
-    trackParameters.m_trackStateAtEnd = pandora::TrackState(pHelixEnd->getReferencePoint()[0], pHelixEnd->getReferencePoint()[1],
-        pHelixEnd->getReferencePoint()[2], pHelixEnd->getMomentum()[0], pHelixEnd->getMomentum()[1], pHelixEnd->getMomentum()[2]);
-
-    // Get track state at ecal surface
-    HelixClass* pHelixToProject = pHelixFit;
-
-    if(0 != m_settings.m_useEndTrackHelixForECalProjection)
-        pHelixToProject = pHelixEnd;
-
-    float referencePoint[3] = {pHelixToProject->getReferencePoint()[0], pHelixToProject->getReferencePoint()[1],
-        pHelixToProject->getReferencePoint()[2]};
-
-    trackParameters.m_trackStateAtECal = this->GetECalProjection(pHelixToProject, referencePoint, signPz);
-
-    streamlog_out(DEBUG) << "TrackStateAtStart: " << std::endl << trackParameters.m_trackStateAtStart.Get() << std::endl
-                         << "TrackStateAtEnd: "   << std::endl << trackParameters.m_trackStateAtEnd.Get()   << std::endl
-                         << "TrackStateAtECal: "  << std::endl << trackParameters.m_trackStateAtECal.Get()  << std::endl;
-
-    delete pHelix1;
-    delete pHelix2;
-    delete pHelixFit;
+    return pandora::TrackState(bestECalProjection, pHelix->GetExtrapolatedMomentum(bestECalProjection));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -740,72 +743,6 @@ void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Tr
 
     trackParameters.m_canFormPfo = canFormPfo;
     trackParameters.m_canFormClusterlessPfo = canFormClusterlessPfo;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-pandora::TrackState TrackCreator::GetECalProjection(HelixClass *const pHelix, float referencePoint[3], int signPz) const
-{
-    static const gear::CalorimeterParameters &ecalBarrelParameters = marlin::Global::GEAR->getEcalBarrelParameters();
-    static const gear::CalorimeterParameters &ecalEndCapParameters = marlin::Global::GEAR->getEcalEndcapParameters();
-
-    static const float phi0(ecalBarrelParameters.getPhi0());
-    static const int ecalSymmetryOrder(ecalBarrelParameters.getSymmetryOrder());
-    static const float rOfBarrel(ecalBarrelParameters.getExtent()[0]);
-    static const float zOfEndCap(ecalEndCapParameters.getExtent()[2]);
-
-    float bestEcalProjection[3];
-
-    // First project to endcap
-    float minTime = pHelix->getPointInZ(static_cast<float>(signPz) * zOfEndCap, referencePoint, bestEcalProjection);
-
-    // Then project to barrel surface(s)
-    float barrelProjection[3];
-    static const float pi(std::acos(-1.));
-
-    if (ecalSymmetryOrder > 0)
-    {
-        // Polygon
-        float twopi_n = 2. * pi / (static_cast<float>(ecalSymmetryOrder));
-
-        for (int i = 0; i < ecalSymmetryOrder; ++i)
-        {
-            float phi = twopi_n * static_cast<float>(i) + phi0;
-            float xx = rOfBarrel * cos(phi);
-            float yy = rOfBarrel * sin(phi);
-            float ax = cos(phi + 0.5*pi);
-            float ay = sin(phi + 0.5*pi);
-            float tt = pHelix->getPointInXY(xx, yy , ax, ay, referencePoint, barrelProjection);
-
-            // If helix intersects this plane before current best use this point
-            if (tt < minTime)
-            {
-                minTime = tt;
-                bestEcalProjection[0] = barrelProjection[0];
-                bestEcalProjection[1] = barrelProjection[1];
-                bestEcalProjection[2] = barrelProjection[2];
-            }
-        }
-    }
-    else
-    {
-        // Cylinder
-        float tt = pHelix->getPointOnCircle(rOfBarrel, referencePoint, barrelProjection);
-
-        if (tt < minTime)
-        {
-            minTime = tt;
-            bestEcalProjection[0] = barrelProjection[0];
-            bestEcalProjection[1] = barrelProjection[1];
-            bestEcalProjection[2] = barrelProjection[2];
-        }
-    }
-
-    float extrapolatedMomentum[3];
-    pHelix->getExtrapolatedMomentum(bestEcalProjection, extrapolatedMomentum);
-
-    return pandora::TrackState(bestEcalProjection[0], bestEcalProjection[1], bestEcalProjection[2],
-        extrapolatedMomentum[0], extrapolatedMomentum[1], extrapolatedMomentum[2]);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
