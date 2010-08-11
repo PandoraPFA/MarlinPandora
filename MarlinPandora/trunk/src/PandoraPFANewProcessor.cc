@@ -332,7 +332,7 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_caloHitCreator.m_settings.m_layersFromEdgeMaxRearDistance,
                             float(250.f));
 
-    // For calculating track properties
+    // Track hit specifications
    registerProcessorParameter("MinTrackHits",
                             "Track quality cut: the minimum number of track hits",
                             m_trackCreator.m_settings.m_minTrackHits,
@@ -347,16 +347,6 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "Track quality cut: the maximum number of track hits",
                             m_trackCreator.m_settings.m_maxTrackHits,
                             int(5000));
-
-    registerProcessorParameter("NumberOfHitsForTrackHelixFits",
-                            "The number of hits to be used in helix fits at start/end of tracks",
-                            m_trackCreator.m_settings.m_nHitsForHelixFits,
-                            int(50));
-
-    registerProcessorParameter("UseEndTrackHelixForECalProjection",
-                            "==0 use full track, ==1 use last NumberOfHitsForTrackHelixFit hits",
-                            m_trackCreator.m_settings.m_useEndTrackHelixForECalProjection,
-                            int(1));
 
     // Track PFO usage parameters
     registerProcessorParameter("D0TrackCut",

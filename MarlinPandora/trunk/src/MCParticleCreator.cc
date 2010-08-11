@@ -119,12 +119,8 @@ StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(const LCEvent
                     const LCObjectVec &objectVec = navigate.getRelatedToObjects(*trackIter);
 
                     // Get reconstructed momentum at dca
-                    HelixClass helixFit;
-                    helixFit.Initialize_Canonical(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(),
-                        pTrack->getTanLambda(), bField);
-
-                    const float recoMomentum(pandora::CartesianVector(helixFit.getMomentum()[0], helixFit.getMomentum()[1],
-                        helixFit.getMomentum()[2]).GetMagnitude());
+                    const pandora::Helix helixFit(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), bField);
+                    const float recoMomentum(helixFit.GetMomentum().GetMagnitude());
 
                     // Use momentum magnitude to identify best mc particle
                     MCParticle *pBestMCParticle = NULL;

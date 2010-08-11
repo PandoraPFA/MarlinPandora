@@ -20,27 +20,23 @@ SET( ILC_HOME "path_to_ilc_home"
     CACHE PATH "Path to ILC Software" FORCE )
 
 # Path to PandoraPFANew
-SET( PandoraPFANew_HOME "${ILC_HOME}/PandoraPFANew"
+SET( PandoraPFANew_HOME "${ILC_HOME}/PandoraPFANew/a.b.c.d"
     CACHE PATH "Path to PandoraPFANew" FORCE )
 
 # Path to Marlin
-SET( Marlin_HOME "${ILC_HOME}/Marlin/HEAD"
+SET( Marlin_HOME "${ILC_HOME}/Marlin/a.b.c.d"
     CACHE PATH "Path to Marlin" FORCE )
 
-# Path to MarlinUtil
-SET( MarlinUtil_HOME "${ILC_HOME}/MarlinUtil/HEAD"
-    CACHE PATH "Path to MarlinUtil" FORCE )
-
 # Path to LCIO
-SET( LCIO_HOME "${ILC_HOME}/lcio/v01-11"
+SET( LCIO_HOME "${ILC_HOME}/lcio/a.b.c.d"
     CACHE PATH "Path to LCIO" FORCE )
 
 # Path to GEAR
-SET( GEAR_HOME "${ILC_HOME}/gear/v00-11-01"
+SET( GEAR_HOME "${ILC_HOME}/gear/a.b.c.d"
     CACHE PATH "Path to GEAR" FORCE )
 
 # CMake Modules Path
-SET( CMAKE_MODULE_PATH "${ILC_HOME}/CMakeModules/v01-08"
+SET( CMAKE_MODULE_PATH "${ILC_HOME}/CMakeModules/a.b.c.d"
     CACHE PATH "Path to CMake Modules" FORCE )
 
 ###############################################
