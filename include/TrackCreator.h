@@ -52,6 +52,7 @@ public:
 
         float           m_d0TrackCut;                           ///< Track d0 cut used to determine whether track can be used to form pfo
         float           m_z0TrackCut;                           ///< Track z0 cut used to determine whether track can be used to form pfo
+	float           m_maxTrackSigmaPOverP;                  ///< Track fraction momentum error cut
         float           m_maxTpcInnerRDistance;                 ///< Track cut on distance from tpc inner r to id whether track can form pfo
 
         int             m_usingNonVertexTracks;                 ///< Whether can form pfos from tracks that don't start at vertex

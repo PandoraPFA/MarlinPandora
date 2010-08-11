@@ -753,5 +753,23 @@ bool TrackCreator::PassesQualityCuts(const Track *const pTrack, const PandoraApi
     if (trackParameters.m_trackStateAtECal.Get().GetPosition().GetMagnitude() < m_settings.m_minTrackECalDistanceFromIp)
         return false;
 
+
+    if(pTrack->getOmega()==0.f)
+      { 
+	streamlog_out(ERROR) << "Track has Omega = 0 " << std::endl;
+	return false;
+      }
+
+    const float sigmaPOverP = sqrt(pTrack->getCovMatrix()[5])/fabs(pTrack->getOmega());
+    const EVENT::TrackerHitVec hits = pTrack->getTrackerHits();
+    
+    if(sigmaPOverP > m_settings.m_maxTrackSigmaPOverP)
+      {
+	const EVENT::TrackerHitVec hits = pTrack->getTrackerHits();
+	const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
+	streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << "+-" << sigmaPOverP*(momentumAtDca.GetMagnitude()) << " chi2 = " <<  pTrack->getChi2() << " " << pTrack->getNdf() << " from " << hits.size() << std::endl;
+	return false;
+      }
+
     return true;
 }
