@@ -367,9 +367,8 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
 
     registerProcessorParameter("MaxTrackSigmaPOverP",
                             "Cut on fractional track momentum error",
-			    m_trackCreator.m_settings.m_maxTrackSigmaPOverP,
+                            m_trackCreator.m_settings.m_maxTrackSigmaPOverP,
                             float(0.25));
-
 
     registerProcessorParameter("MaxTpcInnerRDistance",
                             "Track cut on distance from tpc inner r to id whether track can form pfo",
