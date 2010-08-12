@@ -442,7 +442,7 @@ void TrackCreator::FitTrackHelices(const Track *const pTrack, PandoraApi::Track:
     pandora::Helix *pHelixFit = new pandora::Helix(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), bField);
     trackParameters.m_momentumAtDca = pHelixFit->GetMomentum();
 
-    TrackerHitVec trackerHitvec(pTrack->getTrackerHits());
+    const TrackerHitVec &trackerHitvec(pTrack->getTrackerHits());
     float zMin(std::numeric_limits<float>::max()), zMax(-std::numeric_limits<float>::max());
 
     for (int iz = 0, nTrackHits = trackerHitvec.size(); iz < nTrackHits - 1; ++iz)
