@@ -87,6 +87,13 @@ public:
      */
     static pandora::Pandora *GetPandora();
 
+    /**
+     *  @brief  Get address of the current lcio event
+     * 
+     *  @return address of the current lcio event
+     */
+    static lcio::LCEvent *GetCurrentEvent();
+
 private:
     /**
      *  @brief  Register user algorithm factories, energy correction functions and particle id functions,
@@ -110,6 +117,8 @@ private:
     void Reset();
 
     static pandora::Pandora    *m_pPandora;                 ///< Address of the pandora instance
+    static lcio::LCEvent       *m_pLcioEvent;               ///< Address of the current lcio event
+
     Settings                    m_settings;                 ///< The settings for the pandora pfa new processor
     std::string                 m_detectorName;             ///< The detector name
     unsigned int                m_nRun;                     ///< The run number
@@ -137,6 +146,16 @@ inline pandora::Pandora *PandoraPFANewProcessor::GetPandora()
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
     return m_pPandora;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline lcio::LCEvent *PandoraPFANewProcessor::GetCurrentEvent()
+{
+    if (NULL == m_pLcioEvent)
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    return m_pLcioEvent;
 }
 
 #endif // #ifndef PANDORA_PFA_NEW_PROCESSOR_H

@@ -10,6 +10,7 @@
 
 #include "Api/PandoraApi.h"
 
+#include "ExternalClusteringAlgorithm.h"
 #include "PandoraPFANewProcessor.h"
 
 #include <cstdlib>
@@ -17,6 +18,7 @@
 PandoraPFANewProcessor pandoraPFANewProcessor;
 
 pandora::Pandora *PandoraPFANewProcessor::m_pPandora = NULL;
+lcio::LCEvent *PandoraPFANewProcessor::m_pLcioEvent = NULL;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -68,6 +70,7 @@ void PandoraPFANewProcessor::processRunHeader(LCRunHeader *pLCRunHeader)
 void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
 {
     static int eventCounter = 0;
+    m_pLcioEvent = pLCEvent;
 
     if (eventCounter < m_settings.m_nEventsToSkip)
     {
@@ -142,6 +145,9 @@ StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
     //    &PandoraPFANewProcessor::MyParticleId));
 
     //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "MyAlgorithm", new MyAlgorithm::Factory));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ExternalClustering",
+        new ExternalClusteringAlgorithm::Factory));
 
     return STATUS_CODE_SUCCESS;
 }
