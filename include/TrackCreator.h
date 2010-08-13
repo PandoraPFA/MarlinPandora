@@ -54,6 +54,8 @@ public:
         float           m_z0TrackCut;                           ///< Track z0 cut used to determine whether track can be used to form pfo
         float           m_maxTrackSigmaPOverP;                  ///< Track fraction momentum error cut
         float           m_maxTpcInnerRDistance;                 ///< Track cut on distance from tpc inner r to id whether track can form pfo
+        float           m_minTpcHitFractionOfExpected;          ///< Minimum fraction of TPC hits compared to expected
+	int             m_minFtdHitsForTpcHitFraction;          ///< Minimum number of FTD hits to ignore TPC hit fraction
 
         int             m_usingNonVertexTracks;                 ///< Whether can form pfos from tracks that don't start at vertex
         int             m_usingUnmatchedNonVertexTracks;        ///< Whether can form pfos from unmatched tracks that don't start at vertex

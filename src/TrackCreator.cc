@@ -602,7 +602,7 @@ void TrackCreator::TrackReachesECAL(const Track *const pTrack, PandoraApi::Track
             if (r > hitOuterR)
                 hitOuterR = r;
 
-            if (r > tpcInnerR)
+            if (r > tpcInnerR && r < tpcOuterR  && std::fabs(z) <= tpcZmax )
             {
                 nTpcHits++;
                 continue;
@@ -749,7 +749,15 @@ void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Tr
 
 bool TrackCreator::PassesQualityCuts(const Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters, const float rInner) const
 {
-    // ATTN Used to contain cuts on track chi2 values and energies. Reduced to simple sanity check for first official release.
+    // Extract tracking subdetector parameters
+    static const gear::TPCParameters &tpcParameters = marlin::Global::GEAR->getTPCParameters();
+    static const float tpcInnerR(tpcParameters.getPadLayout().getPlaneExtent()[0]);
+    static const float tpcOuterR(tpcParameters.getPadLayout().getPlaneExtent()[1]);
+    static const float tpcZmax(tpcParameters.getMaxDriftLength());
+    static const gear::PadRowLayout2D& tpcPads = tpcParameters.getPadLayout();
+    static const int   tpcMaxRow(tpcPads.getNRows());
+  
+    // First simple sanity checks
     if (trackParameters.m_trackStateAtECal.Get().GetPosition().GetMagnitude() < m_settings.m_minTrackECalDistanceFromIp)
         return false;
 
@@ -759,13 +767,48 @@ bool TrackCreator::PassesQualityCuts(const Track *const pTrack, const PandoraApi
         return false;
     }
 
-    const float sigmaPOverP(std::sqrt(pTrack->getCovMatrix()[5]) / std::fabs(pTrack->getOmega()));
 
+    // require reasonable number of TPC hits 
+
+    const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
+    const float pX(fabs(momentumAtDca.GetX()));
+    const float pY(fabs(momentumAtDca.GetY()));
+    const float pZ(fabs(momentumAtDca.GetZ()));
+    const float pT(std::sqrt(pX * pX + pY * pY));
+    const float rInnermostHit(pTrack->getRadiusOfInnermostHit());
+
+    float nExpectedTpcHits(0.);
+    if(pZ <  tpcZmax/tpcOuterR*pT){
+      const float innerExpectedHitRadius(std::max(tpcInnerR,rInnermostHit));
+      const float frac = (tpcOuterR- innerExpectedHitRadius)/(tpcOuterR-tpcInnerR);
+      nExpectedTpcHits =  tpcMaxRow*frac;
+    }
+    if(pZ <= tpcZmax/tpcInnerR*pT && pZ >= tpcZmax/tpcOuterR*pT){
+      const float innerExpectedHitRadius = std::max(tpcInnerR,rInnermostHit);
+      const float frac = (tpcZmax*pT/pZ- innerExpectedHitRadius)/(tpcOuterR-innerExpectedHitRadius);
+      nExpectedTpcHits = frac*tpcMaxRow;
+    }
+    // account for central TPC membrane (not specified in GEAR?) take to be 10mm for now
+    // TODO get information from geometry and calculate correct expected number of hits
+    if(std::fabs(pZ)/momentumAtDca.GetMagnitude()<10.0/tpcInnerR)nExpectedTpcHits=0;
+
+    const EVENT::IntVec &hitsBySubdetector(pTrack->getSubdetectorHitNumbers());
+    const int nTpcHits = hitsBySubdetector[9];
+    const int nFtdHits = hitsBySubdetector[7];
+    const int minTpcHits = static_cast<int>(nExpectedTpcHits*m_settings.m_minTpcHitFractionOfExpected);
+
+    if( nTpcHits < minTpcHits && momentumAtDca.GetMagnitude() > 1.0 && nFtdHits< m_settings.m_minFtdHitsForTpcHitFraction){
+      streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << " Number of TPC hits = " << nTpcHits << " < " << minTpcHits << " nftd = " << nFtdHits  << std::endl;
+      return false;
+    }
+
+
+    // check momentum uncertainty is reasonable to use track
+    const float sigmaPOverP(std::sqrt(pTrack->getCovMatrix()[5]) / std::fabs(pTrack->getOmega()));
     if (sigmaPOverP > m_settings.m_maxTrackSigmaPOverP)
     {
         const TrackerHitVec &trackerHitVec(pTrack->getTrackerHits());
         const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
-
         streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << "+-" << sigmaPOverP*(momentumAtDca.GetMagnitude())
             << " chi2 = " <<  pTrack->getChi2() << " " << pTrack->getNdf() << " from " << trackerHitVec.size() << std::endl;
 
