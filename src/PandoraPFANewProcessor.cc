@@ -476,7 +476,7 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     registerProcessorParameter("HCalEndCapInnerSymmetryOrder",
                             "HCal end cap inner symmetry order (missing from ILD00 gear file)",
                             m_geometryCreator.m_settings.m_hCalEndCapInnerSymmetryOrder,
-                            int(8));
+                            int(4));
 
     registerProcessorParameter("HCalEndCapInnerPhiCoordinate",
                             "HCal end cap inner phi coordinate (missing from ILD00 gear file)",

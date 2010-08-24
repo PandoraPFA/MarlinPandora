@@ -56,16 +56,14 @@ StatusCode GeometryCreator::CreateGeometry() const
         SetDefaultSubDetectorParameters(marlin::Global::GEAR->getYokeBarrelParameters(), geometryParameters.m_muonBarrelParameters);
         SetDefaultSubDetectorParameters(marlin::Global::GEAR->getYokeEndcapParameters(), geometryParameters.m_muonEndCapParameters);
 
-        // Non-default values (and those missing from GEAR parameters file)...
-        geometryParameters.m_eCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_eCalEndCapInnerSymmetryOrder;
-        geometryParameters.m_eCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_eCalEndCapInnerPhiCoordinate;
-        geometryParameters.m_hCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_hCalEndCapInnerSymmetryOrder;
-        geometryParameters.m_hCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_hCalEndCapInnerPhiCoordinate;
-        geometryParameters.m_hCalBarrelParameters.m_outerPhiCoordinate = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
-        geometryParameters.m_hCalBarrelParameters.m_outerSymmetryOrder = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
-
         // Additional subdetectors
         this->SetAdditionalSubDetectorParameters(geometryParameters);
+
+        // Set positions of gaps in ILD detector and add information missing from GEAR parameters file
+        if (std::string::npos != marlin::Global::GEAR->getDetectorName().find("ILD"))
+        {
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SetILDSpecificGeometry(geometryParameters));
+        }
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::Create(*pPandora, geometryParameters));
     }
@@ -128,4 +126,135 @@ void GeometryCreator::SetAdditionalSubDetectorParameters(PandoraApi::GeometryPar
     const gear::CalorimeterParameters &lHCalInputParameters = marlin::Global::GEAR->getLHcalParameters();
     SetDefaultSubDetectorParameters(lHCalInputParameters, lHCalParameters);
     geometryParameters.m_additionalSubDetectors["LHCal"] = lHCalParameters;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode GeometryCreator::SetILDSpecificGeometry(PandoraApi::GeometryParameters &geometryParameters) const
+{
+    // Non-default values (and those missing from GEAR parameters file)...
+    const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
+    geometryParameters.m_hCalBarrelParameters.m_outerPhiCoordinate = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
+    geometryParameters.m_hCalBarrelParameters.m_outerSymmetryOrder = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
+
+    // TODO Remove hardcoded numbers
+    geometryParameters.m_eCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_eCalEndCapInnerSymmetryOrder;
+    geometryParameters.m_eCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_eCalEndCapInnerPhiCoordinate;
+    geometryParameters.m_eCalEndCapParameters.m_outerSymmetryOrder = 8;
+    geometryParameters.m_eCalEndCapParameters.m_outerPhiCoordinate = 0;
+
+    geometryParameters.m_hCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_hCalEndCapInnerSymmetryOrder;
+    geometryParameters.m_hCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_hCalEndCapInnerPhiCoordinate;
+    geometryParameters.m_hCalEndCapParameters.m_outerSymmetryOrder = 16;
+    geometryParameters.m_hCalEndCapParameters.m_outerPhiCoordinate = 0;
+
+    // Gaps in detector active material
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelBoxGaps(geometryParameters));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelConcentricGaps(geometryParameters));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode GeometryCreator::CreateHCalBarrelBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const
+{
+    const std::string detectorName(marlin::Global::GEAR->getDetectorName());
+
+    const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
+    const unsigned int innerSymmetryOrder(hCalBarrelParameters.getSymmetryOrder());
+    const unsigned int outerSymmetryOrder(hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order"));
+
+    if ((0 == innerSymmetryOrder) || (2 != outerSymmetryOrder / innerSymmetryOrder))
+    {
+        streamlog_out(ERROR) << " Detector " << detectorName << " doesn't conform to expected ILD-specific geometry" << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+
+    const float innerRadius(hCalBarrelParameters.getExtent()[0]);
+    const float outerRadius(hCalBarrelParameters.getExtent()[1]);
+    const float outerZ(hCalBarrelParameters.getExtent()[3]);
+    const float phi0(hCalBarrelParameters.getPhi0());
+
+    const float staveGap(hCalBarrelParameters.getDoubleVal("Hcal_stave_gaps"));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateRegularBoxGaps(innerSymmetryOrder, phi0, innerRadius, outerRadius,
+        outerZ, staveGap, geometryParameters));
+
+    static const float pi(std::acos(-1.));
+    const float outerPseudoPhi0(pi / static_cast<float>(innerSymmetryOrder));
+    const float cosOuterPseudoPhi0(std::cos(outerPseudoPhi0));
+
+    if ((0 == outerPseudoPhi0) || (0.f == cosOuterPseudoPhi0))
+    {
+        streamlog_out(ERROR) << " Detector " << detectorName << " doesn't conform to expected ILD-specific geometry" << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+
+    const float middleStaveGap(hCalBarrelParameters.getDoubleVal("Hcal_middle_stave_gaps"));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateRegularBoxGaps(innerSymmetryOrder, outerPseudoPhi0,
+        innerRadius / cosOuterPseudoPhi0, outerRadius, outerZ, middleStaveGap, geometryParameters));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode GeometryCreator::CreateHCalBarrelConcentricGaps(PandoraApi::GeometryParameters &geometryParameters) const
+{
+    static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
+
+    const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
+    const float gapWidth(hCalBarrelParameters.getDoubleVal("Hcal_stave_gaps"));
+
+    PandoraApi::ConcentricGap::Parameters gapParameters;
+
+    gapParameters.m_minZCoordinate = -0.5f * gapWidth;
+    gapParameters.m_maxZCoordinate =  0.5f * gapWidth;
+    gapParameters.m_innerRCoordinate = hCalBarrelParameters.getExtent()[0];
+    gapParameters.m_innerPhiCoordinate = hCalBarrelParameters.getPhi0();
+    gapParameters.m_innerSymmetryOrder = hCalBarrelParameters.getSymmetryOrder();
+    gapParameters.m_outerRCoordinate = hCalBarrelParameters.getExtent()[1];
+    gapParameters.m_outerPhiCoordinate = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
+    gapParameters.m_outerSymmetryOrder = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ConcentricGap::Create(*pPandora, gapParameters));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode GeometryCreator::CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float outerZ,
+    float gapWidth, PandoraApi::GeometryParameters &geometryParameters) const
+{
+    static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
+
+    const pandora::CartesianVector basicGapVertex(-0.5f * gapWidth, innerRadius, -outerZ);
+    const pandora::CartesianVector basicSide1(gapWidth, 0, 0);
+    const pandora::CartesianVector basicSide2(0, outerRadius - innerRadius, 0);
+    const pandora::CartesianVector basicSide3(0, 0, 2.f * outerZ);
+
+    for (unsigned int i = 0; i < symmetryOrder; ++i)
+    {
+        static const float pi(std::acos(-1.));
+
+        const float phi = phi0 + (2. * pi * static_cast<float>(i) / static_cast<float>(symmetryOrder));
+        const float sinPhi(std::sin(phi));
+        const float cosPhi(std::cos(phi));
+
+        PandoraApi::BoxGap::Parameters gapParameters;
+
+        gapParameters.m_vertex = pandora::CartesianVector(cosPhi * basicGapVertex.GetX() + sinPhi * basicGapVertex.GetY(),
+            -sinPhi * basicGapVertex.GetX() + cosPhi * basicGapVertex.GetY(), basicGapVertex.GetZ());
+        gapParameters.m_side1 = pandora::CartesianVector(cosPhi * basicSide1.GetX() + sinPhi * basicSide1.GetY(),
+            -sinPhi * basicSide1.GetX() + cosPhi * basicSide1.GetY(), basicSide1.GetZ());
+        gapParameters.m_side2 = pandora::CartesianVector(cosPhi * basicSide2.GetX() + sinPhi * basicSide2.GetY(),
+            -sinPhi * basicSide2.GetX() + cosPhi * basicSide2.GetY(), basicSide2.GetZ());
+        gapParameters.m_side3 = pandora::CartesianVector(cosPhi * basicSide3.GetX() + sinPhi * basicSide3.GetY(),
+            -sinPhi * basicSide3.GetX() + cosPhi * basicSide3.GetY(), basicSide3.GetZ());
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::BoxGap::Create(*pPandora, gapParameters));
+    }
+
+    return STATUS_CODE_SUCCESS;
 }
