@@ -57,6 +57,41 @@ private:
      *  @param  geometryParameters the pandora geometry parameters
      */
     void SetAdditionalSubDetectorParameters(PandoraApi::GeometryParameters &geometryParameters) const;
+
+    /**
+     *  @brief  Set positions of gaps in ILD detector and add information missing from GEAR parameters file
+     * 
+     *  @param  geometryParameters the pandora geometry parameters
+     */
+    StatusCode SetILDSpecificGeometry(PandoraApi::GeometryParameters &geometryParameters) const;
+
+    /**
+     *  @brief  Specify positions of hcal barrel box gaps - ILD specific
+     * 
+     *  @param  geometryParameters the pandora geometry parameters
+     */
+    StatusCode CreateHCalBarrelBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const;
+
+    /**
+     *  @brief  Specify positions of hcal barrel concentric polygon gaps - ILD specific
+     * 
+     *  @param  geometryParameters the pandora geometry parameters
+     */
+    StatusCode CreateHCalBarrelConcentricGaps(PandoraApi::GeometryParameters &geometryParameters) const;
+
+    /**
+     *  @brief  Create box gaps at regular positions on polygonal prism, oriented along main z axis - ILD specific
+     * 
+     *  @param  symmetryOrder the pandora geometry parameters
+     *  @param  phi0
+     *  @param  innerRadius
+     *  @param  outerRadius
+     *  @param  outerZ
+     *  @param  gapWidth
+     *  @param  geometryParameters the pandora geometry parameters
+     */
+    StatusCode CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float outerZ,
+        float gapWidth, PandoraApi::GeometryParameters &geometryParameters) const;
 };
 
 #endif // #ifndef GEOMETRY_CREATOR_H
