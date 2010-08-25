@@ -150,6 +150,7 @@ StatusCode GeometryCreator::SetILDSpecificGeometry(PandoraApi::GeometryParameter
 
     // Gaps in detector active material
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelBoxGaps(geometryParameters));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateHCalEndCapBoxGaps(geometryParameters));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelConcentricGaps(geometryParameters));
 
     return STATUS_CODE_SUCCESS;
@@ -178,7 +179,7 @@ StatusCode GeometryCreator::CreateHCalBarrelBoxGaps(PandoraApi::GeometryParamete
 
     const float staveGap(hCalBarrelParameters.getDoubleVal("Hcal_stave_gaps"));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateRegularBoxGaps(innerSymmetryOrder, phi0, innerRadius, outerRadius,
-        outerZ, staveGap, geometryParameters));
+        -outerZ, outerZ, staveGap, geometryParameters));
 
     static const float pi(std::acos(-1.));
     const float outerPseudoPhi0(pi / static_cast<float>(innerSymmetryOrder));
@@ -192,7 +193,30 @@ StatusCode GeometryCreator::CreateHCalBarrelBoxGaps(PandoraApi::GeometryParamete
 
     const float middleStaveGap(hCalBarrelParameters.getDoubleVal("Hcal_middle_stave_gaps"));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateRegularBoxGaps(innerSymmetryOrder, outerPseudoPhi0,
-        innerRadius / cosOuterPseudoPhi0, outerRadius, outerZ, middleStaveGap, geometryParameters));
+        innerRadius / cosOuterPseudoPhi0, outerRadius, -outerZ, outerZ, middleStaveGap, geometryParameters));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode GeometryCreator::CreateHCalEndCapBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const
+{
+    const gear::CalorimeterParameters &hCalEndCapParameters = marlin::Global::GEAR->getHcalEndcapParameters();
+
+    const float staveGap(hCalEndCapParameters.getDoubleVal("Hcal_stave_gaps"));
+    const float innerRadius(hCalEndCapParameters.getExtent()[0]);
+    const float outerRadius(hCalEndCapParameters.getExtent()[1]);
+    const float innerZ(hCalEndCapParameters.getExtent()[2]);
+    const float outerZ(hCalEndCapParameters.getExtent()[3]);
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateRegularBoxGaps(m_settings.m_hCalEndCapInnerSymmetryOrder,
+        m_settings.m_hCalEndCapInnerPhiCoordinate, innerRadius, outerRadius, innerZ, outerZ, staveGap, geometryParameters,
+        pandora::CartesianVector(-innerRadius, 0, 0)));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateRegularBoxGaps(m_settings.m_hCalEndCapInnerSymmetryOrder,
+        m_settings.m_hCalEndCapInnerPhiCoordinate, innerRadius, outerRadius, -outerZ, -innerZ, staveGap, geometryParameters,
+        pandora::CartesianVector(innerRadius, 0, 0)));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -224,15 +248,15 @@ StatusCode GeometryCreator::CreateHCalBarrelConcentricGaps(PandoraApi::GeometryP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode GeometryCreator::CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float outerZ,
-    float gapWidth, PandoraApi::GeometryParameters &geometryParameters) const
+StatusCode GeometryCreator::CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float minZ,
+    float maxZ, float gapWidth, PandoraApi::GeometryParameters &geometryParameters, pandora::CartesianVector vertexOffset) const
 {
     static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
 
-    const pandora::CartesianVector basicGapVertex(-0.5f * gapWidth, innerRadius, -outerZ);
+    const pandora::CartesianVector basicGapVertex(pandora::CartesianVector(-0.5f * gapWidth, innerRadius, minZ) + vertexOffset);
     const pandora::CartesianVector basicSide1(gapWidth, 0, 0);
     const pandora::CartesianVector basicSide2(0, outerRadius - innerRadius, 0);
-    const pandora::CartesianVector basicSide3(0, 0, 2.f * outerZ);
+    const pandora::CartesianVector basicSide3(0, 0, maxZ - minZ);
 
     for (unsigned int i = 0; i < symmetryOrder; ++i)
     {

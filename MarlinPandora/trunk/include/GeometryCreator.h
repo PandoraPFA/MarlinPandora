@@ -73,6 +73,13 @@ private:
     StatusCode CreateHCalBarrelBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const;
 
     /**
+     *  @brief  Specify positions of hcal end cap box gaps - ILD specific
+     * 
+     *  @param  geometryParameters the pandora geometry parameters
+     */
+    StatusCode CreateHCalEndCapBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const;
+
+    /**
      *  @brief  Specify positions of hcal barrel concentric polygon gaps - ILD specific
      * 
      *  @param  geometryParameters the pandora geometry parameters
@@ -83,15 +90,17 @@ private:
      *  @brief  Create box gaps at regular positions on polygonal prism, oriented along main z axis - ILD specific
      * 
      *  @param  symmetryOrder the pandora geometry parameters
-     *  @param  phi0
-     *  @param  innerRadius
-     *  @param  outerRadius
-     *  @param  outerZ
-     *  @param  gapWidth
+     *  @param  phi0 the phi coordinate
+     *  @param  innerRadius the inner r coordinate
+     *  @param  outerRadius the outer r coordinate
+     *  @param  minZ the minimum z coordinate
+     *  @param  maxZ the maximum z coordinate
+     *  @param  gapWidth the gap width
      *  @param  geometryParameters the pandora geometry parameters
+     *  @param  vertexOffset position offset for vertex that doesn't point back to origin of xy plane
      */
-    StatusCode CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float outerZ,
-        float gapWidth, PandoraApi::GeometryParameters &geometryParameters) const;
+    StatusCode CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float minZ, float maxZ,
+        float gapWidth, PandoraApi::GeometryParameters &geometryParameters, pandora::CartesianVector vertexOffset = pandora::CartesianVector(0, 0, 0)) const;
 };
 
 #endif // #ifndef GEOMETRY_CREATOR_H
