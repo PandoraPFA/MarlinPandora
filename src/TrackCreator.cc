@@ -767,9 +767,7 @@ bool TrackCreator::PassesQualityCuts(const Track *const pTrack, const PandoraApi
         return false;
     }
 
-
-    // require reasonable number of TPC hits 
-
+    // Require reasonable number of TPC hits 
     const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
     const float pX(fabs(momentumAtDca.GetX()));
     const float pY(fabs(momentumAtDca.GetY()));
@@ -778,40 +776,48 @@ bool TrackCreator::PassesQualityCuts(const Track *const pTrack, const PandoraApi
     const float rInnermostHit(pTrack->getRadiusOfInnermostHit());
 
     float nExpectedTpcHits(0.);
-    if(pZ <  tpcZmax/tpcOuterR*pT){
-      const float innerExpectedHitRadius(std::max(tpcInnerR,rInnermostHit));
-      const float frac = (tpcOuterR- innerExpectedHitRadius)/(tpcOuterR-tpcInnerR);
-      nExpectedTpcHits =  tpcMaxRow*frac;
+
+    if (pZ < tpcZmax / tpcOuterR * pT)
+    {
+        const float innerExpectedHitRadius(std::max(tpcInnerR, rInnermostHit));
+        const float frac((tpcOuterR - innerExpectedHitRadius) / (tpcOuterR - tpcInnerR));
+        nExpectedTpcHits = tpcMaxRow * frac;
     }
-    if(pZ <= tpcZmax/tpcInnerR*pT && pZ >= tpcZmax/tpcOuterR*pT){
-      const float innerExpectedHitRadius = std::max(tpcInnerR,rInnermostHit);
-      const float frac = (tpcZmax*pT/pZ- innerExpectedHitRadius)/(tpcOuterR-innerExpectedHitRadius);
-      nExpectedTpcHits = frac*tpcMaxRow;
+
+    if ((pZ <= tpcZmax / tpcInnerR * pT) && (pZ >= tpcZmax / tpcOuterR * pT))
+    {
+        const float innerExpectedHitRadius(std::max(tpcInnerR, rInnermostHit));
+        const float frac((tpcZmax * pT / pZ - innerExpectedHitRadius) / (tpcOuterR - innerExpectedHitRadius));
+        nExpectedTpcHits = frac * tpcMaxRow;
     }
-    // account for central TPC membrane (not specified in GEAR?) take to be 10mm for now
+
+    // Account for central TPC membrane (not specified in GEAR?) take to be 10mm for now
     // TODO get information from geometry and calculate correct expected number of hits
-    if(std::fabs(pZ)/momentumAtDca.GetMagnitude()<10.0/tpcInnerR)nExpectedTpcHits=0;
+    if (std::fabs(pZ) / momentumAtDca.GetMagnitude() < 10.f / tpcInnerR)
+        nExpectedTpcHits = 0;
 
     const EVENT::IntVec &hitsBySubdetector(pTrack->getSubdetectorHitNumbers());
     const int nTpcHits = hitsBySubdetector[9];
     const int nFtdHits = hitsBySubdetector[7];
-    const int minTpcHits = static_cast<int>(nExpectedTpcHits*m_settings.m_minTpcHitFractionOfExpected);
+    const int minTpcHits = static_cast<int>(nExpectedTpcHits * m_settings.m_minTpcHitFractionOfExpected);
 
-    if( nTpcHits < minTpcHits && momentumAtDca.GetMagnitude() > 1.0 && nFtdHits< m_settings.m_minFtdHitsForTpcHitFraction){
-      streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << " Number of TPC hits = " << nTpcHits << " < " << minTpcHits << " nftd = " << nFtdHits  << std::endl;
-      return false;
+    if ((nTpcHits < minTpcHits) && (momentumAtDca.GetMagnitude() > 1.f) && (nFtdHits < m_settings.m_minFtdHitsForTpcHitFraction))
+    {
+        streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << " Number of TPC hits = " << nTpcHits
+                               << " < " << minTpcHits << " nftd = " << nFtdHits  << std::endl;
+        return false;
     }
 
-
-    // check momentum uncertainty is reasonable to use track
+    // Check momentum uncertainty is reasonable to use track
     const float sigmaPOverP(std::sqrt(pTrack->getCovMatrix()[5]) / std::fabs(pTrack->getOmega()));
+
     if (sigmaPOverP > m_settings.m_maxTrackSigmaPOverP)
     {
         const TrackerHitVec &trackerHitVec(pTrack->getTrackerHits());
         const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
-        streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << "+-" << sigmaPOverP*(momentumAtDca.GetMagnitude())
-            << " chi2 = " <<  pTrack->getChi2() << " " << pTrack->getNdf() << " from " << trackerHitVec.size() << std::endl;
 
+        streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << "+-" << sigmaPOverP*(momentumAtDca.GetMagnitude())
+                               << " chi2 = " <<  pTrack->getChi2() << " " << pTrack->getNdf() << " from " << trackerHitVec.size() << std::endl;
         return false;
     }
 
