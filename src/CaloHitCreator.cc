@@ -9,7 +9,15 @@
 #include "marlin/Global.h"
 #include "marlin/Processor.h"
 
+#include "gear/GearParameters.h"
 #include "gear/CalorimeterParameters.h"
+#include "gear/GearDistanceProperties.h"
+#include "gear/GearPointProperties.h"
+#include "gear/GEAR.h"
+#include "gear/TPCParameters.h"
+#include "gear/PadRowLayout2D.h"
+#include "gear/LayerLayout.h"
+
 
 #include "UTIL/CellIDDecoder.h"
 
@@ -454,11 +462,22 @@ void CaloHitCreator::GetCommonCaloHitProperties(CalorimeterHit *const pCaloHit, 
 
     caloHitParameters.m_pParentAddress = pCaloHit;
 
-    // TODO Calculate number of interaction lengths between cell position and IP
-    caloHitParameters.m_nInteractionLengthsFromIp = 0.f;
-
     caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
     caloHitParameters.m_time = pCaloHit->getTime();
+
+    double interactionLengthsFromIp = 0.f;
+    try
+    {
+        const gear::Vector3D positionIP(0,0,0);
+        const float* pos = pCaloHit->getPosition();
+        const gear::Vector3D positionHit(pos[0], pos[1], pos[2] );
+        interactionLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNIntlen( positionIP, positionHit);
+    }
+    catch( gear::Exception excpt )
+    {
+        ComputeInteractionLengthsFromIP(pCaloHit, interactionLengthsFromIp);
+    }
+    caloHitParameters.m_nInteractionLengthsFromIp = interactionLengthsFromIp;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -610,3 +629,252 @@ float CaloHitCreator::GetMaximumRadius(CalorimeterHit *const pCaloHit, const uns
 
     return maximumRadius;
 }
+
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode CaloHitCreator::ComputeInteractionLengthsFromIP(CalorimeterHit *const& pCaloHit, double& lengthInUnitsOfInteractionLength) const
+{
+    try
+    {
+        // Insert user code here ...
+        static bool coordinatesAlreadyComputed = false;
+
+        // coordinates of the sub-detectors in one quadrant
+        static float rMinECalBarrel = 0.f;
+        static float rMaxECalBarrel = 0.f;
+        static float zMinECalBarrel = 0.f;
+        static float zMaxECalBarrel = 0.f;
+
+        static float rMinECalEndCap = 0.f;
+        static float rMaxECalEndCap = 0.f;
+        static float zMinECalEndCap = 0.f;
+        static float zMaxECalEndCap = 0.f;
+
+        static float rMinHCalBarrel = 0.f;
+        static float rMaxHCalBarrel = 0.f;
+        static float zMinHCalBarrel = 0.f;
+        static float zMaxHCalBarrel = 0.f;
+
+        static float rMinHCalEndCap = 0.f;
+        static float rMaxHCalEndCap = 0.f;
+        static float zMinHCalEndCap = 0.f;
+        static float zMaxHCalEndCap = 0.f;
+
+        static float rMinCoil = 0.f;
+        static float rMaxCoil = 0.f;
+        static float zMinCoil = 0.f;
+        static float zMaxCoil = 0.f;
+
+        static float rMinTracker = 0.f;
+        static float rMaxTracker = 0.f;
+        static float zMinTracker = 0.f;
+        static float zMaxTracker = 0.f;
+
+
+
+        if( !coordinatesAlreadyComputed )
+        {
+            const PandoraApi::Geometry::Parameters geometryParameters;
+
+            const gear::TPCParameters &tpcParameters    = marlin::Global::GEAR->getTPCParameters();
+            const gear::PadRowLayout2D &tpcPadLayout    = tpcParameters.getPadLayout();
+            rMinTracker = tpcPadLayout.getPlaneExtent()[0];
+            rMaxTracker = tpcPadLayout.getPlaneExtent()[1];
+            zMinTracker = 0;
+            zMaxTracker     = tpcParameters.getMaxDriftLength();
+
+            const gear::GearParameters &coilParameters  = marlin::Global::GEAR->getGearParameters("CoilParameters");
+            rMinCoil        = coilParameters.getDoubleVal("Coil_cryostat_inner_radius");
+            rMaxCoil        = coilParameters.getDoubleVal("Coil_cryostat_outer_radius");
+            zMinCoil        = 0.f;
+            zMaxCoil        = coilParameters.getDoubleVal("Coil_cryostat_half_z");
+
+            const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
+            const gear::CalorimeterParameters &hCalEndCapParameters = marlin::Global::GEAR->getHcalEndcapParameters();
+            const gear::CalorimeterParameters &eCalBarrelParameters = marlin::Global::GEAR->getEcalBarrelParameters();
+            const gear::CalorimeterParameters &eCalEndCapParameters = marlin::Global::GEAR->getEcalEndcapParameters();
+
+            rMinECalBarrel =  eCalBarrelParameters.getExtent()[0];
+            rMaxECalBarrel =  eCalBarrelParameters.getExtent()[1];
+            zMinECalBarrel =  eCalBarrelParameters.getExtent()[2];
+            zMaxECalBarrel =  eCalBarrelParameters.getExtent()[3];
+
+            rMinHCalBarrel =  hCalBarrelParameters.getExtent()[0];
+            rMaxHCalBarrel =  hCalBarrelParameters.getExtent()[1];
+            zMinHCalBarrel =  hCalBarrelParameters.getExtent()[2];
+            zMaxHCalBarrel =  hCalBarrelParameters.getExtent()[3];
+
+            rMinECalEndCap =  eCalEndCapParameters.getExtent()[0];
+            rMaxECalEndCap =  eCalEndCapParameters.getExtent()[1];
+            zMinECalEndCap =  eCalEndCapParameters.getExtent()[2];
+            zMaxECalEndCap =  eCalEndCapParameters.getExtent()[3];
+
+            rMinHCalEndCap =  hCalEndCapParameters.getExtent()[0];
+            rMaxHCalEndCap =  hCalEndCapParameters.getExtent()[1];
+            zMinHCalEndCap =  hCalEndCapParameters.getExtent()[2];
+            zMaxHCalEndCap =  hCalEndCapParameters.getExtent()[3];
+            
+            coordinatesAlreadyComputed = true;
+        }
+
+        const float* position = pCaloHit->getPosition();
+        pandora::CartesianVector pPosition( position[0], position[1], position[2] );
+        float radius, phi, z;
+        pPosition.GetCylindricalCoordinates(radius, phi, z);
+        pPosition.SetValues( radius, 0, fabs(z) );
+
+        
+//        lengthInUnitsOfInteractionLength += ComputePathLengthFromIPInRectangle( pPosition, rMinTracker, zMinTracker, rMaxTracker, zMaxTracker ) * m_settings.avgIntLengthTracker;
+        lengthInUnitsOfInteractionLength += ComputePathLengthFromIPInRectangle( pPosition, rMinECalBarrel, zMinECalBarrel, rMaxECalBarrel, zMaxECalBarrel ) * m_settings.avgIntLengthECalBarrel;
+        lengthInUnitsOfInteractionLength += ComputePathLengthFromIPInRectangle( pPosition, rMinHCalBarrel, zMinHCalBarrel, rMaxHCalBarrel, zMaxHCalBarrel ) * m_settings.avgIntLengthHCalBarrel;
+        lengthInUnitsOfInteractionLength += ComputePathLengthFromIPInRectangle( pPosition, rMinCoil, zMinCoil, rMaxCoil, zMaxCoil ) * m_settings.avgIntLengthCoil;
+        lengthInUnitsOfInteractionLength += ComputePathLengthFromIPInRectangle( pPosition, rMinECalEndCap, zMinECalEndCap, rMaxECalEndCap, zMaxECalEndCap ) * m_settings.avgIntLengthECalEndCap;
+        lengthInUnitsOfInteractionLength += ComputePathLengthFromIPInRectangle( pPosition, rMinHCalEndCap, zMinHCalEndCap, rMaxHCalEndCap, zMaxHCalEndCap ) * m_settings.avgIntLengthHCalEndCap;
+    }
+    catch (gear::UnknownParameterException &e)
+    {
+        streamlog_out(ERROR) << "Failed to extract geometry information from gear." << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
+    return STATUS_CODE_SUCCESS;
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float CaloHitCreator::ComputePathLengthFromIPInRectangle(const pandora::CartesianVector& pPosition, 
+                                                         const float& rMin, const float& zMin, const float& rMax, const float& zMax) const
+{
+    // compute cuts with rectangle borders
+    float phi, radius, z;
+    pPosition.GetCylindricalCoordinates( radius, phi, z );
+
+    float xInt[4];
+    float zInt[4];
+    bool valid[4];
+    valid[0] = IntersectLines2D( 0, 0, radius, z,   rMin, zMin,   rMin, zMax,   (xInt[0]), (zInt[0]) ); // first edge of rectangle at rMin
+    valid[1] = IntersectLines2D( 0, 0, radius, z,   rMin, zMin,   rMax, zMin,   (xInt[1]), (zInt[1]) ); // first edge of rectangle at zMin
+    valid[2] = IntersectLines2D( 0, 0, radius, z,   rMax, zMax,   rMax, zMin,   (xInt[2]), (zInt[2]) ); // first edge of rectangle at rMax
+    valid[3] = IntersectLines2D( 0, 0, radius, z,   rMax, zMax,   rMin, zMax,   (xInt[3]), (zInt[3]) ); // first edge of rectangle at zMax
+
+    int indexFirstPoint = -1;
+    int indexSecondPoint = -1;
+
+    for( int i = 0; i < 4; ++i )
+    {
+//        std::cout << "valid["<<i<<"] " << valid[i] << "  x " << xInt[i] << "  y " << zInt[i] << std::endl;
+        if( valid[i] )
+        {
+            if( indexFirstPoint == -1 ) // first point not yet set
+                indexFirstPoint = i;
+            else if( indexSecondPoint == -1 ) // second point not yet set
+                indexSecondPoint = i;
+            else
+                std::cout << "ERROR calohitcreator problem at computing path length from IP to calohit in rectangle" << std::endl;
+        }
+    }
+
+    if( indexFirstPoint == -1 )
+        return 0.f;
+
+    pandora::CartesianVector intersectionA( xInt[indexFirstPoint], 0.f, zInt[indexFirstPoint] );
+    if( indexSecondPoint == -1 )
+    {
+        float length = pandora::CartesianVector(pPosition - intersectionA).GetMagnitude();
+        return length;
+    }
+
+    pandora::CartesianVector intersectionB( xInt[indexSecondPoint], 0.f, zInt[indexSecondPoint] );
+    float length = pandora::CartesianVector(intersectionA-intersectionB).GetMagnitude();
+    return length;
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool CaloHitCreator::IntersectLines2D( const float& lineAXStart, const float& lineAYStart, const float& lineAXEnd, const float& lineAYEnd, 
+                                       const float& lineBXStart, const float& lineBYStart, const float& lineBXEnd, const float& lineBYEnd, 
+                                       float& xIntersect, float& yIntersect) const
+{
+    float k0,k1;    // the slopes of the two lines
+
+    const float epsilon = 1e-6;
+
+    bool parallelToY_A = false;
+    bool parallelToY_B = false;
+
+    if ( fabs(lineAXEnd-lineAXStart) > epsilon )
+        k0 = (lineAYEnd-lineAYStart)/(lineAXEnd-lineAXStart);
+    else
+    {
+        parallelToY_A = true;
+        k0 = std::numeric_limits<float>::max();   // take max float value instead of infinity
+    }
+
+    if ( fabs(lineBXEnd-lineBXStart) > epsilon )
+        k1 = (lineBYEnd-lineBYStart)/(lineBXEnd-lineBXStart);
+    else
+    {
+        parallelToY_B = true;
+        k1 = std::numeric_limits<float>::max();   // take max float value instead of infinity
+    }
+
+    if( parallelToY_A && parallelToY_B )
+    {
+//         if( lineAXStart == lineBXStart ) 
+        xIntersect = 0.f;
+        yIntersect = 0.f;
+        return false;
+    }       
+
+    if( parallelToY_A )
+    {
+        xIntersect = lineAXStart;
+        yIntersect = lineBXStart+k1*(xIntersect-lineBXStart);
+    }
+    else if( parallelToY_B )
+    {
+        xIntersect = lineBXStart;
+        yIntersect = lineAXStart+k0*(xIntersect-lineAXStart);
+    }
+    else
+    {
+
+        // compute constants
+        const float b0 = -1;
+        const float b1 = -1;
+
+        const float c0 = (lineAYStart-k0*lineAXStart);
+        const float c1 = (lineBYStart-k1*lineBXStart);
+
+        // compute the inverse of the determinate
+
+        const float inverseDet = 1/(k0*b1 - k1*b0);
+
+        // use Kramers rule to compute xi and yi
+        xIntersect=((b0*c1 - b1*c0)*inverseDet);
+        yIntersect=((k1*c0 - k0*c1)*inverseDet);
+    }
+
+    // check if intersections are within end-points of lines
+    // check x coordinate, line A
+    if( !(  (xIntersect >= lineAXStart && xIntersect <= lineAXEnd) || (xIntersect >= lineAXEnd && xIntersect <= lineAXStart) ) )
+        return false;
+
+    // check x coordinate, line B
+    if( !(  (xIntersect >= lineBXStart && xIntersect <= lineBXEnd) || (xIntersect >= lineBXEnd && xIntersect <= lineBXStart) ) )
+        return false;
+
+    // check y coordinate, line A
+    if( !(  (yIntersect >= lineAYStart && yIntersect <= lineAYEnd) || (yIntersect >= lineAYEnd && yIntersect <= lineAYStart) ) )
+        return false;
+
+    // check y coordinate, line B
+    if( !(  (yIntersect >= lineBYStart && yIntersect <= lineBYEnd) || (yIntersect >= lineBYEnd && yIntersect <= lineBYStart) ) )
+        return false;
+
+    return true;
+} 
+
