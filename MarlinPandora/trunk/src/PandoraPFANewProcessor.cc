@@ -338,6 +338,37 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_caloHitCreator.m_settings.m_layersFromEdgeMaxRearDistance,
                             float(250.f));
 
+    // average interaction length parameters
+    registerProcessorParameter("AverageInteractionLengthTracker",
+                            "average number interaction length per mm in the tracker",
+                            m_caloHitCreator.m_settings.avgIntLengthTracker,
+                            float(0.f));
+
+    registerProcessorParameter("AverageInteractionLengthCoil",
+                            "average number interaction length per mm in the coil",
+                            m_caloHitCreator.m_settings.avgIntLengthCoil,
+                            float(0.0025189));
+
+    registerProcessorParameter("AverageInteractionLengthECalBarrel",
+                            "average number interaction length per mm in the ECal Barrel",
+                            m_caloHitCreator.m_settings.avgIntLengthECalBarrel,
+                            float(0.0040269f));
+
+    registerProcessorParameter("AverageInteractionLengthHCalBarrel",
+                            "average number interaction length per mm in the HCal Barrel",
+                            m_caloHitCreator.m_settings.avgIntLengthHCalBarrel,
+                            float(0.0033041916f));
+
+    registerProcessorParameter("AverageInteractionLengthECalEndCap",
+                            "average number interaction length per mm in the ECal EndCap",
+                            m_caloHitCreator.m_settings.avgIntLengthECalEndCap,
+                            float(0.0040269f));
+
+    registerProcessorParameter("AverageInteractionLengthHCalEndCap",
+                            "average number interaction length per mm in the HCal EndCap",
+                            m_caloHitCreator.m_settings.avgIntLengthHCalEndCap,
+                            float(0.0033041916));
+
     // Track hit specifications
    registerProcessorParameter("MinTrackHits",
                             "Track quality cut: the minimum number of track hits",
