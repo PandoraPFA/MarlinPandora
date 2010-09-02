@@ -369,6 +369,17 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_caloHitCreator.m_settings.avgIntLengthHCalEndCap,
                             float(0.0033041916));
 
+    registerProcessorParameter("AverageInteractionLengthMuonBarrel",
+                            "average number interaction length per mm in the Muon Barrel",
+                            m_caloHitCreator.m_settings.avgIntLengthMuonBarrel,
+                            float(0.0040269f));
+
+    registerProcessorParameter("AverageInteractionLengthMuonEndCap",
+                            "average number interaction length per mm in the Muon EndCap",
+                            m_caloHitCreator.m_settings.avgIntLengthMuonEndCap,
+                            float(0.0040269f));
+
+
     // Track hit specifications
    registerProcessorParameter("MinTrackHits",
                             "Track quality cut: the minimum number of track hits",
