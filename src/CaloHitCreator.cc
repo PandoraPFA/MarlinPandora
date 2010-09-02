@@ -672,6 +672,15 @@ StatusCode CaloHitCreator::ComputeInteractionLengthsFromIP(CalorimeterHit *const
         static float zMinTracker = 0.f;
         static float zMaxTracker = 0.f;
 
+        static float rMinMuonBarrel = 0.f;
+        static float rMaxMuonBarrel = 0.f;
+        static float zMinMuonBarrel = 0.f;
+        static float zMaxMuonBarrel = 0.f;
+
+        static float rMinMuonEndCap = 0.f;
+        static float rMaxMuonEndCap = 0.f;
+        static float zMinMuonEndCap = 0.f;
+        static float zMaxMuonEndCap = 0.f;
 
 
         if( !coordinatesAlreadyComputed )
@@ -695,6 +704,9 @@ StatusCode CaloHitCreator::ComputeInteractionLengthsFromIP(CalorimeterHit *const
             const gear::CalorimeterParameters &hCalEndCapParameters = marlin::Global::GEAR->getHcalEndcapParameters();
             const gear::CalorimeterParameters &eCalBarrelParameters = marlin::Global::GEAR->getEcalBarrelParameters();
             const gear::CalorimeterParameters &eCalEndCapParameters = marlin::Global::GEAR->getEcalEndcapParameters();
+            const gear::CalorimeterParameters &muonBarrelParameters = marlin::Global::GEAR->getYokeBarrelParameters();
+            const gear::CalorimeterParameters &muonEndCapParameters = marlin::Global::GEAR->getYokeEndcapParameters();
+
 
             rMinECalBarrel =  eCalBarrelParameters.getExtent()[0];
             rMaxECalBarrel =  eCalBarrelParameters.getExtent()[1];
@@ -715,7 +727,17 @@ StatusCode CaloHitCreator::ComputeInteractionLengthsFromIP(CalorimeterHit *const
             rMaxHCalEndCap =  hCalEndCapParameters.getExtent()[1];
             zMinHCalEndCap =  hCalEndCapParameters.getExtent()[2];
             zMaxHCalEndCap =  hCalEndCapParameters.getExtent()[3];
+
+            rMinMuonBarrel =  muonBarrelParameters.getExtent()[0];
+            rMaxMuonBarrel =  muonBarrelParameters.getExtent()[1];
+            zMinMuonBarrel =  muonBarrelParameters.getExtent()[2];
+            zMaxMuonBarrel =  muonBarrelParameters.getExtent()[3];
             
+            rMinMuonEndCap =  muonEndCapParameters.getExtent()[0];
+            rMaxMuonEndCap =  muonEndCapParameters.getExtent()[1];
+            zMinMuonEndCap =  muonEndCapParameters.getExtent()[2];
+            zMaxMuonEndCap =  muonEndCapParameters.getExtent()[3];
+
             coordinatesAlreadyComputed = true;
         }
 
@@ -732,6 +754,9 @@ StatusCode CaloHitCreator::ComputeInteractionLengthsFromIP(CalorimeterHit *const
         lengthInUnitsOfInteractionLength += ComputePathLengthFromIPInRectangle( pPosition, rMinCoil, zMinCoil, rMaxCoil, zMaxCoil ) * m_settings.avgIntLengthCoil;
         lengthInUnitsOfInteractionLength += ComputePathLengthFromIPInRectangle( pPosition, rMinECalEndCap, zMinECalEndCap, rMaxECalEndCap, zMaxECalEndCap ) * m_settings.avgIntLengthECalEndCap;
         lengthInUnitsOfInteractionLength += ComputePathLengthFromIPInRectangle( pPosition, rMinHCalEndCap, zMinHCalEndCap, rMaxHCalEndCap, zMaxHCalEndCap ) * m_settings.avgIntLengthHCalEndCap;
+
+        lengthInUnitsOfInteractionLength += ComputePathLengthFromIPInRectangle( pPosition, rMinMuonBarrel, zMinMuonBarrel, rMaxMuonBarrel, zMaxMuonBarrel ) * m_settings.avgIntLengthMuonBarrel;
+        lengthInUnitsOfInteractionLength += ComputePathLengthFromIPInRectangle( pPosition, rMinMuonEndCap, zMinMuonEndCap, rMaxMuonEndCap, zMaxMuonEndCap ) * m_settings.avgIntLengthMuonEndCap;
     }
     catch (gear::UnknownParameterException &e)
     {

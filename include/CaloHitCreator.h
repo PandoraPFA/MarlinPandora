@@ -68,6 +68,8 @@ public:
 	float           avgIntLengthHCalBarrel;                 ///< Average interaction length per mm in the HCal barrel
 	float           avgIntLengthECalEndCap;                 ///< Average interaction length per mm in the ECal endcap
 	float           avgIntLengthHCalEndCap;                 ///< Average interaction length per mm in the HCal endcap
+	float           avgIntLengthMuonBarrel;                 ///< Average interaction length per mm in the Muon barrel
+	float           avgIntLengthMuonEndCap;                 ///< Average interaction length per mm in the Muon endcap
     };
 
     /**
