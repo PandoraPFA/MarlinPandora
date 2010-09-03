@@ -144,7 +144,8 @@ StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
     //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterParticleIdFunction(*m_pPandora, "MyParticleId",
     //    &PandoraPFANewProcessor::MyParticleId));
 
-    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "MyAlgorithm", new MyAlgorithm::Factory));
+    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "MyAlgorithm",
+    //    new MyAlgorithm::Factory));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ExternalClustering",
         new ExternalClusteringAlgorithm::Factory));
