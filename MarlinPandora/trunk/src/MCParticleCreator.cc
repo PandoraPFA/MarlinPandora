@@ -43,26 +43,16 @@ StatusCode MCParticleCreator::CreateMCParticles(const LCEvent *const pLCEvent) c
                 {
                     MCParticle *pMcParticle = dynamic_cast<MCParticle*>(pMCParticleCollection->getElementAt(i));
 
-                    double innerRadius = 0.;
-                    double outerRadius = 0.;
-                    pandora::CartesianVector momentum(pMcParticle->getMomentum()[0], pMcParticle->getMomentum()[1], pMcParticle->getMomentum()[2]);
-
-                    for(int i = 0; i < 3; ++i)
-                    {
-                        innerRadius += pow(pMcParticle->getVertex()[i], 2);
-                        outerRadius += pow(pMcParticle->getEndpoint()[i], 2);
-                    }
-
-                    innerRadius = std::sqrt(innerRadius);
-                    outerRadius = std::sqrt(outerRadius);
-         
                     PandoraApi::MCParticle::Parameters mcParticleParameters;
                     mcParticleParameters.m_energy = pMcParticle->getEnergy();
                     mcParticleParameters.m_particleId = pMcParticle->getPDG();
-                    mcParticleParameters.m_momentum = momentum;
-                    mcParticleParameters.m_innerRadius = innerRadius;
-                    mcParticleParameters.m_outerRadius = outerRadius;
                     mcParticleParameters.m_pParentAddress = pMcParticle;
+                    mcParticleParameters.m_momentum = pandora::CartesianVector(pMcParticle->getMomentum()[0], pMcParticle->getMomentum()[1],
+                        pMcParticle->getMomentum()[2]);
+                    mcParticleParameters.m_vertex = pandora::CartesianVector(pMcParticle->getVertex()[0], pMcParticle->getVertex()[1],
+                        pMcParticle->getVertex()[2]);
+                    mcParticleParameters.m_endpoint = pandora::CartesianVector(pMcParticle->getEndpoint()[0], pMcParticle->getEndpoint()[1],
+                        pMcParticle->getEndpoint()[2]);
 
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*pPandora, mcParticleParameters));
 
