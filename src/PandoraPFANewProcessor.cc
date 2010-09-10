@@ -507,23 +507,43 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
 
     // Additional geometry parameters
     registerProcessorParameter("ECalEndCapInnerSymmetryOrder",
-                            "ECal end cap inner symmetry order (missing from ILD00 gear file)",
+                            "ECal end cap inner symmetry order (missing from ILD gear files)",
                             m_geometryCreator.m_settings.m_eCalEndCapInnerSymmetryOrder,
                             int(4));
 
     registerProcessorParameter("ECalEndCapInnerPhiCoordinate",
-                            "ECal end cap inner phi coordinate (missing from ILD00 gear file)",
+                            "ECal end cap inner phi coordinate (missing from ILD gear files)",
                             m_geometryCreator.m_settings.m_eCalEndCapInnerPhiCoordinate,
                             float(0.));
 
+    registerProcessorParameter("ECalEndCapOuterSymmetryOrder",
+                            "ECal end cap outer symmetry order (missing from ILD gear files)",
+                            m_geometryCreator.m_settings.m_eCalEndCapOuterSymmetryOrder,
+                            int(8));
+
+    registerProcessorParameter("ECalEndCapOuterPhiCoordinate",
+                            "ECal end cap outer phi coordinate (missing from ILD gear files)",
+                            m_geometryCreator.m_settings.m_eCalEndCapOuterPhiCoordinate,
+                            float(0.));
+
     registerProcessorParameter("HCalEndCapInnerSymmetryOrder",
-                            "HCal end cap inner symmetry order (missing from ILD00 gear file)",
+                            "HCal end cap inner symmetry order (missing from ILD gear files)",
                             m_geometryCreator.m_settings.m_hCalEndCapInnerSymmetryOrder,
                             int(4));
 
     registerProcessorParameter("HCalEndCapInnerPhiCoordinate",
-                            "HCal end cap inner phi coordinate (missing from ILD00 gear file)",
+                            "HCal end cap inner phi coordinate (missing from ILD gear files)",
                             m_geometryCreator.m_settings.m_hCalEndCapInnerPhiCoordinate,
+                            float(0.));
+
+    registerProcessorParameter("HCalEndCapOuterSymmetryOrder",
+                            "HCal end cap outer symmetry order (missing from ILD gear files)",
+                            m_geometryCreator.m_settings.m_hCalEndCapOuterSymmetryOrder,
+                            int(16));
+
+    registerProcessorParameter("HCalEndCapOuterPhiCoordinate",
+                            "HCal end cap outer phi coordinate (missing from ILD gear files)",
+                            m_geometryCreator.m_settings.m_hCalEndCapOuterPhiCoordinate,
                             float(0.));
 
     // Number of events to skip
