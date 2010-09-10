@@ -137,16 +137,15 @@ StatusCode GeometryCreator::SetILDSpecificGeometry(PandoraApi::GeometryParameter
     geometryParameters.m_hCalBarrelParameters.m_outerPhiCoordinate = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
     geometryParameters.m_hCalBarrelParameters.m_outerSymmetryOrder = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
 
-    // TODO Remove hardcoded numbers
     geometryParameters.m_eCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_eCalEndCapInnerSymmetryOrder;
     geometryParameters.m_eCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_eCalEndCapInnerPhiCoordinate;
-    geometryParameters.m_eCalEndCapParameters.m_outerSymmetryOrder = 8;
-    geometryParameters.m_eCalEndCapParameters.m_outerPhiCoordinate = 0;
+    geometryParameters.m_eCalEndCapParameters.m_outerSymmetryOrder = m_settings.m_eCalEndCapOuterSymmetryOrder;
+    geometryParameters.m_eCalEndCapParameters.m_outerPhiCoordinate = m_settings.m_eCalEndCapOuterPhiCoordinate;
 
     geometryParameters.m_hCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_hCalEndCapInnerSymmetryOrder;
     geometryParameters.m_hCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_hCalEndCapInnerPhiCoordinate;
-    geometryParameters.m_hCalEndCapParameters.m_outerSymmetryOrder = 16;
-    geometryParameters.m_hCalEndCapParameters.m_outerPhiCoordinate = 0;
+    geometryParameters.m_hCalEndCapParameters.m_outerSymmetryOrder = m_settings.m_hCalEndCapOuterSymmetryOrder;
+    geometryParameters.m_hCalEndCapParameters.m_outerPhiCoordinate = m_settings.m_hCalEndCapOuterPhiCoordinate;
 
     // Gaps in detector active material
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelBoxGaps(geometryParameters));
