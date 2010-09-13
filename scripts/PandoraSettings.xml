@@ -338,6 +338,7 @@
         <fragmentRemovalAlgorithms>
             <algorithm type = "MainFragmentRemoval"/>
             <algorithm type = "NeutralFragmentRemoval"/>
+            <algorithm type = "PhotonFragmentRemoval"/>
         </fragmentRemovalAlgorithms>
     </algorithm>
 
