@@ -46,12 +46,13 @@ public:
     ~InteractionLengthCalculator();
 
     /**
-     *  @brief  Compute the path length from the IP to the position of a CalorimeterHit in units of interaction lengths
+     *  @brief  Get the path length from the IP to the position of a calorimeter hit in units of interaction lengths
      * 
-     *  @param  pCaloHit Calorimeter hit
-     *  @param  nInteractionLengths to receive the length from the IP to the position of the calorimeter hit in units of interaction length
+     *  @param  pCaloHit address of the calorimeter hit
+     * 
+     *  @return the path length from the IP to the position of a CalorimeterHit
      */
-    static StatusCode ComputeInteractionLengthsFromIP(const EVENT::CalorimeterHit *const pCaloHit, float &nInteractionLengths);
+    static float GetNInteractionLengthsFromIP(const EVENT::CalorimeterHit *const pCaloHit);
 
 private:
     /**

@@ -66,14 +66,14 @@ public:
      *
      *  @param  pLCEvent the lc event
      */
-    virtual void processEvent(lcio::LCEvent *pLCEvent);
+    virtual void processEvent(EVENT::LCEvent *pLCEvent);
 
     /**
      *  @brief  Checks for event
      *
      *  @param  pLCEvent the lc event
      */
-    virtual void check(lcio::LCEvent *pLCEvent);
+    virtual void check(EVENT::LCEvent *pLCEvent);
 
     /**
      *  @brief  End, called at shutdown
@@ -92,7 +92,7 @@ public:
      * 
      *  @return address of the current lcio event
      */
-    static lcio::LCEvent *GetCurrentEvent();
+    static EVENT::LCEvent *GetCurrentEvent();
 
 private:
     /**
@@ -117,7 +117,7 @@ private:
     void Reset();
 
     static pandora::Pandora        *m_pPandora;                     ///< Address of the pandora instance
-    static lcio::LCEvent           *m_pLcioEvent;                   ///< Address of the current lcio event
+    static EVENT::LCEvent           *m_pLcioEvent;                   ///< Address of the current lcio event
 
     GeometryCreator                *m_pGeometryCreator;             ///< The geometry creator
     CaloHitCreator                 *m_pCaloHitCreator;              ///< The calo hit creator
@@ -156,7 +156,7 @@ inline pandora::Pandora *PandoraPFANewProcessor::GetPandora()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline lcio::LCEvent *PandoraPFANewProcessor::GetCurrentEvent()
+inline EVENT::LCEvent *PandoraPFANewProcessor::GetCurrentEvent()
 {
     if (NULL == m_pLcioEvent)
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);

@@ -31,66 +31,49 @@ TrackVector TrackCreator::m_trackVector;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TrackCreator::TrackCreator(const Settings &settings) :
-    m_settings(settings)
+    m_settings(settings),
+    m_pPandora(PandoraPFANewProcessor::GetPandora()),
+    m_bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z()),
+    m_tpcInnerR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[0]),
+    m_tpcOuterR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[1]),
+    m_tpcMaxRow(marlin::Global::GEAR->getTPCParameters().getPadLayout().getNRows()),
+    m_tpcZmax(marlin::Global::GEAR->getTPCParameters().getMaxDriftLength()),
+    m_ftdInnerRadii(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDInnerRadius")),
+    m_ftdOuterRadii(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDOuterRadius")),
+    m_ftdZPositions(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDZCoordinate")),
+    m_nFtdLayers(m_ftdZPositions.size()),
+    m_eCalBarrelInnerSymmetry(marlin::Global::GEAR->getEcalBarrelParameters().getSymmetryOrder()),
+    m_eCalBarrelInnerPhi0(marlin::Global::GEAR->getEcalBarrelParameters().getPhi0()),
+    m_eCalBarrelInnerR(marlin::Global::GEAR->getEcalBarrelParameters().getExtent()[0]),
+    m_eCalEndCapInnerZ(marlin::Global::GEAR->getEcalEndcapParameters().getExtent()[2])
 {
-    try
-    {
-        m_pPandora = PandoraPFANewProcessor::GetPandora();
-        m_bField = marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z();
-
-        // TPC parameters
-        const gear::TPCParameters &tpcParameters(marlin::Global::GEAR->getTPCParameters());
-        m_tpcInnerR = tpcParameters.getPadLayout().getPlaneExtent()[0];
-        m_tpcOuterR = tpcParameters.getPadLayout().getPlaneExtent()[1];
-        m_tpcZmax = tpcParameters.getMaxDriftLength();
-        m_tpcMaxRow = tpcParameters.getPadLayout().getNRows();
-
-        if ((0.f == m_tpcZmax) || (0.f == m_tpcInnerR) || (m_tpcInnerR == m_tpcOuterR))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        m_cosTpc = m_tpcZmax / std::sqrt(m_tpcZmax * m_tpcZmax + m_tpcInnerR * m_tpcInnerR);
-
-        // FTD parameters
-        const gear::GearParameters &ftdParameters(marlin::Global::GEAR->getGearParameters("FTD"));
-        m_ftdInnerRadii = ftdParameters.getDoubleVals("FTDInnerRadius");
-        m_ftdOuterRadii = ftdParameters.getDoubleVals("FTDOuterRadius");
-        m_ftdZPositions = ftdParameters.getDoubleVals("FTDZCoordinate");
-        m_nFtdLayers = m_ftdZPositions.size();
-
-        if ((0 == m_nFtdLayers) || (m_nFtdLayers != m_ftdInnerRadii.size()) || (m_nFtdLayers != m_ftdOuterRadii.size()))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        for (unsigned int iFtdLayer = 0; iFtdLayer < m_nFtdLayers; ++iFtdLayer)
-        {
-            if ((0.f == m_ftdOuterRadii[iFtdLayer]) || (0.f == m_ftdInnerRadii[iFtdLayer]))
-                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);;
-        }
-
-        m_tanLambdaFtd = m_ftdZPositions[0] / m_ftdOuterRadii[0];
-
-        // ETD and SET parameters
-        const DoubleVector &etdZPositions(marlin::Global::GEAR->getGearParameters("ETD").getDoubleVals("ETDLayerZ"));
-        const DoubleVector &setInnerRadii(marlin::Global::GEAR->getGearParameters("SET").getDoubleVals("SETLayerRadius"));
-
-        if (etdZPositions.empty() || setInnerRadii.empty())
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        m_minEtdZPosition = *(std::min_element(etdZPositions.begin(), etdZPositions.end()));
-        m_minSetRadius = *(std::min_element(setInnerRadii.begin(), setInnerRadii.end()));
-
-        // ECal parameters
-        const gear::CalorimeterParameters &ecalBarrelParameters(marlin::Global::GEAR->getEcalBarrelParameters());
-        const gear::CalorimeterParameters &ecalEndCapParameters(marlin::Global::GEAR->getEcalEndcapParameters());
-        m_ecalBarrelInnerSymmetry = ecalBarrelParameters.getSymmetryOrder();
-        m_ecalBarrelInnerPhi0 = ecalBarrelParameters.getPhi0();
-        m_ecalBarrelInnerR = ecalBarrelParameters.getExtent()[0];
-        m_ecalEndCapInnerZ = ecalEndCapParameters.getExtent()[2];
-    }
-    catch (...)
-    {
-        streamlog_out(ERROR) << "Failed to initialize track creator." << std::endl;
+    // Check tpc parameters
+    if ((0.f == m_tpcZmax) || (0.f == m_tpcInnerR) || (m_tpcInnerR == m_tpcOuterR))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    m_cosTpc = m_tpcZmax / std::sqrt(m_tpcZmax * m_tpcZmax + m_tpcInnerR * m_tpcInnerR);
+
+    // Check ftd parameters
+    if ((0 == m_nFtdLayers) || (m_nFtdLayers != m_ftdInnerRadii.size()) || (m_nFtdLayers != m_ftdOuterRadii.size()))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    for (unsigned int iFtdLayer = 0; iFtdLayer < m_nFtdLayers; ++iFtdLayer)
+    {
+        if ((0.f == m_ftdOuterRadii[iFtdLayer]) || (0.f == m_ftdInnerRadii[iFtdLayer]))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);;
     }
+
+    m_tanLambdaFtd = m_ftdZPositions[0] / m_ftdOuterRadii[0];
+
+    // Calculate etd and set parameters
+    const DoubleVector &etdZPositions(marlin::Global::GEAR->getGearParameters("ETD").getDoubleVals("ETDLayerZ"));
+    const DoubleVector &setInnerRadii(marlin::Global::GEAR->getGearParameters("SET").getDoubleVals("SETLayerRadius"));
+
+    if (etdZPositions.empty() || setInnerRadii.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    m_minEtdZPosition = *(std::min_element(etdZPositions.begin(), etdZPositions.end()));
+    m_minSetRadius = *(std::min_element(setInnerRadii.begin(), setInnerRadii.end()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,7 +84,7 @@ TrackCreator::~TrackCreator()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackCreator::CreateTrackAssociations(const LCEvent *const pLCEvent)
+StatusCode TrackCreator::CreateTrackAssociations(const EVENT::LCEvent *const pLCEvent)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractKinks(pLCEvent));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractProngsAndSplits(pLCEvent));
@@ -112,23 +95,23 @@ StatusCode TrackCreator::CreateTrackAssociations(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
+StatusCode TrackCreator::ExtractKinks(const EVENT::LCEvent *const pLCEvent)
 {
     for (StringVector::const_iterator iter = m_settings.m_kinkVertexCollections.begin(), iterEnd = m_settings.m_kinkVertexCollections.end();
         iter != iterEnd; ++iter)
     {
         try
         {
-            const LCCollection *pKinkCollection = pLCEvent->getCollection(*iter);
+            const EVENT::LCCollection *pKinkCollection = pLCEvent->getCollection(*iter);
 
             for (int i = 0, iMax = pKinkCollection->getNumberOfElements(); i < iMax; ++i)
             {
                 try
                 {
-                    Vertex *pVertex = dynamic_cast<Vertex*>(pKinkCollection->getElementAt(i));
+                    EVENT::Vertex *pVertex = dynamic_cast<Vertex*>(pKinkCollection->getElementAt(i));
 
-                    ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
-                    const TrackVec &trackVec(pReconstructedParticle->getTracks());
+                    EVENT::ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
+                    const EVENT::TrackVec &trackVec(pReconstructedParticle->getTracks());
 
                     if (this->IsConflictingRelationship(trackVec))
                         continue;
@@ -138,7 +121,7 @@ StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
                     // Extract the kink vertex information
                     for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
                     {
-                        Track *pTrack = trackVec[iTrack];
+                        EVENT::Track *pTrack = trackVec[iTrack];
                         (0 == iTrack) ? m_parentTrackList.insert(pTrack) : m_daughterTrackList.insert(pTrack);
                         streamlog_out(DEBUG) << "KinkTrack " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
 
@@ -217,23 +200,23 @@ StatusCode TrackCreator::ExtractKinks(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackCreator::ExtractProngsAndSplits(const LCEvent *const pLCEvent)
+StatusCode TrackCreator::ExtractProngsAndSplits(const EVENT::LCEvent *const pLCEvent)
 {
     for (StringVector::const_iterator iter = m_settings.m_prongSplitVertexCollections.begin(), iterEnd = m_settings.m_prongSplitVertexCollections.end();
         iter != iterEnd; ++iter)
     {
         try
         {
-            const LCCollection *pProngOrSplitCollection = pLCEvent->getCollection(*iter);
+            const EVENT::LCCollection *pProngOrSplitCollection = pLCEvent->getCollection(*iter);
 
             for (int i = 0, iMax = pProngOrSplitCollection->getNumberOfElements(); i < iMax; ++i)
             {
                 try
                 {
-                    Vertex *pVertex = dynamic_cast<Vertex*>(pProngOrSplitCollection->getElementAt(i));
+                    EVENT::Vertex *pVertex = dynamic_cast<Vertex*>(pProngOrSplitCollection->getElementAt(i));
 
-                    ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
-                    const TrackVec &trackVec(pReconstructedParticle->getTracks());
+                    EVENT::ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
+                    const EVENT::TrackVec &trackVec(pReconstructedParticle->getTracks());
 
                     if (this->IsConflictingRelationship(trackVec))
                         continue;
@@ -241,7 +224,7 @@ StatusCode TrackCreator::ExtractProngsAndSplits(const LCEvent *const pLCEvent)
                     // Extract the prong/split vertex information
                     for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
                     {
-                        Track *pTrack = trackVec[iTrack];
+                        EVENT::Track *pTrack = trackVec[iTrack];
                         (0 == iTrack) ? m_parentTrackList.insert(pTrack) : m_daughterTrackList.insert(pTrack);
                         streamlog_out(DEBUG) << "Prong or Split Track " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
 
@@ -286,23 +269,23 @@ StatusCode TrackCreator::ExtractProngsAndSplits(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
+StatusCode TrackCreator::ExtractV0s(const EVENT::LCEvent *const pLCEvent)
 {
     for (StringVector::const_iterator iter = m_settings.m_v0VertexCollections.begin(), iterEnd = m_settings.m_v0VertexCollections.end();
         iter != iterEnd; ++iter)
     {
         try
         {
-            const LCCollection *pV0Collection = pLCEvent->getCollection(*iter);
+            const EVENT::LCCollection *pV0Collection = pLCEvent->getCollection(*iter);
 
             for (int i = 0, iMax = pV0Collection->getNumberOfElements(); i < iMax; ++i)
             {
                 try
                 {
-                    Vertex *pVertex = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
+                    EVENT::Vertex *pVertex = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
 
-                    ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
-                    const TrackVec &trackVec(pReconstructedParticle->getTracks());
+                    EVENT::ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
+                    const EVENT::TrackVec &trackVec(pReconstructedParticle->getTracks());
 
                     if (this->IsConflictingRelationship(trackVec))
                         continue;
@@ -312,7 +295,7 @@ StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
 
                     for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
                     {
-                        Track *pTrack = trackVec[iTrack];
+                        EVENT::Track *pTrack = trackVec[iTrack];
                         m_v0TrackList.insert(pTrack);
                         streamlog_out(DEBUG) << "V0Track " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
 
@@ -367,11 +350,11 @@ StatusCode TrackCreator::ExtractV0s(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackCreator::IsConflictingRelationship(const TrackVec &trackVec) const
+bool TrackCreator::IsConflictingRelationship(const EVENT::TrackVec &trackVec) const
 {
     for (unsigned int iTrack = 0, nTracks = trackVec.size(); iTrack < nTracks; ++iTrack)
     {
-        Track *pTrack = trackVec[iTrack];
+        EVENT::Track *pTrack = trackVec[iTrack];
 
         if (this->IsDaughter(pTrack) || this->IsParent(pTrack) || this->IsV0(pTrack))
             return true;
@@ -382,20 +365,20 @@ bool TrackCreator::IsConflictingRelationship(const TrackVec &trackVec) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent) const
+StatusCode TrackCreator::CreateTracks(const EVENT::LCEvent *const pLCEvent) const
 {
     for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), iterEnd = m_settings.m_trackCollections.end();
         iter != iterEnd; ++iter)
     {
         try
         {
-            const LCCollection *pTrackCollection = pLCEvent->getCollection(*iter);
+            const EVENT::LCCollection *pTrackCollection = pLCEvent->getCollection(*iter);
 
             for (int i = 0, iMax = pTrackCollection->getNumberOfElements(); i < iMax; ++i)
             {
                 try
                 {
-                    Track *pTrack = dynamic_cast<Track*>(pTrackCollection->getElementAt(i));
+                    EVENT::Track *pTrack = dynamic_cast<Track*>(pTrackCollection->getElementAt(i));
 
                     int minTrackHits = m_settings.m_minTrackHits;
                     const float tanLambda(std::fabs(pTrack->getTanLambda()));
@@ -442,7 +425,7 @@ StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent) const
                         trackParameters.m_mass = pandora::PdgTable::GetParticleMass((*iter).second);
                     }
 
-                    if (0. != signedCurvature)
+                    if (0.f != signedCurvature)
                         trackParameters.m_charge = static_cast<int>(signedCurvature / std::fabs(signedCurvature));
 
                     this->FitTrackHelices(pTrack, trackParameters);
@@ -473,12 +456,12 @@ StatusCode TrackCreator::CreateTracks(const LCEvent *const pLCEvent) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackCreator::FitTrackHelices(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
+void TrackCreator::FitTrackHelices(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
     pandora::Helix *pHelixFit = new pandora::Helix(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), m_bField);
     trackParameters.m_momentumAtDca = pHelixFit->GetMomentum();
 
-    const TrackerHitVec &trackerHitvec(pTrack->getTrackerHits());
+    const EVENT::TrackerHitVec &trackerHitvec(pTrack->getTrackerHits());
     float zMin(std::numeric_limits<float>::max()), zMax(-std::numeric_limits<float>::max());
 
     for (int iz = 0, nTrackHits = trackerHitvec.size(); iz < nTrackHits - 1; ++iz)
@@ -513,28 +496,28 @@ void TrackCreator::FitTrackHelices(const Track *const pTrack, PandoraApi::Track:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::TrackState TrackCreator::GetECalProjection(pandora::Helix *const pHelix, const pandora::CartesianVector &referencePoint, int signPz) const
+pandora::TrackState TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const pandora::CartesianVector &referencePoint, int signPz) const
 {
     // First project to endcap
     float minTime(std::numeric_limits<float>::max());
     pandora::CartesianVector bestECalProjection;
-    (void) pHelix->GetPointInZ(static_cast<float>(signPz) * m_ecalEndCapInnerZ, referencePoint, bestECalProjection, minTime);
+    (void) pHelix->GetPointInZ(static_cast<float>(signPz) * m_eCalEndCapInnerZ, referencePoint, bestECalProjection, minTime);
 
     // Then project to barrel surface(s)
     static const float pi(std::acos(-1.));
     pandora::CartesianVector barrelProjection;
 
-    if (m_ecalBarrelInnerSymmetry > 0)
+    if (m_eCalBarrelInnerSymmetry > 0)
     {
         // Polygon
-        float twopi_n = 2. * pi / (static_cast<float>(m_ecalBarrelInnerSymmetry));
+        float twopi_n = 2. * pi / (static_cast<float>(m_eCalBarrelInnerSymmetry));
 
-        for (int i = 0; i < m_ecalBarrelInnerSymmetry; ++i)
+        for (int i = 0; i < m_eCalBarrelInnerSymmetry; ++i)
         {
             float time(std::numeric_limits<float>::max());
-            const float phi(twopi_n * static_cast<float>(i) + m_ecalBarrelInnerPhi0);
+            const float phi(twopi_n * static_cast<float>(i) + m_eCalBarrelInnerPhi0);
 
-            const StatusCode statusCode(pHelix->GetPointInXY(m_ecalBarrelInnerR * std::cos(phi), m_ecalBarrelInnerR * std::sin(phi),
+            const StatusCode statusCode(pHelix->GetPointInXY(m_eCalBarrelInnerR * std::cos(phi), m_eCalBarrelInnerR * std::sin(phi),
                 std::cos(phi + 0.5 * pi), std::sin(phi + 0.5 * pi), referencePoint, barrelProjection, time));
 
             if ((STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
@@ -548,7 +531,7 @@ pandora::TrackState TrackCreator::GetECalProjection(pandora::Helix *const pHelix
     {
         // Cylinder
         float time(std::numeric_limits<float>::max());
-        const StatusCode statusCode(pHelix->GetPointOnCircle(m_ecalBarrelInnerR, referencePoint, barrelProjection, time));
+        const StatusCode statusCode(pHelix->GetPointOnCircle(m_eCalBarrelInnerR, referencePoint, barrelProjection, time));
 
         if ((STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
         {
@@ -565,7 +548,7 @@ pandora::TrackState TrackCreator::GetECalProjection(pandora::Helix *const pHelix
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackCreator::TrackReachesECAL(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
+void TrackCreator::TrackReachesECAL(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
     // Calculate hit position information
     float hitZMin(std::numeric_limits<float>::max());
@@ -575,7 +558,7 @@ void TrackCreator::TrackReachesECAL(const Track *const pTrack, PandoraApi::Track
     int nTpcHits(0);
     int nFtdHits(0);
 
-    const TrackerHitVec &trackerHitVec(pTrack->getTrackerHits());
+    const EVENT::TrackerHitVec &trackerHitVec(pTrack->getTrackerHits());
     const unsigned int nTrackHits(trackerHitVec.size());
 
     for (unsigned int i = 0; i < nTrackHits; ++i)
@@ -648,7 +631,7 @@ void TrackCreator::TrackReachesECAL(const Track *const pTrack, PandoraApi::Track
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
+void TrackCreator::DefineTrackPfoUsage(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
     bool canFormPfo(false);
     bool canFormClusterlessPfo(false);
@@ -657,10 +640,10 @@ void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Tr
     {
         const float d0(std::fabs(pTrack->getD0())), z0(std::fabs(pTrack->getZ0()));
 
-        TrackerHitVec trackerHitvec(pTrack->getTrackerHits());
+        EVENT::TrackerHitVec trackerHitvec(pTrack->getTrackerHits());
         float rInner(std::numeric_limits<float>::max()), zMin(std::numeric_limits<float>::max());
 
-        for (TrackerHitVec::const_iterator iter = trackerHitvec.begin(), iterEnd = trackerHitvec.end(); iter != iterEnd; ++iter)
+        for (EVENT::TrackerHitVec::const_iterator iter = trackerHitvec.begin(), iterEnd = trackerHitvec.end(); iter != iterEnd; ++iter)
         {
             const double *pPosition((*iter)->getPosition());
             const float x(pPosition[0]), y(pPosition[1]), absoluteZ(std::fabs(pPosition[2]));
@@ -728,7 +711,7 @@ void TrackCreator::DefineTrackPfoUsage(const Track *const pTrack, PandoraApi::Tr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackCreator::PassesQualityCuts(const Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters, const float rInner) const
+bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters, const float rInner) const
 {
     // First simple sanity checks
     if (trackParameters.m_trackStateAtECal.Get().GetPosition().GetMagnitude() < m_settings.m_minTrackECalDistanceFromIp)
@@ -740,66 +723,65 @@ bool TrackCreator::PassesQualityCuts(const Track *const pTrack, const PandoraApi
         return false;
     }
 
-    // Require reasonable number of TPC hits 
-    const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
-    const float pX(fabs(momentumAtDca.GetX()));
-    const float pY(fabs(momentumAtDca.GetY()));
-    const float pZ(fabs(momentumAtDca.GetZ()));
-    const float pT(std::sqrt(pX * pX + pY * pY));
-    const float rInnermostHit(pTrack->getRadiusOfInnermostHit());
-
-    if ((0.f == pT) || (0.f == pZ) || (rInnermostHit == m_tpcOuterR))
-    {
-        streamlog_out(ERROR) << "Invalid track parameter, pT " << pT << ", pZ " << pZ << ", rInnermostHit " << rInnermostHit << std::endl;
-        return false;
-    }
-
-    float nExpectedTpcHits(0.);
-
-    if (pZ < m_tpcZmax / m_tpcOuterR * pT)
-    {
-        const float innerExpectedHitRadius(std::max(m_tpcInnerR, rInnermostHit));
-        const float frac((m_tpcOuterR - innerExpectedHitRadius) / (m_tpcOuterR - m_tpcInnerR));
-        nExpectedTpcHits = m_tpcMaxRow * frac;
-    }
-
-    if ((pZ <= m_tpcZmax / m_tpcInnerR * pT) && (pZ >= m_tpcZmax / m_tpcOuterR * pT))
-    {
-        const float innerExpectedHitRadius(std::max(m_tpcInnerR, rInnermostHit));
-        const float frac((m_tpcZmax * pT / pZ - innerExpectedHitRadius) / (m_tpcOuterR - innerExpectedHitRadius));
-        nExpectedTpcHits = frac * m_tpcMaxRow;
-    }
-
-    // Account for central TPC membrane (not specified in GEAR?) take to be 10mm for now
-    // TODO get information from geometry and calculate correct expected number of hits
-    static const float tpcMembrane(10.f);
-
-    if (std::fabs(pZ) / momentumAtDca.GetMagnitude() < tpcMembrane / m_tpcInnerR)
-        nExpectedTpcHits = 0;
-
-    const EVENT::IntVec &hitsBySubdetector(pTrack->getSubdetectorHitNumbers());
-    const int nTpcHits = hitsBySubdetector[9];
-    const int nFtdHits = hitsBySubdetector[7];
-    const int minTpcHits = static_cast<int>(nExpectedTpcHits * m_settings.m_minTpcHitFractionOfExpected);
-
-    if ((nTpcHits < minTpcHits) && (momentumAtDca.GetMagnitude() > 1.f) && (nFtdHits < m_settings.m_minFtdHitsForTpcHitFraction))
-    {
-        streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << " Number of TPC hits = " << nTpcHits
-                               << " < " << minTpcHits << " nftd = " << nFtdHits  << std::endl;
-        return false;
-    }
-
     // Check momentum uncertainty is reasonable to use track
+    const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
     const float sigmaPOverP(std::sqrt(pTrack->getCovMatrix()[5]) / std::fabs(pTrack->getOmega()));
 
     if (sigmaPOverP > m_settings.m_maxTrackSigmaPOverP)
     {
-        const TrackerHitVec &trackerHitVec(pTrack->getTrackerHits());
-        const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
+        const EVENT::TrackerHitVec &trackerHitVec(pTrack->getTrackerHits());
 
-        streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << "+-" << sigmaPOverP*(momentumAtDca.GetMagnitude())
+        streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << "+-" << sigmaPOverP * (momentumAtDca.GetMagnitude())
                                << " chi2 = " <<  pTrack->getChi2() << " " << pTrack->getNdf() << " from " << trackerHitVec.size() << std::endl;
         return false;
+    }
+
+    // Require reasonable number of TPC hits 
+    if (momentumAtDca.GetMagnitude() > m_settings.m_minMomentumForTrackHitChecks)
+    {
+        const float pX(fabs(momentumAtDca.GetX()));
+        const float pY(fabs(momentumAtDca.GetY()));
+        const float pZ(fabs(momentumAtDca.GetZ()));
+        const float pT(std::sqrt(pX * pX + pY * pY));
+        const float rInnermostHit(pTrack->getRadiusOfInnermostHit());
+
+        if ((0.f == pT) || (0.f == pZ) || (rInnermostHit == m_tpcOuterR))
+        {
+            streamlog_out(ERROR) << "Invalid track parameter, pT " << pT << ", pZ " << pZ << ", rInnermostHit " << rInnermostHit << std::endl;
+            return false;
+        }
+
+        float nExpectedTpcHits(0.);
+
+        if (pZ < m_tpcZmax / m_tpcOuterR * pT)
+        {
+            const float innerExpectedHitRadius(std::max(m_tpcInnerR, rInnermostHit));
+            const float frac((m_tpcOuterR - innerExpectedHitRadius) / (m_tpcOuterR - m_tpcInnerR));
+            nExpectedTpcHits = m_tpcMaxRow * frac;
+        }
+
+        if ((pZ <= m_tpcZmax / m_tpcInnerR * pT) && (pZ >= m_tpcZmax / m_tpcOuterR * pT))
+        {
+            const float innerExpectedHitRadius(std::max(m_tpcInnerR, rInnermostHit));
+            const float frac((m_tpcZmax * pT / pZ - innerExpectedHitRadius) / (m_tpcOuterR - innerExpectedHitRadius));
+            nExpectedTpcHits = frac * m_tpcMaxRow;
+        }
+
+        // TODO Get TPC membrane information from GEAR when available
+        if (std::fabs(pZ) / momentumAtDca.GetMagnitude() < m_settings.m_tpcMembraneMaxZ / m_tpcInnerR)
+            nExpectedTpcHits = 0;
+
+        const EVENT::IntVec &hitsBySubdetector(pTrack->getSubdetectorHitNumbers());
+        const int nTpcHits = hitsBySubdetector[9];
+        const int nFtdHits = hitsBySubdetector[7];
+        const int minTpcHits = static_cast<int>(nExpectedTpcHits * m_settings.m_minTpcHitFractionOfExpected);
+
+        if ((nTpcHits < minTpcHits) && (nFtdHits < m_settings.m_minFtdHitsForTpcHitFraction))
+        {
+            streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << " Number of TPC hits = " << nTpcHits
+                                   << " < " << minTpcHits << " nftd = " << nFtdHits  << std::endl;
+            return false;
+        }
     }
 
     return true;

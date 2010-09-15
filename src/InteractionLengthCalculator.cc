@@ -55,7 +55,7 @@ InteractionLengthCalculator::~InteractionLengthCalculator()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode InteractionLengthCalculator::ComputeInteractionLengthsFromIP(const EVENT::CalorimeterHit *const pCaloHit, float &nInteractionLengths)
+float InteractionLengthCalculator::GetNInteractionLengthsFromIP(const EVENT::CalorimeterHit *const pCaloHit)
 {
     try
     {
@@ -166,7 +166,9 @@ StatusCode InteractionLengthCalculator::ComputeInteractionLengthsFromIP(const EV
         positionVector.GetCylindricalCoordinates(radius, phi, z);
         positionVector.SetValues(radius, 0.f, std::fabs(z));
 
-        nInteractionLengths  = ComputePathLengthFromIPInRectangle(positionVector, rMinECalBarrel, zMinECalBarrel, rMaxECalBarrel, zMaxECalBarrel) * Settings::m_avgIntLengthECalBarrel;
+        float nInteractionLengths(0.f);
+
+        nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinECalBarrel, zMinECalBarrel, rMaxECalBarrel, zMaxECalBarrel) * Settings::m_avgIntLengthECalBarrel;
         nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinHCalBarrel, zMinHCalBarrel, rMaxHCalBarrel, zMaxHCalBarrel) * Settings::m_avgIntLengthHCalBarrel;
 
         nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinCoil, zMinCoil, rMaxCoil, zMaxCoil) * Settings::m_avgIntLengthCoil;
@@ -176,14 +178,14 @@ StatusCode InteractionLengthCalculator::ComputeInteractionLengthsFromIP(const EV
 
         nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinMuonBarrel, zMinMuonBarrel, rMaxMuonBarrel, zMaxMuonBarrel) * Settings::m_avgIntLengthMuonBarrel;
         nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinMuonEndCap, zMinMuonEndCap, rMaxMuonEndCap, zMaxMuonEndCap) * Settings::m_avgIntLengthMuonEndCap;
-    }
-    catch (gear::UnknownParameterException &)
-    {
-        streamlog_out(ERROR) << "Failed to extract geometry information from gear." << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
 
-    return STATUS_CODE_SUCCESS;
+        return nInteractionLengths;
+    }
+    catch (gear::Exception &exception)
+    {
+        streamlog_out(ERROR) << "InteractionLengthCalculator: failed to extract gear geometry information" << std::endl;
+        throw exception;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

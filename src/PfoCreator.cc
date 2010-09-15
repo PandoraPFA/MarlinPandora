@@ -29,7 +29,8 @@
 #include <cmath>
 
 PfoCreator::PfoCreator(const Settings &settings) :
-    m_settings(settings)
+    m_settings(settings),
+    m_pPandora(PandoraPFANewProcessor::GetPandora())
 {
 }
 
@@ -41,18 +42,16 @@ PfoCreator::~PfoCreator()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PfoCreator::CreateParticleFlowObjects( LCEvent * pLCEvent)
+StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEvent)
 {
-    static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
-
     pandora::ParticleFlowObjectList particleFlowObjectList;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraApi::GetParticleFlowObjects(*pPandora,
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraApi::GetParticleFlowObjects(*m_pPandora,
         particleFlowObjectList));
 
-    LCCollectionVec *pClusterCollection = new LCCollectionVec(LCIO::CLUSTER);
-    LCCollectionVec *pReconstructedParticleCollection = new LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
+    IMPL::LCCollectionVec *pClusterCollection = new IMPL::LCCollectionVec(LCIO::CLUSTER);
+    IMPL::LCCollectionVec *pReconstructedParticleCollection = new IMPL::LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
 
-    LCFlagImpl lcFlagImpl(pClusterCollection->getFlag());
+    IMPL::LCFlagImpl lcFlagImpl(pClusterCollection->getFlag());
     lcFlagImpl.setBit(LCIO::CLBIT_HITS);
     pClusterCollection->setFlag(lcFlagImpl.getFlag());
 
@@ -70,7 +69,7 @@ StatusCode PfoCreator::CreateParticleFlowObjects( LCEvent * pLCEvent)
     for (pandora::ParticleFlowObjectList::iterator itPFO = particleFlowObjectList.begin(), itPFOEnd = particleFlowObjectList.end();
          itPFO != itPFOEnd; ++itPFO)
     {
-        ReconstructedParticleImpl *pReconstructedParticle= new ReconstructedParticleImpl();
+        IMPL::ReconstructedParticleImpl *pReconstructedParticle= new ReconstructedParticleImpl();
 
         pandora::ClusterAddressList clusterAddressList = (*itPFO)->GetClusterAddressList();
         pandora::TrackAddressList trackAddressList = (*itPFO)->GetTrackAddressList();
@@ -79,7 +78,7 @@ StatusCode PfoCreator::CreateParticleFlowObjects( LCEvent * pLCEvent)
         for (pandora::ClusterAddressList::iterator itCluster = clusterAddressList.begin(), itClusterEnd = clusterAddressList.end();
             itCluster != itClusterEnd; ++itCluster)
         {
-            ClusterImpl *pCluster = new ClusterImpl();
+            IMPL::ClusterImpl *pCluster = new ClusterImpl();
 
             const unsigned int nHitsInCluster((*itCluster).size());
 
@@ -91,7 +90,7 @@ StatusCode PfoCreator::CreateParticleFlowObjects( LCEvent * pLCEvent)
 
             for (unsigned int iHit = 0; iHit < nHitsInCluster; ++iHit)
             {
-                CalorimeterHit *pCalorimeterHit = (CalorimeterHit*)((*itCluster)[iHit]);
+                EVENT::CalorimeterHit *pCalorimeterHit = (CalorimeterHit*)((*itCluster)[iHit]);
                 pCluster->addHit(pCalorimeterHit, 1.0);
 
                 const float caloHitEnergy(pCalorimeterHit->getEnergy());

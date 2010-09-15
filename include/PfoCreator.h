@@ -13,10 +13,6 @@
 
 #include "Api/PandoraApi.h"
 
-using namespace EVENT;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 /**
  *  @brief  PfoCreator class
  */
@@ -30,7 +26,7 @@ public:
     {
     public:
         std::string     m_clusterCollectionName;                ///< The name of the cluster output collection
-        std::string     m_pfoCollectionName;                    ///< The name of the PFO output collection
+        std::string     m_pfoCollectionName;                    ///< The name of the pfo output collection
     };
 
     /**
@@ -50,10 +46,11 @@ public:
      * 
      *  @param  pLCEvent the lcio event
      */    
-    StatusCode CreateParticleFlowObjects(LCEvent *pLCEvent);
+    StatusCode CreateParticleFlowObjects(EVENT::LCEvent *pLCEvent);
 
 private:
-    Settings                m_settings;         ///< The settings
+    const Settings          m_settings;                         ///< The pfo creator settings
+    const pandora::Pandora *m_pPandora;                         ///< Address of the pandora object from which to extract the pfos
 };
 
 #endif // #ifndef PFO_CREATOR_H

@@ -30,49 +30,33 @@
 CalorimeterHitVector CaloHitCreator::m_calorimeterHitVector;
 
 CaloHitCreator::CaloHitCreator(const Settings &settings) :
+    m_settings(settings),
+    m_pPandora(PandoraPFANewProcessor::GetPandora()),
     m_pInteractionLengthCalculator(InteractionLengthCalculator::GetInstance()),
-    m_settings(settings)
+    m_eCalEndCapInnerZ(marlin::Global::GEAR->getEcalEndcapParameters().getExtent()[2]),
+    m_eCalBarrelOuterZ(marlin::Global::GEAR->getEcalBarrelParameters().getExtent()[3]),
+    m_eCalBarrelInnerPhi0(marlin::Global::GEAR->getEcalBarrelParameters().getPhi0()),
+    m_eCalBarrelInnerSymmetry(marlin::Global::GEAR->getEcalBarrelParameters().getSymmetryOrder()),
+    m_hCalEndCapOuterR(marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[1]),
+    m_hCalEndCapInnerZ(marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[2]),
+    m_hCalEndCapOuterZ(marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[3]),
+    m_hCalBarrelInnerPhi0(marlin::Global::GEAR->getHcalBarrelParameters().getPhi0()),
+    m_hCalBarrelInnerSymmetry(marlin::Global::GEAR->getHcalBarrelParameters().getSymmetryOrder()),
+    m_hCalBarrelOuterR(marlin::Global::GEAR->getHcalBarrelParameters().getExtent()[1]),
+    m_hCalBarrelOuterPhi0(marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_phi0")),
+    m_hCalBarrelOuterSymmetry(marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_order")),
+    m_muonEndCapInnerZ(marlin::Global::GEAR->getYokeEndcapParameters().getExtent()[2]),
+    m_muonBarrelInnerPhi0(marlin::Global::GEAR->getYokeBarrelParameters().getPhi0()),
+    m_muonBarrelInnerSymmetry(marlin::Global::GEAR->getYokeBarrelParameters().getSymmetryOrder())
 {
-    try
-    {
-        m_pPandora = PandoraPFANewProcessor::GetPandora();
+    const gear::LayerLayout &hCalEndCapLayerLayout(marlin::Global::GEAR->getHcalEndcapParameters().getLayerLayout());
+    const gear::LayerLayout &hCalBarrelLayerLayout(marlin::Global::GEAR->getHcalBarrelParameters().getLayerLayout()); 
 
-        // ECal parameters
-        m_eCalEndCapInnerZ = marlin::Global::GEAR->getEcalEndcapParameters().getExtent()[2];
-        m_eCalBarrelOuterZ = marlin::Global::GEAR->getEcalBarrelParameters().getExtent()[3];
-        m_eCalBarrelInnerPhi0 = marlin::Global::GEAR->getEcalBarrelParameters().getPhi0();
-        m_eCalBarrelInnerSymmetry = marlin::Global::GEAR->getEcalBarrelParameters().getSymmetryOrder();
+    m_hCalEndCapLayerThickness = hCalEndCapLayerLayout.getThickness(hCalEndCapLayerLayout.getNLayers() - 1);
+    m_hCalBarrelLayerThickness = hCalBarrelLayerLayout.getThickness(hCalBarrelLayerLayout.getNLayers() - 1);
 
-        // HCal parameters
-        m_hCalEndCapInnerZ = marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[2];
-        m_hCalEndCapOuterR = marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[1];
-        m_hCalEndCapOuterZ = marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[3];
-
-        m_hCalBarrelOuterR = marlin::Global::GEAR->getHcalBarrelParameters().getExtent()[1];
-        m_hCalBarrelInnerPhi0 = marlin::Global::GEAR->getHcalBarrelParameters().getPhi0();
-        m_hCalBarrelInnerSymmetry = marlin::Global::GEAR->getHcalBarrelParameters().getSymmetryOrder();
-        m_hCalBarrelOuterPhi0 = marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_phi0");
-        m_hCalBarrelOuterSymmetry = marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_order");
-
-        const gear::LayerLayout &hCalEndCapLayerLayout(marlin::Global::GEAR->getHcalEndcapParameters().getLayerLayout());
-        const gear::LayerLayout &hCalBarrelLayerLayout(marlin::Global::GEAR->getHcalBarrelParameters().getLayerLayout()); 
-
-        m_hCalEndCapLayerThickness = hCalEndCapLayerLayout.getThickness(hCalEndCapLayerLayout.getNLayers() - 1);
-        m_hCalBarrelLayerThickness = hCalBarrelLayerLayout.getThickness(hCalBarrelLayerLayout.getNLayers() - 1);
-
-        if ((0.f == m_hCalEndCapLayerThickness) || (0.f == m_hCalBarrelLayerThickness))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        // Muon yoke parameters
-        m_muonEndCapInnerZ = marlin::Global::GEAR->getYokeEndcapParameters().getExtent()[2];
-        m_muonBarrelInnerPhi0 = marlin::Global::GEAR->getYokeBarrelParameters().getPhi0();
-        m_muonBarrelInnerSymmetry = marlin::Global::GEAR->getYokeBarrelParameters().getSymmetryOrder();
-    }
-    catch (...)
-    {
-        streamlog_out(ERROR) << "Failed to initialize calo hit creator." << std::endl;
+    if ((0.f == m_hCalEndCapLayerThickness) || (0.f == m_hCalBarrelLayerThickness))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -84,9 +68,9 @@ CaloHitCreator::~CaloHitCreator()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CaloHitCreator::CreateCaloHits(const LCEvent *const pLCEvent)
+StatusCode CaloHitCreator::CreateCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
-    CellIDDecoder<CalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6");
+    UTIL::CellIDDecoder<CalorimeterHit>::setDefaultEncoding("M:3,S-1:3,I:9,J:9,K-1:6");
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateECalCaloHits(pLCEvent));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CreateHCalCaloHits(pLCEvent));
@@ -99,7 +83,7 @@ StatusCode CaloHitCreator::CreateCaloHits(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CaloHitCreator::CreateECalCaloHits(const LCEvent *const pLCEvent)
+StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
     static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getEcalEndcapParameters().getLayerLayout());
     static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getEcalBarrelParameters().getLayerLayout()); 
@@ -109,13 +93,13 @@ StatusCode CaloHitCreator::CreateECalCaloHits(const LCEvent *const pLCEvent)
     {
         try
         {
-            const LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
+            const EVENT::LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
             const int nElements(pCaloHitCollection->getNumberOfElements());
 
             if (0 == nElements)
                 continue;
 
-            CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
+            UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
             const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
 
@@ -123,27 +107,25 @@ StatusCode CaloHitCreator::CreateECalCaloHits(const LCEvent *const pLCEvent)
             {
                 try
                 {
-                    CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
+                    EVENT::CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::ECAL;
                     caloHitParameters.m_isDigital = false;
                     caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
-                    caloHitParameters.m_detectorRegion = (std::fabs(pCaloHit->getPosition()[2]) < m_eCalEndCapInnerZ) ? pandora::BARREL : pandora::ENDCAP;
                     caloHitParameters.m_isInOuterSamplingLayer = false;
                     this->GetCommonCaloHitProperties(pCaloHit, caloHitParameters);
 
                     float absorberCorrection(1.);
 
-                    if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
+                    if (std::fabs(pCaloHit->getPosition()[2]) < m_eCalEndCapInnerZ)
                     {
-                        this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
+                        this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_eCalBarrelInnerSymmetry, m_eCalBarrelInnerPhi0,
+                            cellIdDecoder(pCaloHit)["S-1"], caloHitParameters, absorberCorrection);
                     }
                     else
                     {
-                        const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
-                        this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_eCalBarrelInnerSymmetry, m_eCalBarrelInnerPhi0,
-                            staveNumber, caloHitParameters, absorberCorrection);
+                        this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
                     }
 
                     caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_eCalToMip * absorberCorrection;
@@ -178,7 +160,7 @@ StatusCode CaloHitCreator::CreateECalCaloHits(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CaloHitCreator::CreateHCalCaloHits(const LCEvent *const pLCEvent)
+StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
     static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getHcalEndcapParameters().getLayerLayout());
     static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getHcalBarrelParameters().getLayerLayout());
@@ -188,13 +170,13 @@ StatusCode CaloHitCreator::CreateHCalCaloHits(const LCEvent *const pLCEvent)
     {
         try
         {
-            const LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
+            const EVENT::LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
             const int nElements(pCaloHitCollection->getNumberOfElements());
 
             if (0 == nElements)
                 continue;
 
-            CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
+            UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
             const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
 
@@ -202,28 +184,26 @@ StatusCode CaloHitCreator::CreateHCalCaloHits(const LCEvent *const pLCEvent)
             {
                 try
                 {
-                    CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
+                    EVENT::CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::HCAL;
                     caloHitParameters.m_isDigital = false;
                     caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
-                    caloHitParameters.m_detectorRegion = (std::fabs(pCaloHit->getPosition()[2]) < m_hCalEndCapInnerZ) ? pandora::BARREL : pandora::ENDCAP;
                     caloHitParameters.m_isInOuterSamplingLayer = (this->GetNLayersFromEdge(pCaloHit) <= m_settings.m_nOuterSamplingLayers);
                     this->GetCommonCaloHitProperties(pCaloHit, caloHitParameters);
 
                     float absorberCorrection(1.);
 
-                    if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
+                    if (std::fabs(pCaloHit->getPosition()[2]) < m_hCalEndCapInnerZ)
                     {
-                        this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
+                        // TODO Proper fix for barrel normal vectors
+                        this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_hCalBarrelInnerSymmetry, m_hCalBarrelInnerPhi0,
+                            m_hCalBarrelInnerSymmetry - int(cellIdDecoder(pCaloHit)["S-1"] / 2), caloHitParameters, absorberCorrection);
                     }
                     else
                     {
-                        // TODO Proper fix for barrel normal vectors
-                        const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
-                        this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_hCalBarrelInnerSymmetry, m_hCalBarrelInnerPhi0,
-                            m_hCalBarrelInnerSymmetry - int(staveNumber / 2), caloHitParameters, absorberCorrection);
+                        this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
                     }
 
                     caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_hCalToMip * absorberCorrection;
@@ -258,7 +238,7 @@ StatusCode CaloHitCreator::CreateHCalCaloHits(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CaloHitCreator::CreateMuonCaloHits(const LCEvent *const pLCEvent)
+StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
     static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getYokeEndcapParameters().getLayerLayout());
     static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getYokeBarrelParameters().getLayerLayout()); 
@@ -268,13 +248,13 @@ StatusCode CaloHitCreator::CreateMuonCaloHits(const LCEvent *const pLCEvent)
     {
         try
         {
-            const LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
+            const EVENT::LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
             const int nElements(pCaloHitCollection->getNumberOfElements());
 
             if (0 == nElements)
                 continue;
 
-            CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
+            UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
             const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
 
@@ -282,26 +262,24 @@ StatusCode CaloHitCreator::CreateMuonCaloHits(const LCEvent *const pLCEvent)
             {
                 try
                 {
-                    CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
+                    EVENT::CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::MUON;
                     caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
-                    caloHitParameters.m_detectorRegion = (std::fabs(pCaloHit->getPosition()[2]) < m_muonEndCapInnerZ) ? pandora::BARREL : pandora::ENDCAP;
                     caloHitParameters.m_isInOuterSamplingLayer = true;
                     this->GetCommonCaloHitProperties(pCaloHit, caloHitParameters);
 
                     float absorberCorrection(1.);
 
-                    if (pandora::ENDCAP == caloHitParameters.m_detectorRegion.Get())
+                    if (std::fabs(pCaloHit->getPosition()[2]) < m_muonEndCapInnerZ)
                     {
-                        this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
+                        this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_muonBarrelInnerSymmetry, m_muonBarrelInnerPhi0,
+                            cellIdDecoder(pCaloHit)["S-1"], caloHitParameters, absorberCorrection);
                     }
                     else
                     {
-                        const unsigned int staveNumber(cellIdDecoder(pCaloHit)["S-1"]);
-                        this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_muonBarrelInnerSymmetry, m_muonBarrelInnerPhi0,
-                            staveNumber, caloHitParameters, absorberCorrection);
+                        this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
                     }
 
                     if (m_settings.m_muonDigitalHits > 0)
@@ -345,7 +323,7 @@ StatusCode CaloHitCreator::CreateMuonCaloHits(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CaloHitCreator::CreateLCalCaloHits(const LCEvent *const pLCEvent)
+StatusCode CaloHitCreator::CreateLCalCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
     static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getLcalParameters().getLayerLayout()); 
 
@@ -354,13 +332,13 @@ StatusCode CaloHitCreator::CreateLCalCaloHits(const LCEvent *const pLCEvent)
     {
         try
         {
-            const LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
+            const EVENT::LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
             const int nElements(pCaloHitCollection->getNumberOfElements());
 
             if (0 == nElements)
                 continue;
 
-            CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
+            UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
             const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
 
@@ -368,15 +346,13 @@ StatusCode CaloHitCreator::CreateLCalCaloHits(const LCEvent *const pLCEvent)
             {
                 try
                 {
-                    CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
+                    EVENT::CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::ECAL;
                     caloHitParameters.m_isDigital = false;
-                    caloHitParameters.m_detectorRegion = pandora::ENDCAP;
                     caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
                     caloHitParameters.m_isInOuterSamplingLayer = false;
-
                     this->GetCommonCaloHitProperties(pCaloHit, caloHitParameters);
 
                     float absorberCorrection(1.);
@@ -414,7 +390,7 @@ StatusCode CaloHitCreator::CreateLCalCaloHits(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CaloHitCreator::CreateLHCalCaloHits(const LCEvent *const pLCEvent)
+StatusCode CaloHitCreator::CreateLHCalCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
     static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getLHcalParameters().getLayerLayout());
 
@@ -423,13 +399,13 @@ StatusCode CaloHitCreator::CreateLHCalCaloHits(const LCEvent *const pLCEvent)
     {
         try
         {
-            const LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
+            const EVENT::LCCollection *pCaloHitCollection = pLCEvent->getCollection(*iter);
             const int nElements(pCaloHitCollection->getNumberOfElements());
 
             if (0 == nElements)
                 continue;
 
-            CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
+            UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
             const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
 
@@ -437,12 +413,11 @@ StatusCode CaloHitCreator::CreateLHCalCaloHits(const LCEvent *const pLCEvent)
             {
                 try
                 {
-                    CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
+                    EVENT::CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::HCAL;
                     caloHitParameters.m_isDigital = false;
-                    caloHitParameters.m_detectorRegion = pandora::ENDCAP;
                     caloHitParameters.m_layer = cellIdDecoder(pCaloHit)[layerCoding.c_str()];
                     caloHitParameters.m_isInOuterSamplingLayer = (this->GetNLayersFromEdge(pCaloHit) <= m_settings.m_nOuterSamplingLayers);
                     this->GetCommonCaloHitProperties(pCaloHit, caloHitParameters);
@@ -482,28 +457,27 @@ StatusCode CaloHitCreator::CreateLHCalCaloHits(const LCEvent *const pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CaloHitCreator::GetCommonCaloHitProperties(CalorimeterHit *const pCaloHit, PandoraApi::CaloHit::Parameters &caloHitParameters) const
+void CaloHitCreator::GetCommonCaloHitProperties(const EVENT::CalorimeterHit *const pCaloHit, PandoraApi::CaloHit::Parameters &caloHitParameters) const
 {
     const float *pCaloHitPosition(pCaloHit->getPosition());
     caloHitParameters.m_positionVector = pandora::CartesianVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
 
-    caloHitParameters.m_pParentAddress = pCaloHit;
+    caloHitParameters.m_pParentAddress = (void*)pCaloHit;
 
     caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
     caloHitParameters.m_time = pCaloHit->getTime();
 
-    float interactionLengthsFromIp = 0.f;
+    float interactionLengthsFromIp(0.f);
 
     try
     {
-        const gear::Vector3D positionIP(0,0,0);
-        const float* pos = pCaloHit->getPosition();
-        const gear::Vector3D positionHit(pos[0], pos[1], pos[2] );
-        interactionLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNIntlen(positionIP, positionHit);
+        const gear::Vector3D positionIP(0.f, 0.f, 0.f);
+        const gear::Vector3D positionVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
+        interactionLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNIntlen(positionIP, positionVector);
     }
-    catch (gear::Exception &excpt)
+    catch (gear::Exception &exception)
     {
-        m_pInteractionLengthCalculator->ComputeInteractionLengthsFromIP(pCaloHit, interactionLengthsFromIp);
+        interactionLengthsFromIp = m_pInteractionLengthCalculator->GetNInteractionLengthsFromIP(pCaloHit);
     }
 
     caloHitParameters.m_nInteractionLengthsFromIp = interactionLengthsFromIp;
@@ -511,11 +485,12 @@ void CaloHitCreator::GetCommonCaloHitProperties(CalorimeterHit *const pCaloHit, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CaloHitCreator::GetEndCapCaloHitProperties(CalorimeterHit *const pCaloHit, const gear::LayerLayout &layerLayout,
+void CaloHitCreator::GetEndCapCaloHitProperties(const EVENT::CalorimeterHit *const pCaloHit, const gear::LayerLayout &layerLayout,
     PandoraApi::CaloHit::Parameters &caloHitParameters, float &absorberCorrection) const
 {
-    const int physicalLayer(std::min(static_cast<int>(caloHitParameters.m_layer.Get()), layerLayout.getNLayers() - 1));
+    caloHitParameters.m_detectorRegion = pandora::ENDCAP;
 
+    const int physicalLayer(std::min(static_cast<int>(caloHitParameters.m_layer.Get()), layerLayout.getNLayers() - 1));
     caloHitParameters.m_cellSizeU = layerLayout.getCellSize0(physicalLayer);
     caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
@@ -535,12 +510,13 @@ void CaloHitCreator::GetEndCapCaloHitProperties(CalorimeterHit *const pCaloHit, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CaloHitCreator::GetBarrelCaloHitProperties(CalorimeterHit *const pCaloHit, const gear::LayerLayout &layerLayout,
+void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *const pCaloHit, const gear::LayerLayout &layerLayout,
     unsigned int barrelSymmetryOrder, float barrelPhi0, unsigned int staveNumber, PandoraApi::CaloHit::Parameters &caloHitParameters,
     float &absorberCorrection) const
 {
-    const int physicalLayer(std::min(static_cast<int>(caloHitParameters.m_layer.Get()), layerLayout.getNLayers() - 1));
+    caloHitParameters.m_detectorRegion = pandora::BARREL;
 
+    const int physicalLayer(std::min(static_cast<int>(caloHitParameters.m_layer.Get()), layerLayout.getNLayers() - 1));
     caloHitParameters.m_cellSizeU = layerLayout.getCellSize0(physicalLayer);
     caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
@@ -579,7 +555,7 @@ void CaloHitCreator::GetBarrelCaloHitProperties(CalorimeterHit *const pCaloHit, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-int CaloHitCreator::GetNLayersFromEdge(CalorimeterHit *const pCaloHit) const
+int CaloHitCreator::GetNLayersFromEdge(const EVENT::CalorimeterHit *const pCaloHit) const
 {
     // Calo hit coordinate calculations
     const float barrelMaximumRadius(this->GetMaximumRadius(pCaloHit, m_hCalBarrelOuterSymmetry, m_hCalBarrelOuterPhi0));
@@ -621,7 +597,7 @@ int CaloHitCreator::GetNLayersFromEdge(CalorimeterHit *const pCaloHit) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float CaloHitCreator::GetMaximumRadius(CalorimeterHit *const pCaloHit, const unsigned int symmetryOrder, const float phi0) const
+float CaloHitCreator::GetMaximumRadius(const EVENT::CalorimeterHit *const pCaloHit, const unsigned int symmetryOrder, const float phi0) const
 {
     const float *pCaloHitPosition(pCaloHit->getPosition());
 
