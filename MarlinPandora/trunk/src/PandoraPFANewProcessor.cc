@@ -19,7 +19,7 @@
 PandoraPFANewProcessor pandoraPFANewProcessor;
 
 pandora::Pandora *PandoraPFANewProcessor::m_pPandora = NULL;
-lcio::LCEvent *PandoraPFANewProcessor::m_pLcioEvent = NULL;
+EVENT::LCEvent *PandoraPFANewProcessor::m_pLcioEvent = NULL;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -59,12 +59,17 @@ void PandoraPFANewProcessor::init()
     }
     catch (StatusCodeException &statusCodeException)
     {
-        streamlog_out(ERROR) << "Failed to initialize pandora pfa new processor: " << statusCodeException.ToString() << std::endl;
-        throw;
+        streamlog_out(ERROR) << "Failed to initialize marlin pandora: " << statusCodeException.ToString() << std::endl;
+        throw statusCodeException;
+    }
+    catch (gear::Exception &exception)
+    {
+        streamlog_out(ERROR) << "Failed to initialize marlin pandora: gear exception " << exception.what() << std::endl;
+        throw exception;
     }
     catch (...)
     {
-        streamlog_out(ERROR) << "Failed to initialize pandora pfa new processor, unrecognized exception" << std::endl;
+        streamlog_out(ERROR) << "Failed to initialize marlin pandora: unrecognized exception" << std::endl;
         throw;
     }
 }
@@ -109,23 +114,23 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
     }
     catch (StatusCodeException &statusCodeException)
     {
-        streamlog_out(ERROR) << "StatusCodeException: " << statusCodeException.ToString() << std::endl;
-        throw;
+        streamlog_out(ERROR) << "Marlin pandora failed to process event: " << statusCodeException.ToString() << std::endl;
+        throw statusCodeException;
     }
-    catch (lcio::EventException& eventException)
+    catch (gear::Exception &exception)
     {
-        streamlog_out(ERROR) << "LCIO Event exception: " << eventException.what() << std::endl;
-        throw;
+        streamlog_out(ERROR) << "Marlin pandora failed to process event: gear exception " << exception.what() << std::endl;
+        throw exception;
+    }
+    catch (EVENT::Exception &exception)
+    {
+        streamlog_out(ERROR) << "Marlin pandora failed to process event: lcio exception: " << exception.what() << std::endl;
+        throw exception;
     }
     catch (...)
     {
-        streamlog_out(ERROR) << "Failed to process event" << std::endl;
-
-        if (STATUS_CODE_SUCCESS != PandoraApi::Reset(*m_pPandora))
-        {
-            streamlog_out(ERROR) << "Failed to reset Pandora, aborting" << std::endl;
-            abort();
-        }
+        streamlog_out(ERROR) << "Marlin pandora failed to process event: unrecognized exception" << std::endl;
+        throw;
     }
 }
 
@@ -353,7 +358,7 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_caloHitCreatorSettings.m_layersFromEdgeMaxRearDistance,
                             float(250.f));
 
-    // average interaction length parameters
+    // Average interaction length parameters
     registerProcessorParameter("AverageInteractionLengthTracker",
                             "average number interaction length per mm in the tracker",
                             InteractionLengthCalculator::Settings::m_avgIntLengthTracker,
@@ -394,7 +399,13 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             InteractionLengthCalculator::Settings::m_avgIntLengthMuonEndCap,
                             float(0.0040269f));
 
-    // Track hit specifications
+    // Track relationship parameters
+    registerProcessorParameter("ShouldFormTrackRelationships",
+                            "Whether to form pandora track relationships using v0 and kink info",
+                            m_trackCreatorSettings.m_shouldFormTrackRelationships,
+                            int(1));
+
+    // Initial track hit specifications
    registerProcessorParameter("MinTrackHits",
                             "Track quality cut: the minimum number of track hits",
                             m_trackCreatorSettings.m_minTrackHits,
@@ -419,26 +430,6 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     registerProcessorParameter("Z0TrackCut",
                             "Track z0 cut used to determine whether track can be used to form pfo",
                             m_trackCreatorSettings.m_z0TrackCut,
-                            float(50.));
-
-    registerProcessorParameter("MaxTrackSigmaPOverP",
-                            "Cut on fractional track momentum error",
-                            m_trackCreatorSettings.m_maxTrackSigmaPOverP,
-                            float(0.15));
-
-    registerProcessorParameter("MinTpcHitFractionOfExpected",
-                            "Cut on fractional of expected number of TPC hits",
-                            m_trackCreatorSettings.m_minTpcHitFractionOfExpected,
-                            float(0.20));
-
-    registerProcessorParameter("MinFtdHitsForTpcHitFraction",
-                            "Cut on minimum number of FTD hits of TPC hit fraction to be applied",
-                            m_trackCreatorSettings.m_minFtdHitsForTpcHitFraction,
-                            int(2));
-
-    registerProcessorParameter("MaxTpcInnerRDistance",
-                            "Track cut on distance from tpc inner r to id whether track can form pfo",
-                            m_trackCreatorSettings.m_maxTpcInnerRDistance,
                             float(50.));
 
     registerProcessorParameter("UseNonVertexTracks",
@@ -512,11 +503,36 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_trackCreatorSettings.m_minTrackECalDistanceFromIp,
                             float(100.));
 
-    // Track relationship parameters
-    registerProcessorParameter("ShouldFormTrackRelationships",
-                            "Whether to form pandora track relationships using v0 and kink info",
-                            m_trackCreatorSettings.m_shouldFormTrackRelationships,
-                            int(1));
+    // Final track quality parameters
+    registerProcessorParameter("MaxTrackSigmaPOverP",
+                            "Cut on fractional track momentum error",
+                            m_trackCreatorSettings.m_maxTrackSigmaPOverP,
+                            float(0.15));
+
+    registerProcessorParameter("MinMomentumForTrackHitChecks",
+                            "Min track momentum required to perform final quality checks on number of hits",
+                            m_trackCreatorSettings.m_minMomentumForTrackHitChecks,
+                            float(1.));
+
+    registerProcessorParameter("TpcMembraneMaxZ",
+                            "Tpc membrane max z coordinate",
+                            m_trackCreatorSettings.m_tpcMembraneMaxZ,
+                            float(10.));
+
+    registerProcessorParameter("MinTpcHitFractionOfExpected",
+                            "Cut on fractional of expected number of TPC hits",
+                            m_trackCreatorSettings.m_minTpcHitFractionOfExpected,
+                            float(0.20));
+
+    registerProcessorParameter("MinFtdHitsForTpcHitFraction",
+                            "Cut on minimum number of FTD hits of TPC hit fraction to be applied",
+                            m_trackCreatorSettings.m_minFtdHitsForTpcHitFraction,
+                            int(2));
+
+    registerProcessorParameter("MaxTpcInnerRDistance",
+                            "Track cut on distance from tpc inner r to id whether track can form pfo",
+                            m_trackCreatorSettings.m_maxTpcInnerRDistance,
+                            float(50.));
 
     // Additional geometry parameters
     registerProcessorParameter("ECalEndCapInnerSymmetryOrder",

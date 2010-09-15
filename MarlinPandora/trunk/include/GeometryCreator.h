@@ -114,10 +114,12 @@ private:
      *  @param  geometryParameters the pandora geometry parameters
      *  @param  vertexOffset position offset for vertex that doesn't point back to origin of xy plane
      */
-    StatusCode CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float minZ, float maxZ,
-        float gapWidth, PandoraApi::GeometryParameters &geometryParameters, pandora::CartesianVector vertexOffset = pandora::CartesianVector(0, 0, 0)) const;
+    StatusCode CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float minZ,
+        float maxZ, float gapWidth, PandoraApi::GeometryParameters &geometryParameters,
+        pandora::CartesianVector vertexOffset = pandora::CartesianVector(0, 0, 0)) const;
 
-    Settings                m_settings;         ///< The settings
+    const Settings          m_settings;                     ///< The geometry creator settings
+    const pandora::Pandora *m_pPandora;                     ///< Address of the pandora object to create the geometry
 };
 
 #endif // #ifndef GEOMETRY_CREATOR_H

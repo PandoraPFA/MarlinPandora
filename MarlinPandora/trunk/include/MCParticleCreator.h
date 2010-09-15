@@ -13,8 +13,6 @@
 
 #include "Api/PandoraApi.h"
 
-using namespace EVENT;
-
 /**
  *  @brief  MCParticleCreator class
  */
@@ -51,24 +49,26 @@ public:
      * 
      *  @param  pLCEvent the lcio event
      */    
-    StatusCode CreateMCParticles(const LCEvent *const pLCEvent) const;
+    StatusCode CreateMCParticles(const EVENT::LCEvent *const pLCEvent) const;
 
     /**
      *  @brief  Create Track to mc particle relationships
      *
      *  @param  pLCEvent the lcio event
      */
-    StatusCode CreateTrackToMCParticleRelationships(const LCEvent *const pLCEvent) const;
+    StatusCode CreateTrackToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const;
 
     /**
      *  @brief  Create calo hit to mc particle relationships
      *
      *  @param  pLCEvent the lcio event
      */
-    StatusCode CreateCaloHitToMCParticleRelationships(const LCEvent *const pLCEvent) const;
+    StatusCode CreateCaloHitToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const;
 
 private:
-    Settings                m_settings;         ///< The settings
+    const Settings          m_settings;                         ///< The mc particle creator settings
+    const pandora::Pandora *m_pPandora;                         ///< Address of the pandora object to create the mc particles
+    const float             m_bField;                           ///< The bfield
 };
 
 #endif // #ifndef MC_PARTICLE_CREATOR_H
