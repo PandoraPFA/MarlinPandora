@@ -17,6 +17,8 @@
 
 typedef std::vector<CalorimeterHit *> CalorimeterHitVector;
 
+class InteractionLengthCalculator;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
@@ -61,19 +63,22 @@ public:
 
         int             m_hCalEndCapInnerSymmetryOrder;         ///< HCal end cap inner symmetry order (missing from ILD00 gear file)
         float           m_hCalEndCapInnerPhiCoordinate;         ///< HCal end cap inner phi coordinate (missing from ILD00 gear file)
-
-	float           avgIntLengthTracker;                    ///< Average interaction length per mm in the tracker
-	float           avgIntLengthCoil;                       ///< Average interaction length per mm in the coil                     
-	float           avgIntLengthECalBarrel;                 ///< Average interaction length per mm in the ECal barrel
-	float           avgIntLengthHCalBarrel;                 ///< Average interaction length per mm in the HCal barrel
-	float           avgIntLengthECalEndCap;                 ///< Average interaction length per mm in the ECal endcap
-	float           avgIntLengthHCalEndCap;                 ///< Average interaction length per mm in the HCal endcap
-	float           avgIntLengthMuonBarrel;                 ///< Average interaction length per mm in the Muon barrel
-	float           avgIntLengthMuonEndCap;                 ///< Average interaction length per mm in the Muon endcap
     };
 
     /**
-     *  @brief  Create calo hits, insert user code here
+     *  @brief  Constructor
+     * 
+     *  @param  settings the creator settings
+     */
+     CaloHitCreator(const Settings &settings);
+
+    /**
+     *  @brief  Destructor
+     */
+     ~CaloHitCreator();
+
+    /**
+     *  @brief  Create calo hits
      * 
      *  @param  pLCEvent the lcio event
      */    
@@ -91,14 +96,12 @@ public:
      */
     void Reset();
 
-    Settings                m_settings;         ///< The settings
-
 private:
     /**
      *  @brief  Create ecal calo hits
      * 
      *  @param  pLCEvent the lcio event
-     */    
+     */
     StatusCode CreateECalCaloHits(const LCEvent *const pLCEvent);
 
     /**
@@ -107,6 +110,13 @@ private:
      *  @param  pLCEvent the lcio event
      */
     StatusCode CreateHCalCaloHits(const LCEvent *const pLCEvent);
+
+    /**
+     *  @brief  Create muon calo hits
+     * 
+     *  @param  pLCEvent the lcio event
+     */
+    StatusCode CreateMuonCaloHits(const LCEvent *const pLCEvent);
 
     /**
      *  @brief  Create lcal calo hits
@@ -121,13 +131,6 @@ private:
      *  @param  pLCEvent the lcio event
      */
     StatusCode CreateLHCalCaloHits(const LCEvent *const pLCEvent);
-
-    /**
-     *  @brief  Create muon calo hits
-     * 
-     *  @param  pLCEvent the lcio event
-     */
-    StatusCode CreateMuonCaloHits(const LCEvent *const pLCEvent);
 
     /**
      *  @brief  Get common calo hit properties: position, parent address, input energy and time
@@ -180,50 +183,34 @@ private:
      */
     float GetMaximumRadius(CalorimeterHit *const pCaloHit, const unsigned int symmetryOrder, const float phi0) const;
 
-    /**
-     *  @brief  Compute the path length from the IP to the position of a CalorimeterHit in units of interaction lengths
-     * 
-     *  @param  pCaloHit Calorimeter hit
-     *  @param  lengthInUnitsOfInteractionLength is filled with length from the IP to the position of the calorimeter hit in units of interaction length
-     */
-    StatusCode ComputeInteractionLengthsFromIP(CalorimeterHit *const& pCaloHit, double& lengthInUnitsOfInteractionLength) const;
+    static CalorimeterHitVector         m_calorimeterHitVector;     ///< The calorimeter hit vector
 
-    /**
-     *  @brief  Compute the path length of the intersection of the line from the IP to the position of a CalorimeterHit with a rectangle
-     * 
-     *  @param  pPosition position of the calorimeter-hit
-     *  @param  rMin minimum radius coordinate of the rectangle (assuming zylindrical coordinates)
-     *  @param  zMin minimum z-position coordinate of the rectangle
-     *  @param  rMax maximum radius coordinate of the rectangle (assuming zylindrical coordinates)
-     *  @param  zMax maximum z-position coordinate of the rectangle
-     * 
-     *  @return length of the line segment within the rectangle
-     */
-    float ComputePathLengthFromIPInRectangle(const pandora::CartesianVector& pPosition, 
-					     const float& rMin, const float& zMin, const float& rMax, const float& zMax) const;
+    pandora::Pandora                   *m_pPandora;
+    InteractionLengthCalculator        *m_pInteractionLengthCalculator;
 
-    /**
-     *  @brief  Compute the intersection of two lines
-     * 
-     *  @param  lineAXStart x coordinate of the start of the first line
-     *  @param  lineAYStart y coordinate of the start of the first line
-     *  @param  lineAXEnd x coordinate of the end of the first line
-     *  @param  lineAYEnd y coordinate of the end of the first line
-     *  @param  lineBXStart x coordinate of the start of the second line
-     *  @param  lineBYStart y coordinate of the start of the second line
-     *  @param  lineBXEnd x coordinate of the end of the second line
-     *  @param  lineBYEnd y coordinate of the end of the second line
-     *  @param  xIntersect is filled with the x coordinate of the intersection point
-     *  @param  yIntersect is filled with the y coordinate of the intersection point
-     * 
-     *  @return true if the lines are intersecting within their respective start and end points
-     */
-    bool IntersectLines2D( const float& lineAXStart, const float& lineAYStart, const float& lineAXEnd, const float& lineAYEnd, 
-			   const float& lineBXStart, const float& lineBYStart, const float& lineBXEnd, const float& lineBYEnd, 
-			   float& xIntersect, float& yIntersect) const;
+    Settings                            m_settings;                 ///< The settings
 
+    float                               m_eCalEndCapInnerZ;
+    float                               m_eCalBarrelOuterZ;
+    float                               m_eCalBarrelInnerPhi0;
+    unsigned int                        m_eCalBarrelInnerSymmetry;
 
-    static CalorimeterHitVector        m_calorimeterHitVector;     ///< The calorimeter hit vector
+    float                               m_hCalEndCapInnerZ;
+    float                               m_hCalEndCapOuterR;
+    float                               m_hCalEndCapOuterZ;
+
+    float                               m_hCalBarrelOuterR;
+    float                               m_hCalBarrelInnerPhi0;
+    unsigned int                        m_hCalBarrelInnerSymmetry;
+    float                               m_hCalBarrelOuterPhi0;
+    unsigned int                        m_hCalBarrelOuterSymmetry;
+
+    float                               m_hCalBarrelLayerThickness;
+    float                               m_hCalEndCapLayerThickness;
+
+    float                               m_muonEndCapInnerZ;
+    float                               m_muonBarrelInnerPhi0;
+    unsigned int                        m_muonBarrelInnerSymmetry;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -232,7 +219,6 @@ inline const CalorimeterHitVector &CaloHitCreator::GetCalorimeterHitVector()
 {
     return m_calorimeterHitVector;
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

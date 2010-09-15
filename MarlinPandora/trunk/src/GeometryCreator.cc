@@ -20,11 +20,23 @@
 #include "GeometryCreator.h"
 #include "PandoraPFANewProcessor.h"
 
+GeometryCreator::GeometryCreator(const Settings &settings) :
+    m_settings(settings)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+GeometryCreator::~GeometryCreator()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode GeometryCreator::CreateGeometry() const
 {
     try
     {
-        // Insert user code here ...
         static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
         PandoraApi::Geometry::Parameters geometryParameters;
 

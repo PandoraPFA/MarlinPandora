@@ -15,8 +15,6 @@
 
 using namespace EVENT;
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 /**
  *  @brief  MCParticleCreator class
  */
@@ -37,7 +35,19 @@ public:
     };
 
     /**
-     *  @brief  Create MCParticles, insert user code here
+     *  @brief  Constructor
+     * 
+     *  @param  settings the creator settings
+     */
+     MCParticleCreator(const Settings &settings);
+
+    /**
+     *  @brief  Destructor
+     */
+     ~MCParticleCreator();
+
+    /**
+     *  @brief  Create MCParticles
      * 
      *  @param  pLCEvent the lcio event
      */    
@@ -57,6 +67,7 @@ public:
      */
     StatusCode CreateCaloHitToMCParticleRelationships(const LCEvent *const pLCEvent) const;
 
+private:
     Settings                m_settings;         ///< The settings
 };
 
