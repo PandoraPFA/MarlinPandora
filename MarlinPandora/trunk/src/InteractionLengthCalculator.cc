@@ -15,6 +15,8 @@
 
 #include "InteractionLengthCalculator.h"
 
+#include <limits>
+
 bool InteractionLengthCalculator::m_instanceFlag = false;
 InteractionLengthCalculator* InteractionLengthCalculator::m_pInteractionLengthCalculator = NULL;
 
