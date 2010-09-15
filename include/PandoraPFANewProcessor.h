@@ -116,19 +116,25 @@ private:
      */
     void Reset();
 
-    static pandora::Pandora    *m_pPandora;                 ///< Address of the pandora instance
-    static lcio::LCEvent       *m_pLcioEvent;               ///< Address of the current lcio event
+    static pandora::Pandora        *m_pPandora;                     ///< Address of the pandora instance
+    static lcio::LCEvent           *m_pLcioEvent;                   ///< Address of the current lcio event
 
-    Settings                    m_settings;                 ///< The settings for the pandora pfa new processor
-    std::string                 m_detectorName;             ///< The detector name
-    unsigned int                m_nRun;                     ///< The run number
-    unsigned int                m_nEvent;                   ///< The event number
+    GeometryCreator                *m_pGeometryCreator;             ///< The geometry creator
+    CaloHitCreator                 *m_pCaloHitCreator;              ///< The calo hit creator
+    TrackCreator                   *m_pTrackCreator;                ///< The track creator
+    MCParticleCreator              *m_pMCParticleCreator;           ///< The mc particle creator
+    PfoCreator                     *m_pPfoCreator;                  ///< The pfo creator
 
-    CaloHitCreator              m_caloHitCreator;           ///< The calo hit creator
-    GeometryCreator             m_geometryCreator;          ///< The geometry creator
-    MCParticleCreator           m_mcParticleCreator;        ///< The mc particle creator
-    PfoCreator                  m_pfoCreator;               ///< The pfo creator
-    TrackCreator                m_trackCreator;             ///< The track creator
+    Settings                        m_settings;                     ///< The settings for the pandora pfa new processor
+    GeometryCreator::Settings       m_geometryCreatorSettings;      ///< The geometry creator settings
+    TrackCreator::Settings          m_trackCreatorSettings;         ///< The track creator settings
+    CaloHitCreator::Settings        m_caloHitCreatorSettings;       ///< The calo hit creator settings
+    MCParticleCreator::Settings     m_mcParticleCreatorSettings;    ///< The mc particle creator settings
+    PfoCreator::Settings            m_pfoCreatorSettings;           ///< The pfo creator settings
+
+    std::string                     m_detectorName;                 ///< The detector name
+    unsigned int                    m_nRun;                         ///< The run number
+    unsigned int                    m_nEvent;                       ///< The event number
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

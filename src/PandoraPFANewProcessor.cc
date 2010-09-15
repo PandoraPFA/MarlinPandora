@@ -11,6 +11,7 @@
 #include "Api/PandoraApi.h"
 
 #include "ExternalClusteringAlgorithm.h"
+#include "InteractionLengthCalculator.h"
 #include "PandoraPFANewProcessor.h"
 
 #include <cstdlib>
@@ -24,6 +25,11 @@ lcio::LCEvent *PandoraPFANewProcessor::m_pLcioEvent = NULL;
 
 PandoraPFANewProcessor::PandoraPFANewProcessor() :
     Processor("PandoraPFANewProcessor"),
+    m_pGeometryCreator(NULL),
+    m_pCaloHitCreator(NULL),
+    m_pTrackCreator(NULL),
+    m_pMCParticleCreator(NULL),
+    m_pPfoCreator(NULL),
     m_nRun(0),
     m_nEvent(0)
 {
@@ -39,9 +45,15 @@ void PandoraPFANewProcessor::init()
     {
         streamlog_out(MESSAGE) << "PandoraPFANewProcessor - Init" << std::endl;
         this->FinaliseSteeringParameters();
-        m_pPandora = new pandora::Pandora();
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_geometryCreator.CreateGeometry());
+        m_pPandora = new pandora::Pandora();
+        m_pGeometryCreator = new GeometryCreator(m_geometryCreatorSettings);
+        m_pCaloHitCreator = new CaloHitCreator(m_caloHitCreatorSettings);
+        m_pTrackCreator = new TrackCreator(m_trackCreatorSettings);
+        m_pMCParticleCreator = new MCParticleCreator(m_mcParticleCreatorSettings);
+        m_pPfoCreator = new PfoCreator(m_pfoCreatorSettings);
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pGeometryCreator->CreateGeometry());
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RegisterUserComponents());
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ReadSettings(*m_pPandora, m_settings.m_pandoraSettingsXmlFile));
     }
@@ -82,15 +94,15 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
     {
         streamlog_out(MESSAGE) << "PandoraPFANewProcessor, Run " << m_nRun << ", Event " << ++m_nEvent << std::endl;
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_mcParticleCreator.CreateMCParticles(pLCEvent));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_trackCreator.CreateTrackAssociations(pLCEvent));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_trackCreator.CreateTracks(pLCEvent));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_mcParticleCreator.CreateTrackToMCParticleRelationships(pLCEvent));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_caloHitCreator.CreateCaloHits(pLCEvent));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_mcParticleCreator.CreateCaloHitToMCParticleRelationships(pLCEvent));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pMCParticleCreator->CreateMCParticles(pLCEvent));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pTrackCreator->CreateTrackAssociations(pLCEvent));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pTrackCreator->CreateTracks(pLCEvent));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pMCParticleCreator->CreateTrackToMCParticleRelationships(pLCEvent));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pCaloHitCreator->CreateCaloHits(pLCEvent));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pMCParticleCreator->CreateCaloHitToMCParticleRelationships(pLCEvent));
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pPandora));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pfoCreator.CreateParticleFlowObjects(pLCEvent));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pPfoCreator->CreateParticleFlowObjects(pLCEvent));
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pPandora));
         this->Reset();
@@ -129,6 +141,12 @@ void PandoraPFANewProcessor::check(LCEvent *pLCEvent)
 void PandoraPFANewProcessor::end()
 {
     delete m_pPandora;
+    delete m_pGeometryCreator;
+    delete m_pCaloHitCreator;
+    delete m_pTrackCreator;
+    delete m_pMCParticleCreator;
+    delete m_pPfoCreator;
+
     streamlog_out(MESSAGE) << "PandoraPFANewProcessor - End" << std::endl;
 }
 
@@ -136,8 +154,6 @@ void PandoraPFANewProcessor::end()
 
 StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 {
-    // Insert user code here ...
-
     //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionFunction(*m_pPandora, "MyHadronicEnergyCorrection",
     //    pandora::HADRONIC, &PandoraPFANewProcessor::MyHadronicEnergyCorrection));
 
@@ -158,7 +174,6 @@ StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 
 void PandoraPFANewProcessor::ProcessSteeringFile()
 {
-    // Insert user code here ...
     registerProcessorParameter("PandoraSettingsXmlFile",
                             "The pandora settings xml file",
                             m_settings.m_pandoraSettingsXmlFile,
@@ -168,382 +183,380 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     registerInputCollections(LCIO::TRACK,
                             "TrackCollections", 
                             "Names of the Track collections used for clustering",
-                            m_trackCreator.m_settings.m_trackCollections,
+                            m_trackCreatorSettings.m_trackCollections,
                             StringVector());
 
     registerInputCollections(LCIO::VERTEX,
                             "KinkVertexCollections", 
                             "Name of external kink Vertex collections",
-                            m_trackCreator.m_settings.m_kinkVertexCollections,
+                            m_trackCreatorSettings.m_kinkVertexCollections,
                             StringVector());
 
     registerInputCollections(LCIO::VERTEX,
                             "ProngVertexCollections", 
                             "Name of external prong Vertex collections",
-                            m_trackCreator.m_settings.m_prongVertexCollections,
+                            m_trackCreatorSettings.m_prongVertexCollections,
                             StringVector());
 
     registerInputCollections(LCIO::VERTEX,
                             "SplitVertexCollections", 
                             "Name of external split Vertex collections",
-                            m_trackCreator.m_settings.m_splitVertexCollections,
+                            m_trackCreatorSettings.m_splitVertexCollections,
                             StringVector());
 
     registerInputCollections(LCIO::VERTEX,
                             "V0VertexCollections", 
                             "Name of external V0 Vertex collections",
-                            m_trackCreator.m_settings.m_v0VertexCollections,
+                            m_trackCreatorSettings.m_v0VertexCollections,
                             StringVector());
 
     registerInputCollections(LCIO::CALORIMETERHIT,
                             "ECalCaloHitCollections", 
                             "Name of the ECAL calo hit collections",
-                            m_caloHitCreator.m_settings.m_eCalCaloHitCollections,
+                            m_caloHitCreatorSettings.m_eCalCaloHitCollections,
                             StringVector());
 
     registerInputCollections(LCIO::CALORIMETERHIT,
                             "HCalCaloHitCollections", 
                             "Name of the HCAL calo hit collections",
-                            m_caloHitCreator.m_settings.m_hCalCaloHitCollections,
+                            m_caloHitCreatorSettings.m_hCalCaloHitCollections,
                             StringVector());
 
     registerInputCollections(LCIO::CALORIMETERHIT,
                             "LCalCaloHitCollections", 
                             "Name of the LCAL calo hit collections",
-                            m_caloHitCreator.m_settings.m_lCalCaloHitCollections,
+                            m_caloHitCreatorSettings.m_lCalCaloHitCollections,
                             StringVector());
 
     registerInputCollections(LCIO::CALORIMETERHIT,
                             "LHCalCaloHitCollections", 
                             "Name of the LHCAL calo hit collections",
-                            m_caloHitCreator.m_settings.m_lHCalCaloHitCollections,
+                            m_caloHitCreatorSettings.m_lHCalCaloHitCollections,
                             StringVector());
 
     registerInputCollections(LCIO::CALORIMETERHIT,
                             "MuonCaloHitCollections", 
                             "Name of the muon calo hit collections",
-                            m_caloHitCreator.m_settings.m_muonCaloHitCollections,
+                            m_caloHitCreatorSettings.m_muonCaloHitCollections,
                             StringVector());
 
     registerInputCollections(LCIO::MCPARTICLE,
                             "MCParticleCollections", 
                             "Name of mc particle collections",
-                            m_mcParticleCreator.m_settings.m_mcParticleCollections,
+                            m_mcParticleCreatorSettings.m_mcParticleCollections,
                             StringVector());
 
     registerInputCollections(LCIO::LCRELATION, 
                             "RelCaloHitCollections",
                             "SimCaloHit to CaloHit Relations Collection Name",
-                            m_mcParticleCreator.m_settings.m_lcCaloHitRelationCollections,
+                            m_mcParticleCreatorSettings.m_lcCaloHitRelationCollections,
                             StringVector());
 
     registerInputCollections(LCIO::LCRELATION, 
                             "RelTrackCollections",
                             "Track to MCParticle Relations Collection Name",
-                            m_mcParticleCreator.m_settings.m_lcTrackRelationCollections,
+                            m_mcParticleCreatorSettings.m_lcTrackRelationCollections,
                             StringVector());
 
     // Absorber properties
     registerProcessorParameter("AbsorberRadiationLength",
                             "The absorber radation length",
-                            m_geometryCreator.m_settings.m_absorberRadiationLength,
+                            m_geometryCreatorSettings.m_absorberRadiationLength,
                             float(1.));
 
     registerProcessorParameter("AbsorberInteractionLength",
                             "The absorber interaction length",
-                            m_geometryCreator.m_settings.m_absorberInteractionLength,
+                            m_geometryCreatorSettings.m_absorberInteractionLength,
                             float(1.));
 
     // Name of PFO collection written by MarlinPandora
     registerOutputCollection( LCIO::CLUSTER,
                               "ClusterCollectionName" , 
                               "Cluster Collection Name "  ,
-                              m_pfoCreator.m_settings.m_clusterCollectionName,
+                              m_pfoCreatorSettings.m_clusterCollectionName,
                               std::string("PandoraPFANewClusters"));
 
     registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
                               "PFOCollectionName" , 
                               "PFO Collection Name "  ,
-                              m_pfoCreator.m_settings.m_pfoCollectionName,
+                              m_pfoCreatorSettings.m_pfoCollectionName,
                               std::string("PandoraPFANewPFOs"));
 
     // Calibration constants
     registerProcessorParameter("ECalToMipCalibration",
                             "The calibration from deposited ECal energy to mip",
-                            m_caloHitCreator.m_settings.m_eCalToMip,
+                            m_caloHitCreatorSettings.m_eCalToMip,
                             float(1.));
 
     registerProcessorParameter("HCalToMipCalibration",
                             "The calibration from deposited HCal energy to mip",
-                            m_caloHitCreator.m_settings.m_hCalToMip,
+                            m_caloHitCreatorSettings.m_hCalToMip,
                             float(1.));
 
     registerProcessorParameter("ECalMipThreshold",
                             "Threshold for creating calo hits in the ECal, units mip",
-                            m_caloHitCreator.m_settings.m_eCalMipThreshold,
+                            m_caloHitCreatorSettings.m_eCalMipThreshold,
                             float(0.));
 
     registerProcessorParameter("MuonToMipCalibration",
                             "The calibration from deposited Muon energy to mip",
-                            m_caloHitCreator.m_settings.m_muonToMip,
+                            m_caloHitCreatorSettings.m_muonToMip,
                             float(10.));
-
 
     registerProcessorParameter("HCalMipThreshold",
                             "Threshold for creating calo hits in the HCal, units mip",
-                            m_caloHitCreator.m_settings.m_hCalMipThreshold,
+                            m_caloHitCreatorSettings.m_hCalMipThreshold,
                             float(0.));
 
     registerProcessorParameter("ECalToEMGeVCalibration",
                             "The calibration from deposited ECal energy to EM energy",
-                            m_caloHitCreator.m_settings.m_eCalToEMGeV,
+                            m_caloHitCreatorSettings.m_eCalToEMGeV,
                             float(1.));
 
     registerProcessorParameter("HCalToEMGeVCalibration",
                             "The calibration from deposited HCal energy to EM energy",
-                            m_caloHitCreator.m_settings.m_hCalToEMGeV,
+                            m_caloHitCreatorSettings.m_hCalToEMGeV,
                             float(1.));
 
     registerProcessorParameter("ECalToHadGeVCalibration",
                             "The calibration from deposited ECal energy to hadronic energy",
-                            m_caloHitCreator.m_settings.m_eCalToHadGeV,
+                            m_caloHitCreatorSettings.m_eCalToHadGeV,
                             float(1.));
 
     registerProcessorParameter("HCalToHadGeVCalibration",
                             "The calibration from deposited HCal energy to hadronic energy",
-                            m_caloHitCreator.m_settings.m_hCalToHadGeV,
+                            m_caloHitCreatorSettings.m_hCalToHadGeV,
                             float(1.));
 
     registerProcessorParameter("DigitalMuonHits",
                             "Treat muon hits as digital",
-                            m_caloHitCreator.m_settings.m_muonDigitalHits,
+                            m_caloHitCreatorSettings.m_muonDigitalHits,
                             int(1));
 
     registerProcessorParameter("MuonHitEnergy",
                             "The energy for a digital muon calorimeter hit, units GeV",
-                            m_caloHitCreator.m_settings.m_muonHitEnergy,
+                            m_caloHitCreatorSettings.m_muonHitEnergy,
                             float(0.5));
 
     registerProcessorParameter("MaxHCalHitHadronicEnergy",
                             "The maximum hadronic energy allowed for a single hcal hit",
-                            m_caloHitCreator.m_settings.m_maxHCalHitHadronicEnergy,
+                            m_caloHitCreatorSettings.m_maxHCalHitHadronicEnergy,
                             float(1.));
 
     registerProcessorParameter("NOuterSamplingLayers",
                             "Number of layers from edge for hit to be flagged as an outer layer hit",
-                            m_caloHitCreator.m_settings.m_nOuterSamplingLayers,
+                            m_caloHitCreatorSettings.m_nOuterSamplingLayers,
                             int(3));
 
     registerProcessorParameter("LayersFromEdgeMaxRearDistance",
                             "Maximum number of layers from candidate outer layer hit to rear of detector",
-                            m_caloHitCreator.m_settings.m_layersFromEdgeMaxRearDistance,
+                            m_caloHitCreatorSettings.m_layersFromEdgeMaxRearDistance,
                             float(250.f));
 
     // average interaction length parameters
     registerProcessorParameter("AverageInteractionLengthTracker",
                             "average number interaction length per mm in the tracker",
-                            m_caloHitCreator.m_settings.avgIntLengthTracker,
+                            InteractionLengthCalculator::Settings::m_avgIntLengthTracker,
                             float(0.f));
 
     registerProcessorParameter("AverageInteractionLengthCoil",
                             "average number interaction length per mm in the coil",
-                            m_caloHitCreator.m_settings.avgIntLengthCoil,
+                            InteractionLengthCalculator::Settings::m_avgIntLengthCoil,
                             float(0.0025189));
 
     registerProcessorParameter("AverageInteractionLengthECalBarrel",
                             "average number interaction length per mm in the ECal Barrel",
-                            m_caloHitCreator.m_settings.avgIntLengthECalBarrel,
+                            InteractionLengthCalculator::Settings::m_avgIntLengthECalBarrel,
                             float(0.0040269f));
 
     registerProcessorParameter("AverageInteractionLengthHCalBarrel",
                             "average number interaction length per mm in the HCal Barrel",
-                            m_caloHitCreator.m_settings.avgIntLengthHCalBarrel,
+                            InteractionLengthCalculator::Settings::m_avgIntLengthHCalBarrel,
                             float(0.0033041916f));
 
     registerProcessorParameter("AverageInteractionLengthECalEndCap",
                             "average number interaction length per mm in the ECal EndCap",
-                            m_caloHitCreator.m_settings.avgIntLengthECalEndCap,
+                            InteractionLengthCalculator::Settings::m_avgIntLengthECalEndCap,
                             float(0.0040269f));
 
     registerProcessorParameter("AverageInteractionLengthHCalEndCap",
                             "average number interaction length per mm in the HCal EndCap",
-                            m_caloHitCreator.m_settings.avgIntLengthHCalEndCap,
+                            InteractionLengthCalculator::Settings::m_avgIntLengthHCalEndCap,
                             float(0.0033041916));
 
     registerProcessorParameter("AverageInteractionLengthMuonBarrel",
                             "average number interaction length per mm in the Muon Barrel",
-                            m_caloHitCreator.m_settings.avgIntLengthMuonBarrel,
+                            InteractionLengthCalculator::Settings::m_avgIntLengthMuonBarrel,
                             float(0.0040269f));
 
     registerProcessorParameter("AverageInteractionLengthMuonEndCap",
                             "average number interaction length per mm in the Muon EndCap",
-                            m_caloHitCreator.m_settings.avgIntLengthMuonEndCap,
+                            InteractionLengthCalculator::Settings::m_avgIntLengthMuonEndCap,
                             float(0.0040269f));
-
 
     // Track hit specifications
    registerProcessorParameter("MinTrackHits",
                             "Track quality cut: the minimum number of track hits",
-                            m_trackCreator.m_settings.m_minTrackHits,
+                            m_trackCreatorSettings.m_minTrackHits,
                             int(5));
 
    registerProcessorParameter("MinFtdTrackHits",
                             "Track quality cut: the minimum number of ftd track hits for ftd only tracks",
-                            m_trackCreator.m_settings.m_minTrackHits,
+                            m_trackCreatorSettings.m_minTrackHits,
                             int(4));
 
    registerProcessorParameter("MaxTrackHits",
                             "Track quality cut: the maximum number of track hits",
-                            m_trackCreator.m_settings.m_maxTrackHits,
+                            m_trackCreatorSettings.m_maxTrackHits,
                             int(5000));
 
     // Track PFO usage parameters
     registerProcessorParameter("D0TrackCut",
                             "Track d0 cut used to determine whether track can be used to form pfo",
-                            m_trackCreator.m_settings.m_d0TrackCut,
+                            m_trackCreatorSettings.m_d0TrackCut,
                             float(50.));
 
     registerProcessorParameter("Z0TrackCut",
                             "Track z0 cut used to determine whether track can be used to form pfo",
-                            m_trackCreator.m_settings.m_z0TrackCut,
+                            m_trackCreatorSettings.m_z0TrackCut,
                             float(50.));
 
     registerProcessorParameter("MaxTrackSigmaPOverP",
                             "Cut on fractional track momentum error",
-                            m_trackCreator.m_settings.m_maxTrackSigmaPOverP,
+                            m_trackCreatorSettings.m_maxTrackSigmaPOverP,
                             float(0.15));
 
     registerProcessorParameter("MinTpcHitFractionOfExpected",
                             "Cut on fractional of expected number of TPC hits",
-                            m_trackCreator.m_settings.m_minTpcHitFractionOfExpected,
+                            m_trackCreatorSettings.m_minTpcHitFractionOfExpected,
                             float(0.20));
 
     registerProcessorParameter("MinFtdHitsForTpcHitFraction",
                             "Cut on minimum number of FTD hits of TPC hit fraction to be applied",
-                            m_trackCreator.m_settings.m_minFtdHitsForTpcHitFraction,
+                            m_trackCreatorSettings.m_minFtdHitsForTpcHitFraction,
                             int(2));
 
     registerProcessorParameter("MaxTpcInnerRDistance",
                             "Track cut on distance from tpc inner r to id whether track can form pfo",
-                            m_trackCreator.m_settings.m_maxTpcInnerRDistance,
+                            m_trackCreatorSettings.m_maxTpcInnerRDistance,
                             float(50.));
 
     registerProcessorParameter("UseNonVertexTracks",
                             "Whether can form pfos from tracks that don't start at vertex",
-                            m_trackCreator.m_settings.m_usingNonVertexTracks,
+                            m_trackCreatorSettings.m_usingNonVertexTracks,
                             int(1.));
 
     registerProcessorParameter("UseUnmatchedNonVertexTracks",
                             "Whether can form pfos from unmatched tracks that don't start at vertex",
-                            m_trackCreator.m_settings.m_usingUnmatchedNonVertexTracks,
+                            m_trackCreatorSettings.m_usingUnmatchedNonVertexTracks,
                             int(0.));
 
     registerProcessorParameter("UseUnmatchedVertexTracks",
                             "Whether can form pfos from unmatched tracks that start at vertex",
-                            m_trackCreator.m_settings.m_usingUnmatchedVertexTracks,
+                            m_trackCreatorSettings.m_usingUnmatchedVertexTracks,
                             int(1.));
 
     registerProcessorParameter("UnmatchedVertexTrackMaxEnergy",
                             "Maximum energy for unmatched vertex track",
-                            m_trackCreator.m_settings.m_unmatchedVertexTrackMaxEnergy,
+                            m_trackCreatorSettings.m_unmatchedVertexTrackMaxEnergy,
                             float(5.));
 
     registerProcessorParameter("D0UnmatchedVertexTrackCut",
                             "d0 cut used to determine whether unmatched vertex track can form pfo",
-                            m_trackCreator.m_settings.m_d0UnmatchedVertexTrackCut,
+                            m_trackCreatorSettings.m_d0UnmatchedVertexTrackCut,
                             float(5.));
 
     registerProcessorParameter("Z0UnmatchedVertexTrackCut",
                             "z0 cut used to determine whether unmatched vertex track can form pfo",
-                            m_trackCreator.m_settings.m_z0UnmatchedVertexTrackCut,
+                            m_trackCreatorSettings.m_z0UnmatchedVertexTrackCut,
                             float(5.));
 
     registerProcessorParameter("ZCutForNonVertexTracks",
                             "Non vtx track z cut to determine whether track can be used to form pfo",
-                            m_trackCreator.m_settings.m_zCutForNonVertexTracks,
+                            m_trackCreatorSettings.m_zCutForNonVertexTracks,
                             float(250.));
 
     // Track "reaches ecal" parameters
     registerProcessorParameter("ReachesECalNTpcHits",
                             "Minimum number of tpc hits to consider track as reaching ecal",
-                            m_trackCreator.m_settings.m_reachesECalNTpcHits,
+                            m_trackCreatorSettings.m_reachesECalNTpcHits,
                             int(11));
 
     registerProcessorParameter("ReachesECalNFtdHits",
                             "Minimum number of ftd hits to consider track as reaching ecal",
-                            m_trackCreator.m_settings.m_reachesECalNFtdHits,
+                            m_trackCreatorSettings.m_reachesECalNFtdHits,
                             int(4));
 
     registerProcessorParameter("ReachesECalTpcOuterDistance",
                             "Max distance from track to tpc r max to id whether track reaches ecal",
-                            m_trackCreator.m_settings.m_reachesECalTpcOuterDistance,
+                            m_trackCreatorSettings.m_reachesECalTpcOuterDistance,
                             float(-100.));
 
     registerProcessorParameter("ReachesECalTpcZMaxDistance",
                             "Max distance from track to tpc z max to id whether track reaches ecal",
-                            m_trackCreator.m_settings.m_reachesECalTpcZMaxDistance,
+                            m_trackCreatorSettings.m_reachesECalTpcZMaxDistance,
                             float(-50.));
 
     registerProcessorParameter("ReachesECalFtdZMaxDistance",
                             "Max distance from track hit to ftd z position to identify ftd hits",
-                            m_trackCreator.m_settings.m_reachesECalFtdZMaxDistance,
+                            m_trackCreatorSettings.m_reachesECalFtdZMaxDistance,
                             float(1.));
 
     registerProcessorParameter("CurvatureToMomentumFactor",
                             "Constant relating track curvature in b field to momentum",
-                            m_trackCreator.m_settings.m_curvatureToMomentumFactor,
+                            m_trackCreatorSettings.m_curvatureToMomentumFactor,
                             float(0.3 / 2000.));
 
     registerProcessorParameter("MinTrackECalDistanceFromIp",
                             "Sanity check on separation between ip and track projected ecal position",
-                            m_trackCreator.m_settings.m_minTrackECalDistanceFromIp,
+                            m_trackCreatorSettings.m_minTrackECalDistanceFromIp,
                             float(100.));
 
     // Track relationship parameters
     registerProcessorParameter("ShouldFormTrackRelationships",
                             "Whether to form pandora track relationships using v0 and kink info",
-                            m_trackCreator.m_settings.m_shouldFormTrackRelationships,
+                            m_trackCreatorSettings.m_shouldFormTrackRelationships,
                             int(1));
 
     // Additional geometry parameters
     registerProcessorParameter("ECalEndCapInnerSymmetryOrder",
                             "ECal end cap inner symmetry order (missing from ILD gear files)",
-                            m_geometryCreator.m_settings.m_eCalEndCapInnerSymmetryOrder,
+                            m_geometryCreatorSettings.m_eCalEndCapInnerSymmetryOrder,
                             int(4));
 
     registerProcessorParameter("ECalEndCapInnerPhiCoordinate",
                             "ECal end cap inner phi coordinate (missing from ILD gear files)",
-                            m_geometryCreator.m_settings.m_eCalEndCapInnerPhiCoordinate,
+                            m_geometryCreatorSettings.m_eCalEndCapInnerPhiCoordinate,
                             float(0.));
 
     registerProcessorParameter("ECalEndCapOuterSymmetryOrder",
                             "ECal end cap outer symmetry order (missing from ILD gear files)",
-                            m_geometryCreator.m_settings.m_eCalEndCapOuterSymmetryOrder,
+                            m_geometryCreatorSettings.m_eCalEndCapOuterSymmetryOrder,
                             int(8));
 
     registerProcessorParameter("ECalEndCapOuterPhiCoordinate",
                             "ECal end cap outer phi coordinate (missing from ILD gear files)",
-                            m_geometryCreator.m_settings.m_eCalEndCapOuterPhiCoordinate,
+                            m_geometryCreatorSettings.m_eCalEndCapOuterPhiCoordinate,
                             float(0.));
 
     registerProcessorParameter("HCalEndCapInnerSymmetryOrder",
                             "HCal end cap inner symmetry order (missing from ILD gear files)",
-                            m_geometryCreator.m_settings.m_hCalEndCapInnerSymmetryOrder,
+                            m_geometryCreatorSettings.m_hCalEndCapInnerSymmetryOrder,
                             int(4));
 
     registerProcessorParameter("HCalEndCapInnerPhiCoordinate",
                             "HCal end cap inner phi coordinate (missing from ILD gear files)",
-                            m_geometryCreator.m_settings.m_hCalEndCapInnerPhiCoordinate,
+                            m_geometryCreatorSettings.m_hCalEndCapInnerPhiCoordinate,
                             float(0.));
 
     registerProcessorParameter("HCalEndCapOuterSymmetryOrder",
                             "HCal end cap outer symmetry order (missing from ILD gear files)",
-                            m_geometryCreator.m_settings.m_hCalEndCapOuterSymmetryOrder,
+                            m_geometryCreatorSettings.m_hCalEndCapOuterSymmetryOrder,
                             int(16));
 
     registerProcessorParameter("HCalEndCapOuterPhiCoordinate",
                             "HCal end cap outer phi coordinate (missing from ILD gear files)",
-                            m_geometryCreator.m_settings.m_hCalEndCapOuterPhiCoordinate,
+                            m_geometryCreatorSettings.m_hCalEndCapOuterPhiCoordinate,
                             float(0.));
 
     // Number of events to skip
@@ -557,20 +570,20 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
 
 void PandoraPFANewProcessor::FinaliseSteeringParameters()
 {
-    m_caloHitCreator.m_settings.m_absorberRadiationLength = m_geometryCreator.m_settings.m_absorberRadiationLength;
-    m_caloHitCreator.m_settings.m_absorberInteractionLength = m_geometryCreator.m_settings.m_absorberInteractionLength;
-    m_caloHitCreator.m_settings.m_hCalEndCapInnerSymmetryOrder = m_geometryCreator.m_settings.m_hCalEndCapInnerSymmetryOrder;
-    m_caloHitCreator.m_settings.m_hCalEndCapInnerPhiCoordinate = m_geometryCreator.m_settings.m_hCalEndCapInnerPhiCoordinate;
+    m_caloHitCreatorSettings.m_absorberRadiationLength = m_geometryCreatorSettings.m_absorberRadiationLength;
+    m_caloHitCreatorSettings.m_absorberInteractionLength = m_geometryCreatorSettings.m_absorberInteractionLength;
+    m_caloHitCreatorSettings.m_hCalEndCapInnerSymmetryOrder = m_geometryCreatorSettings.m_hCalEndCapInnerSymmetryOrder;
+    m_caloHitCreatorSettings.m_hCalEndCapInnerPhiCoordinate = m_geometryCreatorSettings.m_hCalEndCapInnerPhiCoordinate;
 
-    m_trackCreator.m_settings.m_prongSplitVertexCollections = m_trackCreator.m_settings.m_prongVertexCollections;
-    m_trackCreator.m_settings.m_prongSplitVertexCollections.insert(m_trackCreator.m_settings.m_prongSplitVertexCollections.end(),
-        m_trackCreator.m_settings.m_splitVertexCollections.begin(), m_trackCreator.m_settings.m_splitVertexCollections.end());
+    m_trackCreatorSettings.m_prongSplitVertexCollections = m_trackCreatorSettings.m_prongVertexCollections;
+    m_trackCreatorSettings.m_prongSplitVertexCollections.insert(m_trackCreatorSettings.m_prongSplitVertexCollections.end(),
+        m_trackCreatorSettings.m_splitVertexCollections.begin(), m_trackCreatorSettings.m_splitVertexCollections.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void PandoraPFANewProcessor::Reset()
 {
-    m_caloHitCreator.Reset();
-    m_trackCreator.Reset();
+    m_pCaloHitCreator->Reset();
+    m_pTrackCreator->Reset();
 }

@@ -34,12 +34,25 @@ public:
     };
 
     /**
-     *  @brief  Create particle flow objects, insert user code here
+     *  @brief  Constructor
+     * 
+     *  @param  settings the creator settings
+     */
+     PfoCreator(const Settings &settings);
+
+    /**
+     *  @brief  Destructor
+     */
+     ~PfoCreator();
+
+    /**
+     *  @brief  Create particle flow objects
      * 
      *  @param  pLCEvent the lcio event
      */    
     StatusCode CreateParticleFlowObjects(LCEvent *pLCEvent);
 
+private:
     Settings                m_settings;         ///< The settings
 };
 

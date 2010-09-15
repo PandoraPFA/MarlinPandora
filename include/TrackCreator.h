@@ -55,7 +55,7 @@ public:
         float           m_maxTrackSigmaPOverP;                  ///< Track fraction momentum error cut
         float           m_maxTpcInnerRDistance;                 ///< Track cut on distance from tpc inner r to id whether track can form pfo
         float           m_minTpcHitFractionOfExpected;          ///< Minimum fraction of TPC hits compared to expected
-	int             m_minFtdHitsForTpcHitFraction;          ///< Minimum number of FTD hits to ignore TPC hit fraction
+        int             m_minFtdHitsForTpcHitFraction;          ///< Minimum number of FTD hits to ignore TPC hit fraction
 
         int             m_usingNonVertexTracks;                 ///< Whether can form pfos from tracks that don't start at vertex
         int             m_usingUnmatchedNonVertexTracks;        ///< Whether can form pfos from unmatched tracks that don't start at vertex
@@ -77,6 +77,18 @@ public:
 
         int             m_shouldFormTrackRelationships;         ///< Whether to form pandora track relationships using v0 and kink info
     };
+
+    /**
+     *  @brief  Constructor
+     * 
+     *  @param  settings the creator settings
+     */
+     TrackCreator(const Settings &settings);
+
+    /**
+     *  @brief  Destructor
+     */
+     ~TrackCreator();
 
     /**
      *  @brief  Create associations between tracks, V0s, kinks, etc
@@ -103,8 +115,6 @@ public:
      *  @brief  Reset the track creator
      */
     void Reset();
-
-    Settings                m_settings;         ///< The settings
 
 private:
     /**
@@ -208,12 +218,37 @@ private:
      */
     bool PassesQualityCuts(const Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters, const float rInner) const;
 
-    static TrackVector      m_trackVector;      ///< The track vector
+    static TrackVector      m_trackVector;                  ///< The track vector
 
-    TrackList               m_v0TrackList;      ///< The list of v0 tracks
-    TrackList               m_parentTrackList;  ///< The list of parent tracks
-    TrackList               m_daughterTrackList;///< The list of daughter tracks
-    TrackToPidMap           m_trackToPidMap;    ///< The map of Track* to particle ID where set by Kinks/V0s
+    Settings                m_settings;                     ///< The settings
+
+    TrackList               m_v0TrackList;                  ///< The list of v0 tracks
+    TrackList               m_parentTrackList;              ///< The list of parent tracks
+    TrackList               m_daughterTrackList;            ///< The list of daughter tracks
+    TrackToPidMap           m_trackToPidMap;                ///< The map of Track* to particle ID where set by Kinks/V0s
+
+    pandora::Pandora       *m_pPandora;                     ///< Address of the pandora object to create tracks and track relationships
+    float                   m_bField;                       ///< The bfield
+
+    float                   m_tpcInnerR;                    ///< The tpc inner radius
+    float                   m_tpcOuterR;                    ///< The tpc outer radius
+    float                   m_tpcZmax;                      ///< The tpc maximum z coordinate
+    unsigned int            m_tpcMaxRow;                    ///< The tpc maximum row number
+    float                   m_cosTpc;                       ///< 
+
+    DoubleVector            m_ftdInnerRadii;                ///< Ftd inner radii
+    DoubleVector            m_ftdOuterRadii;                ///< Ftd outer radii
+    DoubleVector            m_ftdZPositions;                ///< Ftd z positions
+    unsigned int            m_nFtdLayers;                   ///< Number of ftd layers
+    float                   m_tanLambdaFtd;                 ///< Tan lambda for first ftd layer
+
+    float                   m_minEtdZPosition;              ///< Min etd z position
+    float                   m_minSetRadius;                 ///< Min set radius
+
+    int                     m_ecalBarrelInnerSymmetry;      ///< ECal barrel inner symmetry order
+    float                   m_ecalBarrelInnerPhi0;          ///< ECal barrel inner phi 0
+    float                   m_ecalBarrelInnerR;             ///< ECal barrel inner radius
+    float                   m_ecalEndCapInnerZ;             ///< ECal endcap inner z
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

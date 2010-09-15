@@ -25,9 +25,21 @@
 #include <cmath>
 #include <limits>
 
+MCParticleCreator::MCParticleCreator(const Settings &settings) :
+    m_settings(settings)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+MCParticleCreator::~MCParticleCreator()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode MCParticleCreator::CreateMCParticles(const LCEvent *const pLCEvent) const
 {
-    // Insert user code here ...
     static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
 
     for (StringVector::const_iterator iter = m_settings.m_mcParticleCollections.begin(), iterEnd = m_settings.m_mcParticleCollections.end();

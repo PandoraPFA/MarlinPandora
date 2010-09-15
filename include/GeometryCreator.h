@@ -37,15 +37,24 @@ public:
         float           m_hCalEndCapInnerPhiCoordinate;         ///< HCal end cap inner phi coordinate (missing from ILD gear files)
         int             m_hCalEndCapOuterSymmetryOrder;         ///< HCal end cap outer symmetry order (missing from ILD gear files)
         float           m_hCalEndCapOuterPhiCoordinate;         ///< HCal end cap outer phi coordinate (missing from ILD gear files)
-
     };
 
     /**
-     *  @brief  Create geometry, insert user code here
+     *  @brief  Constructor
+     * 
+     *  @param  settings the creator settings
+     */
+     GeometryCreator(const Settings &settings);
+
+    /**
+     *  @brief  Destructor
+     */
+     ~GeometryCreator();
+
+    /**
+     *  @brief  Create geometry
      */
     StatusCode CreateGeometry() const;
-
-    Settings                m_settings;         ///< The settings
 
 private:
     /**
@@ -107,6 +116,8 @@ private:
      */
     StatusCode CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float minZ, float maxZ,
         float gapWidth, PandoraApi::GeometryParameters &geometryParameters, pandora::CartesianVector vertexOffset = pandora::CartesianVector(0, 0, 0)) const;
+
+    Settings                m_settings;         ///< The settings
 };
 
 #endif // #ifndef GEOMETRY_CREATOR_H

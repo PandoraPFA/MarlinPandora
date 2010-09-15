@@ -28,6 +28,19 @@
 
 #include <cmath>
 
+PfoCreator::PfoCreator(const Settings &settings) :
+    m_settings(settings)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+PfoCreator::~PfoCreator()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode PfoCreator::CreateParticleFlowObjects( LCEvent * pLCEvent)
 {
     static pandora::Pandora *pPandora = PandoraPFANewProcessor::GetPandora();
