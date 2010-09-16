@@ -124,7 +124,7 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
     }
     catch (EVENT::Exception &exception)
     {
-        streamlog_out(ERROR) << "Marlin pandora failed to process event: lcio exception: " << exception.what() << std::endl;
+        streamlog_out(ERROR) << "Marlin pandora failed to process event: lcio exception " << exception.what() << std::endl;
         throw exception;
     }
     catch (...)

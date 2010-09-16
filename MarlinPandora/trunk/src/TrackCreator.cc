@@ -183,15 +183,15 @@ StatusCode TrackCreator::ExtractKinks(const EVENT::LCEvent *const pLCEvent)
                         }
                     }
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract kink vertex, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract kink vertex: " << exception.what() << std::endl;
                 }
             }
         }
-        catch (...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(MESSAGE) << "Failed to extract kink vertex collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract kink vertex collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
@@ -252,15 +252,15 @@ StatusCode TrackCreator::ExtractProngsAndSplits(const EVENT::LCEvent *const pLCE
                         }
                     }
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract prong/split vertex, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract prong/split vertex: " << exception.what() << std::endl;
                 }
             }
         }
-        catch (...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(MESSAGE) << "Failed to extract prong/split vertex collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract prong/split vertex collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
@@ -333,15 +333,15 @@ StatusCode TrackCreator::ExtractV0s(const EVENT::LCEvent *const pLCEvent)
                         }
                     }
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract v0 vertex, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract v0 vertex: " << exception.what() << std::endl;
                 }
             }
         }
-        catch (...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(MESSAGE) << "Failed to extract v0 vertex collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract v0 vertex collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
@@ -439,15 +439,15 @@ StatusCode TrackCreator::CreateTracks(const EVENT::LCEvent *const pLCEvent) cons
                 {
                     streamlog_out(ERROR) << "Failed to extract a track: " << statusCodeException.ToString() << std::endl;
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract a track, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract a vertex: " << exception.what() << std::endl;
                 }
             }
         }
-        catch (...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(MESSAGE) << "Failed to extract track collection: " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract track collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 

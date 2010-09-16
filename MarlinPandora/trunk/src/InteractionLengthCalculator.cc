@@ -185,7 +185,7 @@ float InteractionLengthCalculator::GetNInteractionLengthsFromIP(const EVENT::Cal
     }
     catch (gear::Exception &exception)
     {
-        streamlog_out(ERROR) << "InteractionLengthCalculator: failed to extract gear geometry information" << std::endl;
+        streamlog_out(ERROR) << "InteractionLengthCalculator: failed to extract gear geometry information" << exception.what() << std::endl;
         throw exception;
     }
 }

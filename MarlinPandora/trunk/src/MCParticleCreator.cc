@@ -80,15 +80,15 @@ StatusCode MCParticleCreator::CreateMCParticles(const EVENT::LCEvent *const pLCE
                 {
                     streamlog_out(ERROR) << "Failed to extract MCParticle: " << statusCodeException.ToString() << std::endl;
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract MCParticle, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract MCParticle: " << exception.what() << std::endl;
                 }
             }
         }
-        catch (...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(WARNING) << "Failed to extract MCParticles collection: " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract MCParticles collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
@@ -155,15 +155,15 @@ StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(const EVENT::
                 {
                     streamlog_out(ERROR) << "Failed to extract track to mc particle relationship: " << statusCodeException.ToString() << std::endl;
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract track to mc particle relationship, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract track to mc particle relationship: " << exception.what() << std::endl;
                 }
             }
         }
-        catch(...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(WARNING) << "Failed to extract track to mc particle relationships collection: " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract track to mc particle relationships collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
@@ -219,15 +219,15 @@ StatusCode MCParticleCreator::CreateCaloHitToMCParticleRelationships(const EVENT
                 {
                     streamlog_out(ERROR) << "Failed to extract calo hit to mc particle relationship: " << statusCodeException.ToString() << std::endl;
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract calo hit to mc particle relationship, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract calo hit to mc particle relationship: " << exception.what() << std::endl;
                 }
             }
         }
-        catch(...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(WARNING) << "Failed to extract calo hit to mc particle relationships collection: " << *iter << std::endl;
+            streamlog_out(WARNING) << "Failed to extract calo hit to mc particle relationships collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 

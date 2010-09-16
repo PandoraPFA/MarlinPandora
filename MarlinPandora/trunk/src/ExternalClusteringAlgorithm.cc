@@ -85,8 +85,9 @@ StatusCode ExternalClusteringAlgorithm::Run()
     {
         return statusCodeException.GetStatusCode();
     }
-    catch (...)
+    catch (EVENT::Exception &exception)
     {
+        std::cout << "ExternalClusteringAlgorithm failure: " << exception.what() << std::endl;
         return STATUS_CODE_FAILURE;
     }
 
