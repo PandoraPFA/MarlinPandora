@@ -85,9 +85,6 @@ StatusCode CaloHitCreator::CreateCaloHits(const EVENT::LCEvent *const pLCEvent)
 
 StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
-    static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getEcalEndcapParameters().getLayerLayout());
-    static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getEcalBarrelParameters().getLayerLayout()); 
-
     for (StringVector::const_iterator iter = m_settings.m_eCalCaloHitCollections.begin(), iterEnd = m_settings.m_eCalCaloHitCollections.end();
         iter != iterEnd; ++iter)
     {
@@ -98,6 +95,9 @@ StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *const pLCEve
 
             if (0 == nElements)
                 continue;
+
+            static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getEcalEndcapParameters().getLayerLayout());
+            static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getEcalBarrelParameters().getLayerLayout()); 
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -143,15 +143,15 @@ StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *const pLCEve
                 {
                     streamlog_out(ERROR) << "Failed to extract ecal calo hit: " << statusCodeException.ToString() << std::endl;
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract ecal calo hit, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract ecal calo hit: " << exception.what() << std::endl;
                 }
             }
         }
-        catch (...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(MESSAGE) << "Failed to extract ecal calo hit collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract ecal calo hit collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
@@ -162,9 +162,6 @@ StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *const pLCEve
 
 StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
-    static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getHcalEndcapParameters().getLayerLayout());
-    static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getHcalBarrelParameters().getLayerLayout());
-
     for (StringVector::const_iterator iter = m_settings.m_hCalCaloHitCollections.begin(), iterEnd = m_settings.m_hCalCaloHitCollections.end();
         iter != iterEnd; ++iter)
     {
@@ -175,6 +172,9 @@ StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *const pLCEve
 
             if (0 == nElements)
                 continue;
+
+            static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getHcalEndcapParameters().getLayerLayout());
+            static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getHcalBarrelParameters().getLayerLayout());
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -221,15 +221,15 @@ StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *const pLCEve
                 {
                     streamlog_out(ERROR) << "Failed to extract hcal calo hit: " << statusCodeException.ToString() << std::endl;
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract hcal calo hit, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract hcal calo hit: " << exception.what() << std::endl;
                 }
             }
         }
-        catch (...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(MESSAGE) << "Failed to extract hcal calo hit collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract hcal calo hit collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
@@ -240,9 +240,6 @@ StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *const pLCEve
 
 StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
-    static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getYokeEndcapParameters().getLayerLayout());
-    static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getYokeBarrelParameters().getLayerLayout()); 
-
     for (StringVector::const_iterator iter = m_settings.m_muonCaloHitCollections.begin(), iterEnd = m_settings.m_muonCaloHitCollections.end();
         iter != iterEnd; ++iter)
     {
@@ -253,6 +250,9 @@ StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *const pLCEve
 
             if (0 == nElements)
                 continue;
+
+            static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getYokeEndcapParameters().getLayerLayout());
+            static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getYokeBarrelParameters().getLayerLayout()); 
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -306,15 +306,15 @@ StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *const pLCEve
                 {
                     streamlog_out(ERROR) << "Failed to extract muon hit: " << statusCodeException.ToString() << std::endl;
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract muon hit, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract muon hit: " << exception.what() << std::endl;
                 }
             }
         }
-        catch (...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(MESSAGE) << "Failed to extract muon hit collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract muon hit collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
@@ -325,8 +325,6 @@ StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *const pLCEve
 
 StatusCode CaloHitCreator::CreateLCalCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
-    static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getLcalParameters().getLayerLayout()); 
-
     for (StringVector::const_iterator iter = m_settings.m_lCalCaloHitCollections.begin(), iterEnd = m_settings.m_lCalCaloHitCollections.end();
         iter != iterEnd; ++iter)
     {
@@ -337,6 +335,8 @@ StatusCode CaloHitCreator::CreateLCalCaloHits(const EVENT::LCEvent *const pLCEve
 
             if (0 == nElements)
                 continue;
+
+            static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getLcalParameters().getLayerLayout()); 
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -373,15 +373,15 @@ StatusCode CaloHitCreator::CreateLCalCaloHits(const EVENT::LCEvent *const pLCEve
                 {
                     streamlog_out(ERROR) << "Failed to extract lcal calo hit: " << statusCodeException.ToString() << std::endl;
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract lcal calo hit, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract lcal calo hit: " << exception.what() << std::endl;
                 }
             }
         }
-        catch (...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(MESSAGE) << "Failed to extract lcal calo hit collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract lcal calo hit collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
@@ -392,8 +392,6 @@ StatusCode CaloHitCreator::CreateLCalCaloHits(const EVENT::LCEvent *const pLCEve
 
 StatusCode CaloHitCreator::CreateLHCalCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
-    static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getLHcalParameters().getLayerLayout());
-
     for (StringVector::const_iterator iter = m_settings.m_lHCalCaloHitCollections.begin(), iterEnd = m_settings.m_lHCalCaloHitCollections.end();
         iter != iterEnd; ++iter)
     {
@@ -404,6 +402,8 @@ StatusCode CaloHitCreator::CreateLHCalCaloHits(const EVENT::LCEvent *const pLCEv
 
             if (0 == nElements)
                 continue;
+
+            static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getLHcalParameters().getLayerLayout());
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -440,15 +440,15 @@ StatusCode CaloHitCreator::CreateLHCalCaloHits(const EVENT::LCEvent *const pLCEv
                 {
                     streamlog_out(ERROR) << "Failed to extract lhcal calo hit: " << statusCodeException.ToString() << std::endl;
                 }
-                catch (...)
+                catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract lhcal calo hit, unrecognised exception" << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract lhcal calo hit: " << exception.what() << std::endl;
                 }
             }
         }
-        catch (...)
+        catch (EVENT::Exception &exception)
         {
-            streamlog_out(MESSAGE) << "Failed to extract lhcal calo hit collection: " << *iter << std::endl;
+            streamlog_out(MESSAGE) << "Failed to extract lhcal calo hit collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 

@@ -79,10 +79,10 @@ StatusCode GeometryCreator::CreateGeometry() const
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::Create(*m_pPandora, geometryParameters));
     }
-    catch (gear::UnknownParameterException &e)
+    catch (gear::Exception &exception)
     {
-        streamlog_out(ERROR) << "Failed to extract geometry information from gear." << std::endl;
-        return STATUS_CODE_FAILURE;
+        streamlog_out(ERROR) << "Failure in marlin pandora geometry creator, gear exception: " << exception.what() << std::endl;
+        throw exception;
     }
 
     return STATUS_CODE_SUCCESS;
@@ -119,25 +119,53 @@ void GeometryCreator::SetDefaultSubDetectorParameters(const gear::CalorimeterPar
 
 void GeometryCreator::SetAdditionalSubDetectorParameters(PandoraApi::GeometryParameters &geometryParameters) const
 {
-    PandoraApi::Geometry::Parameters::SubDetectorParameters eCalPlugParameters;
-    const gear::CalorimeterParameters &eCalPlugInputParameters = marlin::Global::GEAR->getEcalPlugParameters();
-    SetDefaultSubDetectorParameters(eCalPlugInputParameters, eCalPlugParameters);
-    geometryParameters.m_additionalSubDetectors["ECalPlug"] = eCalPlugParameters;
+    try
+    {
+        PandoraApi::Geometry::Parameters::SubDetectorParameters eCalPlugParameters;
+        const gear::CalorimeterParameters &eCalPlugInputParameters = marlin::Global::GEAR->getEcalPlugParameters();
+        SetDefaultSubDetectorParameters(eCalPlugInputParameters, eCalPlugParameters);
+        geometryParameters.m_additionalSubDetectors["ECalPlug"] = eCalPlugParameters;
+    }
+    catch (gear::Exception &exception)
+    {
+        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
+    }
 
-    PandoraApi::Geometry::Parameters::SubDetectorParameters hCalRingParameters;
-    const gear::CalorimeterParameters &hCalRingInputParameters = marlin::Global::GEAR->getHcalRingParameters();
-    SetDefaultSubDetectorParameters(hCalRingInputParameters, hCalRingParameters);
-    geometryParameters.m_additionalSubDetectors["HCalRing"] = hCalRingParameters;
+    try
+    {
+        PandoraApi::Geometry::Parameters::SubDetectorParameters hCalRingParameters;
+        const gear::CalorimeterParameters &hCalRingInputParameters = marlin::Global::GEAR->getHcalRingParameters();
+        SetDefaultSubDetectorParameters(hCalRingInputParameters, hCalRingParameters);
+        geometryParameters.m_additionalSubDetectors["HCalRing"] = hCalRingParameters;
+    }
+    catch (gear::Exception &exception)
+    {
+        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
+    }
 
-    PandoraApi::Geometry::Parameters::SubDetectorParameters lCalParameters;
-    const gear::CalorimeterParameters &lCalInputParameters = marlin::Global::GEAR->getLcalParameters();
-    SetDefaultSubDetectorParameters(lCalInputParameters, lCalParameters);
-    geometryParameters.m_additionalSubDetectors["LCal"] = lCalParameters;
+    try
+    {
+        PandoraApi::Geometry::Parameters::SubDetectorParameters lCalParameters;
+        const gear::CalorimeterParameters &lCalInputParameters = marlin::Global::GEAR->getLcalParameters();
+        SetDefaultSubDetectorParameters(lCalInputParameters, lCalParameters);
+        geometryParameters.m_additionalSubDetectors["LCal"] = lCalParameters;
+    }
+    catch (gear::Exception &exception)
+    {
+        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
+    }
 
-    PandoraApi::Geometry::Parameters::SubDetectorParameters lHCalParameters;
-    const gear::CalorimeterParameters &lHCalInputParameters = marlin::Global::GEAR->getLHcalParameters();
-    SetDefaultSubDetectorParameters(lHCalInputParameters, lHCalParameters);
-    geometryParameters.m_additionalSubDetectors["LHCal"] = lHCalParameters;
+    try
+    {
+        PandoraApi::Geometry::Parameters::SubDetectorParameters lHCalParameters;
+        const gear::CalorimeterParameters &lHCalInputParameters = marlin::Global::GEAR->getLHcalParameters();
+        SetDefaultSubDetectorParameters(lHCalInputParameters, lHCalParameters);
+        geometryParameters.m_additionalSubDetectors["LHCal"] = lHCalParameters;
+    }
+    catch (gear::Exception &exception)
+    {
+        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
