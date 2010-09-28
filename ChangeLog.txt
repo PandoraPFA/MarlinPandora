@@ -1,0 +1,35 @@
+************************************************************************
+LCD_WG2_VALIDATION_3 TAG
+************************************************************************
+Reorganized and restructured all creator classes.
+Improved exception handling.
+Specify mc particle vertex and endpoint properties.
+Added ability to calculate number of interaction lengths from IP to calorimeter cells.
+Added detector gap treatment for ILD-based detectors.
+Added track quality cut on fraction of expected TPC hits.
+Added track quality cut on fractional momentum error.
+Removed track start and end helix fits; MarlinUtil classes (ClusterShapes and HelixClass) were providing unreliable track state information.
+Added ExternalClusteringAlgorithm, to recreate any lcio cluster collection in the pandora framework.
+
+************************************************************************
+LCD_WG2_VALIDATION_2 TAG
+************************************************************************
+Corrected HCal barrel normal vectors.
+Allowed non-digital treatment of muon hits - default behaviour is backward compatible.
+Corrected use of Kink/Prong/Split/V0 track particle identification.
+Added V0 track particle identification.
+Added check on expected number of track hits.
+Set default value for minimum number of track hits to 4.
+Set default minimum number of FTD hits (for forward tracks) to 4.
+Protected against invalid/inconsistent tracking geometry information.
+
+************************************************************************
+LCD_WG2_VALIDATION TAG
+************************************************************************
+Added calo hit parameter: nInteractionLengthsFromIp.
+Updated to reflect Pandora header file reorganization.
+New treatment of tracks with FTD, ETD and SET hits to determine whether such tracks reach the ECal surface.
+
+************************************************************************
+TAG V00-01 FOR ILCSOFT USAGE
+************************************************************************
