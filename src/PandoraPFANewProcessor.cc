@@ -53,8 +53,8 @@ void PandoraPFANewProcessor::init()
         m_pMCParticleCreator = new MCParticleCreator(m_mcParticleCreatorSettings);
         m_pPfoCreator = new PfoCreator(m_pfoCreatorSettings);
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pGeometryCreator->CreateGeometry());
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RegisterUserComponents());
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pGeometryCreator->CreateGeometry());
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ReadSettings(*m_pPandora, m_settings.m_pandoraSettingsXmlFile));
     }
     catch (StatusCodeException &statusCodeException)
