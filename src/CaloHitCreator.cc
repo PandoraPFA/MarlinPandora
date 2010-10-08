@@ -495,7 +495,7 @@ void CaloHitCreator::GetEndCapCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
-    const float layerAbsorberThickness(layerLayout.getAbsorberThickness(std::max(0, physicalLayer - 1)));
+    const float layerAbsorberThickness(layerLayout.getAbsorberThickness(physicalLayer));
 
     if (0 == layerAbsorberThickness)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -521,7 +521,7 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
-    const float layerAbsorberThickness(layerLayout.getAbsorberThickness(std::max(0, physicalLayer - 1)));
+    const float layerAbsorberThickness(layerLayout.getAbsorberThickness(physicalLayer));
 
     if (0 == layerAbsorberThickness)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
