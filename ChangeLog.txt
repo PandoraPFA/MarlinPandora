@@ -1,4 +1,11 @@
 ************************************************************************
+TAG V00-02 FOR ILCSOFT USAGE
+************************************************************************
+Correct layer absorber thickness calculation.
+Switch order of calls to register user content and create geometry.
+Set BUILD_32BIT_COMPATIBLE to OFF by default.
+
+************************************************************************
 LCD_WG2_VALIDATION_3 TAG
 ************************************************************************
 Reorganized and restructured all creator classes.
