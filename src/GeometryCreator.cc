@@ -50,7 +50,6 @@ StatusCode GeometryCreator::CreateGeometry() const
         geometryParameters.m_coilInnerRadius        = coilParameters.getDoubleVal("Coil_cryostat_inner_radius");
         geometryParameters.m_coilOuterRadius        = coilParameters.getDoubleVal("Coil_cryostat_outer_radius");
         geometryParameters.m_coilZExtent            = coilParameters.getDoubleVal("Coil_cryostat_half_z");
-        geometryParameters.m_bField                 = marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z();
 
         geometryParameters.m_nRadLengthsInZGap      = 0;
         geometryParameters.m_nIntLengthsInZGap      = 0;
