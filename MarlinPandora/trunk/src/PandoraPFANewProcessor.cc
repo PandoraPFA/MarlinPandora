@@ -6,13 +6,19 @@
  *  $Log: $
  */
 
+#include "marlin/Global.h"
 #include "marlin/Exceptions.h"
 
+#include "gear/BField.h"
+
 #include "Api/PandoraApi.h"
+
+#include "Utilities/HighGranularityPseudoLayerCalculator.h"
 
 #include "ExternalClusteringAlgorithm.h"
 #include "InteractionLengthCalculator.h"
 #include "PandoraPFANewProcessor.h"
+#include "SimpleBFieldCalculator.h"
 
 #include <cstdlib>
 
@@ -170,6 +176,12 @@ StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ExternalClustering",
         new ExternalClusteringAlgorithm::Factory));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerCalculator(*m_pPandora,
+        new pandora::HighGranularityPseudoLayerCalculator()));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldCalculator(*m_pPandora,
+        new SimpleBFieldCalculator()));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -357,6 +369,17 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "Maximum number of layers from candidate outer layer hit to rear of detector",
                             m_caloHitCreatorSettings.m_layersFromEdgeMaxRearDistance,
                             float(250.f));
+
+    // B-field parameters
+    registerProcessorParameter("MuonBarrelBField",
+                            "The bfield in the muon barrel, units Tesla",
+                            SimpleBFieldCalculator::m_muonBarrelBField,
+                            float(1.5f));
+
+    registerProcessorParameter("MuonEndCapBField",
+                            "The bfield in the muon endcap, units Tesla",
+                            SimpleBFieldCalculator::m_muonEndCapBField,
+                            float(0.01f));
 
     // Average interaction length parameters
     registerProcessorParameter("AverageInteractionLengthTracker",
@@ -586,6 +609,8 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
 
 void PandoraPFANewProcessor::FinaliseSteeringParameters()
 {
+    // ATTN: This function seems to be necessary for operations that cannot easily be performed at construction of the processor,
+    // when the steering file is parsed e.g. the call to GEAR to get the inner bfield
     m_caloHitCreatorSettings.m_absorberRadiationLength = m_geometryCreatorSettings.m_absorberRadiationLength;
     m_caloHitCreatorSettings.m_absorberInteractionLength = m_geometryCreatorSettings.m_absorberInteractionLength;
     m_caloHitCreatorSettings.m_hCalEndCapInnerSymmetryOrder = m_geometryCreatorSettings.m_hCalEndCapInnerSymmetryOrder;
@@ -594,6 +619,8 @@ void PandoraPFANewProcessor::FinaliseSteeringParameters()
     m_trackCreatorSettings.m_prongSplitVertexCollections = m_trackCreatorSettings.m_prongVertexCollections;
     m_trackCreatorSettings.m_prongSplitVertexCollections.insert(m_trackCreatorSettings.m_prongSplitVertexCollections.end(),
         m_trackCreatorSettings.m_splitVertexCollections.begin(), m_trackCreatorSettings.m_splitVertexCollections.end());
+
+    SimpleBFieldCalculator::m_innerBField = marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
