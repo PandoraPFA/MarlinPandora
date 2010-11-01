@@ -374,7 +374,7 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     registerProcessorParameter("MuonBarrelBField",
                             "The bfield in the muon barrel, units Tesla",
                             SimpleBFieldCalculator::m_muonBarrelBField,
-                            float(1.5f));
+                            float(-1.5f));
 
     registerProcessorParameter("MuonEndCapBField",
                             "The bfield in the muon endcap, units Tesla",

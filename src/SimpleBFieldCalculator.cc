@@ -11,7 +11,7 @@
 #include <cmath>
 
 float SimpleBFieldCalculator::m_innerBField = 4.f;
-float SimpleBFieldCalculator::m_muonBarrelBField = 1.5f;
+float SimpleBFieldCalculator::m_muonBarrelBField = -1.5f;
 float SimpleBFieldCalculator::m_muonEndCapBField = 0.01f;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
