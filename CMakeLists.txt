@@ -39,10 +39,6 @@ OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" ON )
 # e.g. SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil LCIO GEAR CLHEP GSL RAIDA ROOT" )
 SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil LCIO GEAR PandoraPFANew" )
 
-IF( APPLE )
-    LIST(APPEND ${PROJECT_NAME}_DEPENDS "streamlog")
-ENDIF() 
-
 # set default cmake build type to RelWithDebInfo
 # possible options are: None Debug Release RelWithDebInfo MinSizeRel
 IF( NOT CMAKE_BUILD_TYPE )
