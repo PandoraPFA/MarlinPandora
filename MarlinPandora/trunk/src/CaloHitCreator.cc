@@ -496,14 +496,22 @@ void CaloHitCreator::GetEndCapCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
     const float layerAbsorberThickness(layerLayout.getAbsorberThickness(physicalLayer));
-
-    if (0 == layerAbsorberThickness)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
     caloHitParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * layerAbsorberThickness;
     caloHitParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * layerAbsorberThickness;
 
-    absorberCorrection = layerLayout.getAbsorberThickness(0) / layerAbsorberThickness;
+    absorberCorrection = 1.;
+    for (unsigned int i = 0, iMax = layerLayout.getNLayers(); i < iMax; ++i)
+    {
+        const float absorberThickness(layerLayout.getAbsorberThickness(i));
+
+        if (absorberThickness <= 0.)
+            continue;
+
+        if (layerAbsorberThickness > 0.)
+            absorberCorrection = absorberThickness / layerAbsorberThickness;
+
+        break;
+    }
 
     caloHitParameters.m_normalVector = (pCaloHit->getPosition()[2] > 0) ? pandora::CartesianVector(0, 0, 1) : pandora::CartesianVector(0, 0, -1);
 }
@@ -522,14 +530,22 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
     const float layerAbsorberThickness(layerLayout.getAbsorberThickness(physicalLayer));
-
-    if (0 == layerAbsorberThickness)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
     caloHitParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * layerAbsorberThickness;
     caloHitParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * layerAbsorberThickness;
 
-    absorberCorrection = layerLayout.getAbsorberThickness(0) / layerAbsorberThickness;
+    absorberCorrection = 1.;
+    for (unsigned int i = 0, iMax = layerLayout.getNLayers(); i < iMax; ++i)
+    {
+        const float absorberThickness(layerLayout.getAbsorberThickness(i));
+
+        if (absorberThickness <= 0.)
+            continue;
+
+        if (layerAbsorberThickness > 0.)
+            absorberCorrection = absorberThickness / layerAbsorberThickness;
+
+        break;
+    }
 
     if (barrelSymmetryOrder > 0)
     {
@@ -548,7 +564,8 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
         }
         else
         {
-            caloHitParameters.m_normalVector = (pCaloHitPosition[0] > 0) ? pandora::CartesianVector(1, 0, 0) : pandora::CartesianVector(-1, 0, 0);
+            caloHitParameters.m_normalVector = (pCaloHitPosition[0] > 0) ? pandora::CartesianVector(1, 0, 0) :
+                pandora::CartesianVector(-1, 0, 0);
         }
     }
 }
