@@ -82,7 +82,7 @@ public:
      * 
      *  @param  pLCEvent the lcio event
      */    
-    StatusCode CreateCaloHits(const LCEvent *const pLCEvent);
+    pandora::StatusCode CreateCaloHits(const LCEvent *const pLCEvent);
 
     /**
      *  @brief  Get the calorimeter hit vector
@@ -102,35 +102,35 @@ private:
      * 
      *  @param  pLCEvent the lcio event
      */
-    StatusCode CreateECalCaloHits(const EVENT::LCEvent *const pLCEvent);
+    pandora::StatusCode CreateECalCaloHits(const EVENT::LCEvent *const pLCEvent);
 
     /**
      *  @brief  Create hcal calo hits
      * 
      *  @param  pLCEvent the lcio event
      */
-    StatusCode CreateHCalCaloHits(const EVENT::LCEvent *const pLCEvent);
+    pandora::StatusCode CreateHCalCaloHits(const EVENT::LCEvent *const pLCEvent);
 
     /**
      *  @brief  Create muon calo hits
      * 
      *  @param  pLCEvent the lcio event
      */
-    StatusCode CreateMuonCaloHits(const EVENT::LCEvent *const pLCEvent);
+    pandora::StatusCode CreateMuonCaloHits(const EVENT::LCEvent *const pLCEvent);
 
     /**
      *  @brief  Create lcal calo hits
      * 
      *  @param  pLCEvent the lcio event
      */    
-    StatusCode CreateLCalCaloHits(const EVENT::LCEvent *const pLCEvent);
+    pandora::StatusCode CreateLCalCaloHits(const EVENT::LCEvent *const pLCEvent);
 
     /**
      *  @brief  Create lhcal calo hits
      * 
      *  @param  pLCEvent the lcio event
      */
-    StatusCode CreateLHCalCaloHits(const EVENT::LCEvent *const pLCEvent);
+    pandora::StatusCode CreateLHCalCaloHits(const EVENT::LCEvent *const pLCEvent);
 
     /**
      *  @brief  Get common calo hit properties: position, parent address, input energy and time

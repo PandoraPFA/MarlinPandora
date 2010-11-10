@@ -49,18 +49,18 @@ TrackCreator::TrackCreator(const Settings &settings) :
 {
     // Check tpc parameters
     if ((0.f == m_tpcZmax) || (0.f == m_tpcInnerR) || (m_tpcInnerR == m_tpcOuterR))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     m_cosTpc = m_tpcZmax / std::sqrt(m_tpcZmax * m_tpcZmax + m_tpcInnerR * m_tpcInnerR);
 
     // Check ftd parameters
     if ((0 == m_nFtdLayers) || (m_nFtdLayers != m_ftdInnerRadii.size()) || (m_nFtdLayers != m_ftdOuterRadii.size()))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     for (unsigned int iFtdLayer = 0; iFtdLayer < m_nFtdLayers; ++iFtdLayer)
     {
         if ((0.f == m_ftdOuterRadii[iFtdLayer]) || (0.f == m_ftdInnerRadii[iFtdLayer]))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);;
+            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);;
     }
 
     m_tanLambdaFtd = m_ftdZPositions[0] / m_ftdOuterRadii[0];
@@ -70,7 +70,7 @@ TrackCreator::TrackCreator(const Settings &settings) :
     const DoubleVector &setInnerRadii(marlin::Global::GEAR->getGearParameters("SET").getDoubleVals("SETLayerRadius"));
 
     if (etdZPositions.empty() || setInnerRadii.empty())
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     m_minEtdZPosition = *(std::min_element(etdZPositions.begin(), etdZPositions.end()));
     m_minSetRadius = *(std::min_element(setInnerRadii.begin(), setInnerRadii.end()));
@@ -84,18 +84,18 @@ TrackCreator::~TrackCreator()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackCreator::CreateTrackAssociations(const EVENT::LCEvent *const pLCEvent)
+pandora::StatusCode TrackCreator::CreateTrackAssociations(const EVENT::LCEvent *const pLCEvent)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractKinks(pLCEvent));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractProngsAndSplits(pLCEvent));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractV0s(pLCEvent));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->ExtractKinks(pLCEvent));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->ExtractProngsAndSplits(pLCEvent));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->ExtractV0s(pLCEvent));
 
-    return STATUS_CODE_SUCCESS;
+    return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackCreator::ExtractKinks(const EVENT::LCEvent *const pLCEvent)
+pandora::StatusCode TrackCreator::ExtractKinks(const EVENT::LCEvent *const pLCEvent)
 {
     for (StringVector::const_iterator iter = m_settings.m_kinkVertexCollections.begin(), iterEnd = m_settings.m_kinkVertexCollections.end();
         iter != iterEnd; ++iter)
@@ -167,7 +167,7 @@ StatusCode TrackCreator::ExtractKinks(const EVENT::LCEvent *const pLCEvent)
                         {
                             for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
                             {
-                                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackParentDaughterRelationship(*m_pPandora,
+                                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackParentDaughterRelationship(*m_pPandora,
                                     pTrack, trackVec[jTrack]));
                             }
                         }
@@ -177,7 +177,7 @@ StatusCode TrackCreator::ExtractKinks(const EVENT::LCEvent *const pLCEvent)
                         {
                             for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
                             {
-                                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackSiblingRelationship(*m_pPandora,
+                                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackSiblingRelationship(*m_pPandora,
                                     pTrack, trackVec[jTrack]));
                             }
                         }
@@ -195,12 +195,12 @@ StatusCode TrackCreator::ExtractKinks(const EVENT::LCEvent *const pLCEvent)
         }
     }
 
-    return STATUS_CODE_SUCCESS;
+    return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackCreator::ExtractProngsAndSplits(const EVENT::LCEvent *const pLCEvent)
+pandora::StatusCode TrackCreator::ExtractProngsAndSplits(const EVENT::LCEvent *const pLCEvent)
 {
     for (StringVector::const_iterator iter = m_settings.m_prongSplitVertexCollections.begin(), iterEnd = m_settings.m_prongSplitVertexCollections.end();
         iter != iterEnd; ++iter)
@@ -236,7 +236,7 @@ StatusCode TrackCreator::ExtractProngsAndSplits(const EVENT::LCEvent *const pLCE
                         {
                             for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
                             {
-                                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackParentDaughterRelationship(*m_pPandora,
+                                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackParentDaughterRelationship(*m_pPandora,
                                     pTrack, trackVec[jTrack]));
                             }
                         }
@@ -246,7 +246,7 @@ StatusCode TrackCreator::ExtractProngsAndSplits(const EVENT::LCEvent *const pLCE
                         {
                             for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
                             {
-                                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackSiblingRelationship(*m_pPandora,
+                                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackSiblingRelationship(*m_pPandora,
                                     pTrack, trackVec[jTrack]));
                             }
                         }
@@ -264,12 +264,12 @@ StatusCode TrackCreator::ExtractProngsAndSplits(const EVENT::LCEvent *const pLCE
         }
     }
 
-    return STATUS_CODE_SUCCESS;
+    return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackCreator::ExtractV0s(const EVENT::LCEvent *const pLCEvent)
+pandora::StatusCode TrackCreator::ExtractV0s(const EVENT::LCEvent *const pLCEvent)
 {
     for (StringVector::const_iterator iter = m_settings.m_v0VertexCollections.begin(), iterEnd = m_settings.m_v0VertexCollections.end();
         iter != iterEnd; ++iter)
@@ -328,7 +328,7 @@ StatusCode TrackCreator::ExtractV0s(const EVENT::LCEvent *const pLCEvent)
                         // Make track sibling relationships
                         for (unsigned int jTrack = iTrack + 1; jTrack < nTracks; ++jTrack)
                         {
-                            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackSiblingRelationship(*m_pPandora,
+                            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackSiblingRelationship(*m_pPandora,
                                 pTrack, trackVec[jTrack]));
                         }
                     }
@@ -345,7 +345,7 @@ StatusCode TrackCreator::ExtractV0s(const EVENT::LCEvent *const pLCEvent)
         }
     }
 
-    return STATUS_CODE_SUCCESS;
+    return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -365,7 +365,7 @@ bool TrackCreator::IsConflictingRelationship(const EVENT::TrackVec &trackVec) co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackCreator::CreateTracks(const EVENT::LCEvent *const pLCEvent) const
+pandora::StatusCode TrackCreator::CreateTracks(const EVENT::LCEvent *const pLCEvent) const
 {
     for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), iterEnd = m_settings.m_trackCollections.end();
         iter != iterEnd; ++iter)
@@ -432,10 +432,10 @@ StatusCode TrackCreator::CreateTracks(const EVENT::LCEvent *const pLCEvent) cons
                     this->TrackReachesECAL(pTrack, trackParameters);
                     this->DefineTrackPfoUsage(pTrack, trackParameters);
 
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(*m_pPandora, trackParameters));
+                    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(*m_pPandora, trackParameters));
                     m_trackVector.push_back(pTrack);
                 }
-                catch (StatusCodeException &statusCodeException)
+                catch (pandora::StatusCodeException &statusCodeException)
                 {
                     streamlog_out(ERROR) << "Failed to extract a track: " << statusCodeException.ToString() << std::endl;
                 }
@@ -451,7 +451,7 @@ StatusCode TrackCreator::CreateTracks(const EVENT::LCEvent *const pLCEvent) cons
         }
     }
 
-    return STATUS_CODE_SUCCESS;
+    return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -480,12 +480,12 @@ void TrackCreator::FitTrackHelices(const EVENT::Track *const pTrack, PandoraApi:
     const float zEnd((signPz > 0) ? zMax : zMin);
 
     pandora::CartesianVector startPosition, startMomentum;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, pHelixFit->GetPointInZ(zStart, pHelixFit->GetReferencePoint(), startPosition));
+    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, pHelixFit->GetPointInZ(zStart, pHelixFit->GetReferencePoint(), startPosition));
     startMomentum = pHelixFit->GetExtrapolatedMomentum(startPosition);
     trackParameters.m_trackStateAtStart = pandora::TrackState(startPosition, startMomentum);
 
     pandora::CartesianVector endPosition, endMomentum;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, pHelixFit->GetPointInZ(zEnd, pHelixFit->GetReferencePoint(), endPosition));
+    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, pHelixFit->GetPointInZ(zEnd, pHelixFit->GetReferencePoint(), endPosition));
     endMomentum = pHelixFit->GetExtrapolatedMomentum(endPosition);
     trackParameters.m_trackStateAtEnd = pandora::TrackState(endPosition, endMomentum);
 
@@ -517,10 +517,10 @@ pandora::TrackState TrackCreator::GetECalProjection(const pandora::Helix *const 
             float time(std::numeric_limits<float>::max());
             const float phi(twopi_n * static_cast<float>(i) + m_eCalBarrelInnerPhi0);
 
-            const StatusCode statusCode(pHelix->GetPointInXY(m_eCalBarrelInnerR * std::cos(phi), m_eCalBarrelInnerR * std::sin(phi),
+            const pandora::StatusCode statusCode(pHelix->GetPointInXY(m_eCalBarrelInnerR * std::cos(phi), m_eCalBarrelInnerR * std::sin(phi),
                 std::cos(phi + 0.5 * pi), std::sin(phi + 0.5 * pi), referencePoint, barrelProjection, time));
 
-            if ((STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
+            if ((pandora::STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
             {
                 minTime = time;
                 bestECalProjection = barrelProjection;
@@ -531,9 +531,9 @@ pandora::TrackState TrackCreator::GetECalProjection(const pandora::Helix *const 
     {
         // Cylinder
         float time(std::numeric_limits<float>::max());
-        const StatusCode statusCode(pHelix->GetPointOnCircle(m_eCalBarrelInnerR, referencePoint, barrelProjection, time));
+        const pandora::StatusCode statusCode(pHelix->GetPointOnCircle(m_eCalBarrelInnerR, referencePoint, barrelProjection, time));
 
-        if ((STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
+        if ((pandora::STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
         {
             minTime = time;
             bestECalProjection = barrelProjection;
@@ -541,7 +541,7 @@ pandora::TrackState TrackCreator::GetECalProjection(const pandora::Helix *const 
     }
 
     if (!bestECalProjection.IsInitialized())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
     return pandora::TrackState(bestECalProjection, pHelix->GetExtrapolatedMomentum(bestECalProjection));
 }

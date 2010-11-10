@@ -49,21 +49,21 @@ public:
      * 
      *  @param  pLCEvent the lcio event
      */    
-    StatusCode CreateMCParticles(const EVENT::LCEvent *const pLCEvent) const;
+    pandora::StatusCode CreateMCParticles(const EVENT::LCEvent *const pLCEvent) const;
 
     /**
      *  @brief  Create Track to mc particle relationships
      *
      *  @param  pLCEvent the lcio event
      */
-    StatusCode CreateTrackToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const;
+    pandora::StatusCode CreateTrackToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const;
 
     /**
      *  @brief  Create calo hit to mc particle relationships
      *
      *  @param  pLCEvent the lcio event
      */
-    StatusCode CreateCaloHitToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const;
+    pandora::StatusCode CreateCaloHitToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const;
 
 private:
     const Settings          m_settings;                         ///< The mc particle creator settings

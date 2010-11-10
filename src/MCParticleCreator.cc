@@ -40,7 +40,7 @@ MCParticleCreator::~MCParticleCreator()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MCParticleCreator::CreateMCParticles(const EVENT::LCEvent *const pLCEvent) const
+pandora::StatusCode MCParticleCreator::CreateMCParticles(const EVENT::LCEvent *const pLCEvent) const
 {
     for (StringVector::const_iterator iter = m_settings.m_mcParticleCollections.begin(), iterEnd = m_settings.m_mcParticleCollections.end();
         iter != iterEnd; ++iter)
@@ -66,17 +66,17 @@ StatusCode MCParticleCreator::CreateMCParticles(const EVENT::LCEvent *const pLCE
                     mcParticleParameters.m_endpoint = pandora::CartesianVector(pMcParticle->getEndpoint()[0], pMcParticle->getEndpoint()[1],
                         pMcParticle->getEndpoint()[2]);
 
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*m_pPandora, mcParticleParameters));
+                    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*m_pPandora, mcParticleParameters));
 
                     // Create parent-daughter relationships
                     for(MCParticleVec::const_iterator itDaughter = pMcParticle->getDaughters().begin(),
                         itDaughterEnd = pMcParticle->getDaughters().end(); itDaughter != itDaughterEnd; ++itDaughter)
                     {
-                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetMCParentDaughterRelationship(*m_pPandora, pMcParticle,
-                            *itDaughter));
+                        PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetMCParentDaughterRelationship(*m_pPandora,
+                            pMcParticle, *itDaughter));
                     }
                 }
-                catch (StatusCodeException &statusCodeException)
+                catch (pandora::StatusCodeException &statusCodeException)
                 {
                     streamlog_out(ERROR) << "Failed to extract MCParticle: " << statusCodeException.ToString() << std::endl;
                 }
@@ -92,12 +92,12 @@ StatusCode MCParticleCreator::CreateMCParticles(const EVENT::LCEvent *const pLCE
         }
     }
 
-    return STATUS_CODE_SUCCESS;
+    return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const
+pandora::StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const
 {
     for (StringVector::const_iterator iter = m_settings.m_lcTrackRelationCollections.begin(), iterEnd = m_settings.m_lcTrackRelationCollections.end();
          iter != iterEnd; ++iter)
@@ -148,10 +148,10 @@ StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(const EVENT::
                     if (NULL == pBestMCParticle)
                         continue;
 
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackToMCParticleRelationship(*m_pPandora, pTrack,
+                    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetTrackToMCParticleRelationship(*m_pPandora, pTrack,
                         pBestMCParticle));
                 }
-                catch (StatusCodeException &statusCodeException)
+                catch (pandora::StatusCodeException &statusCodeException)
                 {
                     streamlog_out(ERROR) << "Failed to extract track to mc particle relationship: " << statusCodeException.ToString() << std::endl;
                 }
@@ -167,12 +167,12 @@ StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(const EVENT::
         }
     }
 
-    return STATUS_CODE_SUCCESS;
+    return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MCParticleCreator::CreateCaloHitToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const
+pandora::StatusCode MCParticleCreator::CreateCaloHitToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const
 {
     typedef std::map<MCParticle *, float> MCParticleToEnergyWeightMap;
     MCParticleToEnergyWeightMap mcParticleToEnergyWeightMap;
@@ -211,11 +211,11 @@ StatusCode MCParticleCreator::CreateCaloHitToMCParticleRelationships(const EVENT
                     for (MCParticleToEnergyWeightMap::const_iterator mcParticleIter = mcParticleToEnergyWeightMap.begin(),
                         mcParticleIterEnd = mcParticleToEnergyWeightMap.end(); mcParticleIter != mcParticleIterEnd; ++mcParticleIter)
                     {
-                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetCaloHitToMCParticleRelationship(*m_pPandora,
+                        PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetCaloHitToMCParticleRelationship(*m_pPandora,
                             *caloHitIter, mcParticleIter->first, mcParticleIter->second));
                     }
                 }
-                catch (StatusCodeException &statusCodeException)
+                catch (pandora::StatusCodeException &statusCodeException)
                 {
                     streamlog_out(ERROR) << "Failed to extract calo hit to mc particle relationship: " << statusCodeException.ToString() << std::endl;
                 }
@@ -231,5 +231,5 @@ StatusCode MCParticleCreator::CreateCaloHitToMCParticleRelationships(const EVENT
         }
     }
 
-    return STATUS_CODE_SUCCESS;
+    return pandora::STATUS_CODE_SUCCESS;
 }

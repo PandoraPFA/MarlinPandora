@@ -99,7 +99,7 @@ private:
      *  @brief  Register user algorithm factories, energy correction functions and particle id functions,
      *          insert user code here
      */
-    StatusCode RegisterUserComponents() const;
+    pandora::StatusCode RegisterUserComponents() const;
 
     /**
      *  @brief  Process steering file parameters, insert user code here
@@ -149,7 +149,7 @@ inline marlin::Processor *PandoraPFANewProcessor::newProcessor()
 inline pandora::Pandora *PandoraPFANewProcessor::GetPandora()
 {
     if (NULL == m_pPandora)
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
     return m_pPandora;
 }
@@ -159,7 +159,7 @@ inline pandora::Pandora *PandoraPFANewProcessor::GetPandora()
 inline EVENT::LCEvent *PandoraPFANewProcessor::GetCurrentEvent()
 {
     if (NULL == m_pLcioEvent)
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
     return m_pLcioEvent;
 }

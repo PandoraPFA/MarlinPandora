@@ -95,14 +95,14 @@ public:
      * 
      *  @param  pLCEvent the lcio event
      */
-    StatusCode CreateTrackAssociations(const EVENT::LCEvent *const pLCEvent);
+    pandora::StatusCode CreateTrackAssociations(const EVENT::LCEvent *const pLCEvent);
 
     /**
      *  @brief  Create tracks, insert user code here
      * 
      *  @param  pLCEvent the lcio event
      */
-    StatusCode CreateTracks(const EVENT::LCEvent *const pLCEvent) const;
+    pandora::StatusCode CreateTracks(const EVENT::LCEvent *const pLCEvent) const;
 
     /**
      *  @brief  Get the track vector
@@ -122,21 +122,21 @@ private:
      * 
      *  @param  pLCEvent the lcio event
      */
-    StatusCode ExtractKinks(const EVENT::LCEvent *const pLCEvent);
+    pandora::StatusCode ExtractKinks(const EVENT::LCEvent *const pLCEvent);
 
     /**
      *  @brief  Extract prong and split information from specified lcio collections
      * 
      *  @param  pLCEvent the lcio event
      */
-    StatusCode ExtractProngsAndSplits(const EVENT::LCEvent *const pLCEvent);
+    pandora::StatusCode ExtractProngsAndSplits(const EVENT::LCEvent *const pLCEvent);
 
     /**
      *  @brief  Extract v0 information from specified lcio collections
      * 
      *  @param  pLCEvent the lcio event
      */
-    StatusCode ExtractV0s(const EVENT::LCEvent *const pLCEvent);
+    pandora::StatusCode ExtractV0s(const EVENT::LCEvent *const pLCEvent);
 
     /**
      *  @brief  Whether the track vertex conflicts with previously provided relationship information
