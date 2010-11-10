@@ -46,7 +46,7 @@ public:
      * 
      *  @param  pLCEvent the lcio event
      */    
-    StatusCode CreateParticleFlowObjects(EVENT::LCEvent *pLCEvent);
+    pandora::StatusCode CreateParticleFlowObjects(EVENT::LCEvent *pLCEvent);
 
 private:
     const Settings          m_settings;                         ///< The pfo creator settings

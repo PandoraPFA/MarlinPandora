@@ -54,7 +54,7 @@ public:
     /**
      *  @brief  Create geometry
      */
-    StatusCode CreateGeometry() const;
+    pandora::StatusCode CreateGeometry() const;
 
 private:
     /**
@@ -78,28 +78,28 @@ private:
      * 
      *  @param  geometryParameters the pandora geometry parameters
      */
-    StatusCode SetILDSpecificGeometry(PandoraApi::GeometryParameters &geometryParameters) const;
+    pandora::StatusCode SetILDSpecificGeometry(PandoraApi::GeometryParameters &geometryParameters) const;
 
     /**
      *  @brief  Specify positions of hcal barrel box gaps - ILD specific
      * 
      *  @param  geometryParameters the pandora geometry parameters
      */
-    StatusCode CreateHCalBarrelBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const;
+    pandora::StatusCode CreateHCalBarrelBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const;
 
     /**
      *  @brief  Specify positions of hcal end cap box gaps - ILD specific
      * 
      *  @param  geometryParameters the pandora geometry parameters
      */
-    StatusCode CreateHCalEndCapBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const;
+    pandora::StatusCode CreateHCalEndCapBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const;
 
     /**
      *  @brief  Specify positions of hcal barrel concentric polygon gaps - ILD specific
      * 
      *  @param  geometryParameters the pandora geometry parameters
      */
-    StatusCode CreateHCalBarrelConcentricGaps(PandoraApi::GeometryParameters &geometryParameters) const;
+    pandora::StatusCode CreateHCalBarrelConcentricGaps(PandoraApi::GeometryParameters &geometryParameters) const;
 
     /**
      *  @brief  Create box gaps at regular positions on polygonal prism, oriented along main z axis - ILD specific
@@ -114,7 +114,7 @@ private:
      *  @param  geometryParameters the pandora geometry parameters
      *  @param  vertexOffset position offset for vertex that doesn't point back to origin of xy plane
      */
-    StatusCode CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float minZ,
+    pandora::StatusCode CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float minZ,
         float maxZ, float gapWidth, PandoraApi::GeometryParameters &geometryParameters,
         pandora::CartesianVector vertexOffset = pandora::CartesianVector(0, 0, 0)) const;
 

@@ -42,11 +42,10 @@ PfoCreator::~PfoCreator()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEvent)
+pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEvent)
 {
     pandora::ParticleFlowObjectList particleFlowObjectList;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraApi::GetParticleFlowObjects(*m_pPandora,
-        particleFlowObjectList));
+    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::GetParticleFlowObjects(*m_pPandora, particleFlowObjectList));
 
     IMPL::LCCollectionVec *pClusterCollection = new IMPL::LCCollectionVec(LCIO::CLUSTER);
     IMPL::LCCollectionVec *pReconstructedParticleCollection = new IMPL::LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
@@ -150,5 +149,5 @@ StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEvent)
     pLCEvent->addCollection(pClusterCollection, m_settings.m_clusterCollectionName.c_str());
     pLCEvent->addCollection(pReconstructedParticleCollection, m_settings.m_pfoCollectionName.c_str());
 
-    return STATUS_CODE_SUCCESS;
+    return pandora::STATUS_CODE_SUCCESS;
 }
