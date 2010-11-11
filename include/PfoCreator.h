@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/include/PfoCreator.h
+ *  @file   MarlinPandora/include/PfoCreator.h
  * 
  *  @brief  Header file for the pfo creator class.
  * 

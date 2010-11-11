@@ -1,5 +1,5 @@
 /**
- *  @file   MarlinPandora/src/Algorithms/ExternalClusteringAlgorithm.cc
+ *  @file   MarlinPandora/src/ExternalClusteringAlgorithm.cc
  * 
  *  @brief  Implementation of the external clustering algorithm class.
  * 

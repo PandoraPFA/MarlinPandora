@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/src/InteractionLengthCalculator.cc
+ *  @file   MarlinPandora/src/InteractionLengthCalculator.cc
  * 
  *  @brief  Implementation of the calo hit creator class.
  * 

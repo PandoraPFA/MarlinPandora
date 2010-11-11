@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/src/PandoraPFANewProcessor.cc
+ *  @file   MarlinPandora/src/PandoraPFANewProcessor.cc
  * 
  *  @brief  Implementation of the pandora pfa new processor class.
  * 
@@ -142,7 +142,7 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PandoraPFANewProcessor::check(LCEvent *pLCEvent)
+void PandoraPFANewProcessor::check(LCEvent */*pLCEvent*/)
 {
     streamlog_out(MESSAGE) << "PandoraPFANewProcessor - Check" << std::endl;
 }

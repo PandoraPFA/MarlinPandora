@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/include/MCParticleCreator.h
+ *  @file   MarlinPandora/include/MCParticleCreator.h
  * 
  *  @brief  Header file for the mc particle creator class.
  * 

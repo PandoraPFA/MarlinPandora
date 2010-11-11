@@ -1,5 +1,5 @@
 /**
- *  @file   MarlinPandora/include/Algorithms/ExternalClusteringAlgorithm.h
+ *  @file   MarlinPandora/include/ExternalClusteringAlgorithm.h
  * 
  *  @brief  Header file for the external clustering algorithm class.
  * 

@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/include/TrackCreator.h
+ *  @file   MarlinPandora/include/TrackCreator.h
  * 
  *  @brief  Header file for the track creator class.
  * 
@@ -212,11 +212,10 @@ private:
      * 
      *  @param  pTrack the lcio track
      *  @param  trackParameters the track parameters
-     *  @param  rInner the track inner radius
      * 
      *  @return boolean
      */
-    bool PassesQualityCuts(const EVENT::Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters, const float rInner) const;
+    bool PassesQualityCuts(const EVENT::Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters) const;
 
     const Settings          m_settings;                     ///< The track creator settings
     const pandora::Pandora *m_pPandora;                     ///< Address of the pandora object to create tracks and track relationships

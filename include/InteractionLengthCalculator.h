@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/include/InteractionLengthCalculator.h
+ *  @file   MarlinPandora/include/InteractionLengthCalculator.h
  * 
  *  @brief  Header file for the interaction length calculator class.
  * 

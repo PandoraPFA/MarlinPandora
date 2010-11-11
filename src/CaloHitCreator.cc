@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/src/CaloHitCreator.cc
+ *  @file   MarlinPandora/src/CaloHitCreator.cc
  * 
  *  @brief  Implementation of the calo hit creator class.
  * 
