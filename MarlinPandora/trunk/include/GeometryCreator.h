@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/include/GeometryCreator.h
+ *  @file   MarlinPandora/include/GeometryCreator.h
  * 
  *  @brief  Header file for the geometry creator class.
  * 
@@ -82,24 +82,18 @@ private:
 
     /**
      *  @brief  Specify positions of hcal barrel box gaps - ILD specific
-     * 
-     *  @param  geometryParameters the pandora geometry parameters
      */
-    pandora::StatusCode CreateHCalBarrelBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const;
+    pandora::StatusCode CreateHCalBarrelBoxGaps() const;
 
     /**
      *  @brief  Specify positions of hcal end cap box gaps - ILD specific
-     * 
-     *  @param  geometryParameters the pandora geometry parameters
      */
-    pandora::StatusCode CreateHCalEndCapBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const;
+    pandora::StatusCode CreateHCalEndCapBoxGaps() const;
 
     /**
      *  @brief  Specify positions of hcal barrel concentric polygon gaps - ILD specific
-     * 
-     *  @param  geometryParameters the pandora geometry parameters
      */
-    pandora::StatusCode CreateHCalBarrelConcentricGaps(PandoraApi::GeometryParameters &geometryParameters) const;
+    pandora::StatusCode CreateHCalBarrelConcentricGaps() const;
 
     /**
      *  @brief  Create box gaps at regular positions on polygonal prism, oriented along main z axis - ILD specific
@@ -111,12 +105,10 @@ private:
      *  @param  minZ the minimum z coordinate
      *  @param  maxZ the maximum z coordinate
      *  @param  gapWidth the gap width
-     *  @param  geometryParameters the pandora geometry parameters
      *  @param  vertexOffset position offset for vertex that doesn't point back to origin of xy plane
      */
     pandora::StatusCode CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius, float minZ,
-        float maxZ, float gapWidth, PandoraApi::GeometryParameters &geometryParameters,
-        pandora::CartesianVector vertexOffset = pandora::CartesianVector(0, 0, 0)) const;
+        float maxZ, float gapWidth, pandora::CartesianVector vertexOffset = pandora::CartesianVector(0, 0, 0)) const;
 
     const Settings          m_settings;                     ///< The geometry creator settings
     const pandora::Pandora *m_pPandora;                     ///< Address of the pandora object to create the geometry

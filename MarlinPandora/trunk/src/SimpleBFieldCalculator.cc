@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/src/SimpleBFieldCalculator.cc
+ *  @file   MarlinPandora/src/SimpleBFieldCalculator.cc
  * 
  *  @brief  Implementation of the simple bfield calculator class.
  * 
@@ -20,7 +20,7 @@ void SimpleBFieldCalculator::Initialize(const pandora::GeometryHelper *const pGe
 {
     m_muonEndCapInnerZ = pGeometryHelper->GetMuonEndCapParameters().GetInnerZCoordinate();
     m_coilMidPointR = (0.5f * (pGeometryHelper->GetCoilInnerRadius() + pGeometryHelper->GetCoilOuterRadius()));
-};
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -33,4 +33,4 @@ float SimpleBFieldCalculator::GetBField(const pandora::CartesianVector &position
         return m_muonBarrelBField;
 
     return m_innerBField;
-};
+}

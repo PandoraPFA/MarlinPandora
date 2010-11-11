@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/src/GeometryCreator.cc
+ *  @file   MarlinPandora/src/GeometryCreator.cc
  * 
  *  @brief  Implementation of the geometry creator class.
  * 
@@ -187,16 +187,16 @@ pandora::StatusCode GeometryCreator::SetILDSpecificGeometry(PandoraApi::Geometry
     geometryParameters.m_hCalEndCapParameters.m_outerPhiCoordinate = m_settings.m_hCalEndCapOuterPhiCoordinate;
 
     // Gaps in detector active material
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelBoxGaps(geometryParameters));
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalEndCapBoxGaps(geometryParameters));
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelConcentricGaps(geometryParameters));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelBoxGaps());
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalEndCapBoxGaps());
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelConcentricGaps());
 
     return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode GeometryCreator::CreateHCalBarrelBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const
+pandora::StatusCode GeometryCreator::CreateHCalBarrelBoxGaps() const
 {
     const std::string detectorName(marlin::Global::GEAR->getDetectorName());
 
@@ -217,7 +217,7 @@ pandora::StatusCode GeometryCreator::CreateHCalBarrelBoxGaps(PandoraApi::Geometr
 
     const float staveGap(hCalBarrelParameters.getDoubleVal("Hcal_stave_gaps"));
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateRegularBoxGaps(innerSymmetryOrder, phi0, innerRadius, outerRadius,
-        -outerZ, outerZ, staveGap, geometryParameters));
+        -outerZ, outerZ, staveGap));
 
     static const float pi(std::acos(-1.));
     const float outerPseudoPhi0(pi / static_cast<float>(innerSymmetryOrder));
@@ -231,14 +231,14 @@ pandora::StatusCode GeometryCreator::CreateHCalBarrelBoxGaps(PandoraApi::Geometr
 
     const float middleStaveGap(hCalBarrelParameters.getDoubleVal("Hcal_middle_stave_gaps"));
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateRegularBoxGaps(innerSymmetryOrder, outerPseudoPhi0,
-        innerRadius / cosOuterPseudoPhi0, outerRadius, -outerZ, outerZ, middleStaveGap, geometryParameters));
+        innerRadius / cosOuterPseudoPhi0, outerRadius, -outerZ, outerZ, middleStaveGap));
 
     return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode GeometryCreator::CreateHCalEndCapBoxGaps(PandoraApi::GeometryParameters &geometryParameters) const
+pandora::StatusCode GeometryCreator::CreateHCalEndCapBoxGaps() const
 {
     const gear::CalorimeterParameters &hCalEndCapParameters = marlin::Global::GEAR->getHcalEndcapParameters();
 
@@ -249,11 +249,11 @@ pandora::StatusCode GeometryCreator::CreateHCalEndCapBoxGaps(PandoraApi::Geometr
     const float outerZ(hCalEndCapParameters.getExtent()[3]);
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateRegularBoxGaps(m_settings.m_hCalEndCapInnerSymmetryOrder,
-        m_settings.m_hCalEndCapInnerPhiCoordinate, innerRadius, outerRadius, innerZ, outerZ, staveGap, geometryParameters,
+        m_settings.m_hCalEndCapInnerPhiCoordinate, innerRadius, outerRadius, innerZ, outerZ, staveGap,
         pandora::CartesianVector(-innerRadius, 0, 0)));
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateRegularBoxGaps(m_settings.m_hCalEndCapInnerSymmetryOrder,
-        m_settings.m_hCalEndCapInnerPhiCoordinate, innerRadius, outerRadius, -outerZ, -innerZ, staveGap, geometryParameters,
+        m_settings.m_hCalEndCapInnerPhiCoordinate, innerRadius, outerRadius, -outerZ, -innerZ, staveGap,
         pandora::CartesianVector(innerRadius, 0, 0)));
 
     return pandora::STATUS_CODE_SUCCESS;
@@ -261,7 +261,7 @@ pandora::StatusCode GeometryCreator::CreateHCalEndCapBoxGaps(PandoraApi::Geometr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode GeometryCreator::CreateHCalBarrelConcentricGaps(PandoraApi::GeometryParameters &geometryParameters) const
+pandora::StatusCode GeometryCreator::CreateHCalBarrelConcentricGaps() const
 {
     const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
     const float gapWidth(hCalBarrelParameters.getDoubleVal("Hcal_stave_gaps"));
@@ -285,7 +285,7 @@ pandora::StatusCode GeometryCreator::CreateHCalBarrelConcentricGaps(PandoraApi::
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 pandora::StatusCode GeometryCreator::CreateRegularBoxGaps(unsigned int symmetryOrder, float phi0, float innerRadius, float outerRadius,
-    float minZ, float maxZ, float gapWidth, PandoraApi::GeometryParameters &geometryParameters, pandora::CartesianVector vertexOffset) const
+    float minZ, float maxZ, float gapWidth, pandora::CartesianVector vertexOffset) const
 {
     const pandora::CartesianVector basicGapVertex(pandora::CartesianVector(-0.5f * gapWidth, innerRadius, minZ) + vertexOffset);
     const pandora::CartesianVector basicSide1(gapWidth, 0, 0);

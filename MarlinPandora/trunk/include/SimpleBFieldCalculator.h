@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/include/SimpleBFieldCalculator.h
+ *  @file   MarlinPandora/include/SimpleBFieldCalculator.h
  * 
  *  @brief  Header file for the simple bfield calculator class.
  * 

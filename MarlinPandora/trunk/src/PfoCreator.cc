@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/src/PfoCreator.cc
+ *  @file   MarlinPandora/src/PfoCreator.cc
  * 
  *  @brief  Implementation of the pfo creator class.
  * 

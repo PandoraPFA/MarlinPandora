@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/include/PandoraPFANewProcessor.h
+ *  @file   MarlinPandora/include/PandoraPFANewProcessor.h
  * 
  *  @brief  Header file for the pandora pfa new processor class.
  * 

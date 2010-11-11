@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/src/TrackCreator.cc
+ *  @file   MarlinPandora/src/TrackCreator.cc
  * 
  *  @brief  Implementation of the track creator class.
  * 
@@ -656,7 +656,7 @@ void TrackCreator::DefineTrackPfoUsage(const EVENT::Track *const pTrack, Pandora
                 zMin = absoluteZ;
         }
 
-        if (this->PassesQualityCuts(pTrack, trackParameters, rInner))
+        if (this->PassesQualityCuts(pTrack, trackParameters))
         {
             const pandora::CartesianVector &momentumAtDca(trackParameters.m_momentumAtDca.Get());
             const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY()), pZ(momentumAtDca.GetZ());
@@ -711,7 +711,7 @@ void TrackCreator::DefineTrackPfoUsage(const EVENT::Track *const pTrack, Pandora
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters, const float rInner) const
+bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters) const
 {
     // First simple sanity checks
     if (trackParameters.m_trackStateAtECal.Get().GetPosition().GetMagnitude() < m_settings.m_minTrackECalDistanceFromIp)

@@ -1,5 +1,5 @@
 /**
- *  @file   PandoraPFANew/include/CaloHitCreator.h
+ *  @file   MarlinPandora/include/CaloHitCreator.h
  * 
  *  @brief  Header file for the calo hit creator class.
  * 
