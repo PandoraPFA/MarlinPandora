@@ -204,6 +204,8 @@ private:
     const float                         m_hCalBarrelOuterPhi0;              ///< HCal barrel outer phi0 coordinate
     const unsigned int                  m_hCalBarrelOuterSymmetry;          ///< HCal barrel outer symmetry order
 
+    const float                         m_coilOuterR;                       ///< Coil outer r coordinate
+
     const float                         m_muonEndCapInnerZ;                 ///< Muon endcap inner z coordinate
     const float                         m_muonBarrelInnerPhi0;              ///< Muon barrel inner phi0 coordinate
     const unsigned int                  m_muonBarrelInnerSymmetry;          ///< Muon barrel inner symmetry order
