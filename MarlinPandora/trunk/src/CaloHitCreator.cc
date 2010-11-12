@@ -45,6 +45,7 @@ CaloHitCreator::CaloHitCreator(const Settings &settings) :
     m_hCalBarrelOuterR(marlin::Global::GEAR->getHcalBarrelParameters().getExtent()[1]),
     m_hCalBarrelOuterPhi0(marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_phi0")),
     m_hCalBarrelOuterSymmetry(marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_order")),
+    m_coilOuterR(marlin::Global::GEAR->getGearParameters("CoilParameters").getDoubleVal("Coil_cryostat_outer_radius")),
     m_muonEndCapInnerZ(marlin::Global::GEAR->getYokeEndcapParameters().getExtent()[2]),
     m_muonBarrelInnerPhi0(marlin::Global::GEAR->getYokeBarrelParameters().getPhi0()),
     m_muonBarrelInnerSymmetry(marlin::Global::GEAR->getYokeBarrelParameters().getSymmetryOrder())
@@ -253,6 +254,7 @@ pandora::StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *con
 
             static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getYokeEndcapParameters().getLayerLayout());
             static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getYokeBarrelParameters().getLayerLayout()); 
+            static const gear::LayerLayout &plugLayerLayout(marlin::Global::GEAR->getYokePlugParameters().getLayerLayout());
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -270,9 +272,19 @@ pandora::StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *con
                     caloHitParameters.m_isInOuterSamplingLayer = true;
                     this->GetCommonCaloHitProperties(pCaloHit, caloHitParameters);
 
+                    const float radius(std::sqrt(pCaloHit->getPosition()[0] * pCaloHit->getPosition()[0] +
+                        pCaloHit->getPosition()[1] * pCaloHit->getPosition()[1]));
+
+                    const bool isWithinCoil(radius < m_coilOuterR);
+                    const bool isInBarrelRegion(std::fabs(pCaloHit->getPosition()[2]) < m_muonEndCapInnerZ);
+
                     float absorberCorrection(1.);
 
-                    if (std::fabs(pCaloHit->getPosition()[2]) < m_muonEndCapInnerZ)
+                    if (isInBarrelRegion && isWithinCoil)
+                    {
+                        this->GetEndCapCaloHitProperties(pCaloHit, plugLayerLayout, caloHitParameters, absorberCorrection);
+                    }
+                    else if (isInBarrelRegion)
                     {
                         this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_muonBarrelInnerSymmetry, m_muonBarrelInnerPhi0,
                             cellIdDecoder(pCaloHit)["S-1"], caloHitParameters, absorberCorrection);
