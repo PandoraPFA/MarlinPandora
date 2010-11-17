@@ -51,11 +51,6 @@ pandora::StatusCode GeometryCreator::CreateGeometry() const
         geometryParameters.m_coilOuterRadius        = coilParameters.getDoubleVal("Coil_cryostat_outer_radius");
         geometryParameters.m_coilZExtent            = coilParameters.getDoubleVal("Coil_cryostat_half_z");
 
-        geometryParameters.m_nRadLengthsInZGap      = 0;
-        geometryParameters.m_nIntLengthsInZGap      = 0;
-        geometryParameters.m_nRadLengthsInRadialGap = 0;
-        geometryParameters.m_nIntLengthsInRadialGap = 0;
-
         const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
         const gear::CalorimeterParameters &hCalEndCapParameters = marlin::Global::GEAR->getHcalEndcapParameters();
 
