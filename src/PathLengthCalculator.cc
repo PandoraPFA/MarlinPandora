@@ -1,5 +1,5 @@
 /**
- *  @file   MarlinPandora/src/InteractionLengthCalculator.cc
+ *  @file   MarlinPandora/src/PathLengthCalculator.cc
  * 
  *  @brief  Implementation of the calo hit creator class.
  * 
@@ -13,51 +13,59 @@
 #include "gear/GEAR.h"
 #include "gear/TPCParameters.h"
 
-#include "InteractionLengthCalculator.h"
+#include "PathLengthCalculator.h"
 
 #include <limits>
 
-bool InteractionLengthCalculator::m_instanceFlag = false;
-InteractionLengthCalculator* InteractionLengthCalculator::m_pInteractionLengthCalculator = NULL;
+bool PathLengthCalculator::m_instanceFlag = false;
+PathLengthCalculator* PathLengthCalculator::m_pPathLengthCalculator = NULL;
 
-float InteractionLengthCalculator::Settings::m_avgIntLengthTracker = 0.f;
-float InteractionLengthCalculator::Settings::m_avgIntLengthCoil = 0.f;
-float InteractionLengthCalculator::Settings::m_avgIntLengthECalBarrel = 0.f;
-float InteractionLengthCalculator::Settings::m_avgIntLengthHCalBarrel = 0.f;
-float InteractionLengthCalculator::Settings::m_avgIntLengthECalEndCap = 0.f;
-float InteractionLengthCalculator::Settings::m_avgIntLengthHCalEndCap = 0.f;
-float InteractionLengthCalculator::Settings::m_avgIntLengthMuonBarrel = 0.f;
-float InteractionLengthCalculator::Settings::m_avgIntLengthMuonEndCap = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthCoil = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthECalBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthHCalBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthECalEndCap = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthHCalEndCap = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthMuonBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthMuonEndCap = 0.f;
+
+float PathLengthCalculator::Settings::m_avgIntLengthCoil = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthECalBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthHCalBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthECalEndCap = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthHCalEndCap = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthMuonBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthMuonEndCap = 0.f;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-InteractionLengthCalculator *InteractionLengthCalculator::GetInstance()
+PathLengthCalculator *PathLengthCalculator::GetInstance()
 {
     if (!m_instanceFlag)
     {
-        m_pInteractionLengthCalculator = new InteractionLengthCalculator();
+        m_pPathLengthCalculator = new PathLengthCalculator();
         m_instanceFlag = true;
     }
 
-    return m_pInteractionLengthCalculator;
+    return m_pPathLengthCalculator;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-InteractionLengthCalculator::InteractionLengthCalculator()
+PathLengthCalculator::PathLengthCalculator()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-InteractionLengthCalculator::~InteractionLengthCalculator()
+PathLengthCalculator::~PathLengthCalculator()
 {
     m_instanceFlag = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float InteractionLengthCalculator::GetNInteractionLengthsFromIP(const EVENT::CalorimeterHit *const pCaloHit)
+void PathLengthCalculator::GetPathLengths(const EVENT::CalorimeterHit *const pCaloHit, float &nRadiationLengthsFromIp,
+    float &nInteractionLengthsFromIp)
 {
     try
     {
@@ -168,31 +176,42 @@ float InteractionLengthCalculator::GetNInteractionLengthsFromIP(const EVENT::Cal
         positionVector.GetCylindricalCoordinates(radius, phi, z);
         positionVector.SetValues(radius, 0.f, std::fabs(z));
 
-        float nInteractionLengths(0.f);
+        const float eCalBarrelPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinECalBarrel, zMinECalBarrel, rMaxECalBarrel, zMaxECalBarrel));
+        const float hCalBarrelPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinHCalBarrel, zMinHCalBarrel, rMaxHCalBarrel, zMaxHCalBarrel));
+        const float muonBarrelPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinMuonBarrel, zMinMuonBarrel, rMaxMuonBarrel, zMaxMuonBarrel));
 
-        nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinECalBarrel, zMinECalBarrel, rMaxECalBarrel, zMaxECalBarrel) * Settings::m_avgIntLengthECalBarrel;
-        nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinHCalBarrel, zMinHCalBarrel, rMaxHCalBarrel, zMaxHCalBarrel) * Settings::m_avgIntLengthHCalBarrel;
+        const float eCalEndCapPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinECalEndCap, zMinECalEndCap, rMaxECalEndCap, zMaxECalEndCap));
+        const float hCalEndCapPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinHCalEndCap, zMinHCalEndCap, rMaxHCalEndCap, zMaxHCalEndCap));
+        const float muonEndCapPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinMuonEndCap, zMinMuonEndCap, rMaxMuonEndCap, zMaxMuonEndCap));
 
-        nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinCoil, zMinCoil, rMaxCoil, zMaxCoil) * Settings::m_avgIntLengthCoil;
+        const float coilPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinCoil, zMinCoil, rMaxCoil, zMaxCoil));
 
-        nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinECalEndCap, zMinECalEndCap, rMaxECalEndCap, zMaxECalEndCap) * Settings::m_avgIntLengthECalEndCap;
-        nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinHCalEndCap, zMinHCalEndCap, rMaxHCalEndCap, zMaxHCalEndCap) * Settings::m_avgIntLengthHCalEndCap;
+        nRadiationLengthsFromIp = (eCalBarrelPathLength * Settings::m_avgRadLengthECalBarrel) +
+            (hCalBarrelPathLength * Settings::m_avgRadLengthHCalBarrel) +
+            (muonBarrelPathLength * Settings::m_avgRadLengthMuonBarrel) +
+            (eCalEndCapPathLength * Settings::m_avgRadLengthECalEndCap) +
+            (hCalEndCapPathLength * Settings::m_avgRadLengthHCalEndCap) +
+            (muonEndCapPathLength * Settings::m_avgRadLengthMuonEndCap) +
+            (coilPathLength * Settings::m_avgRadLengthCoil);
 
-        nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinMuonBarrel, zMinMuonBarrel, rMaxMuonBarrel, zMaxMuonBarrel) * Settings::m_avgIntLengthMuonBarrel;
-        nInteractionLengths += ComputePathLengthFromIPInRectangle(positionVector, rMinMuonEndCap, zMinMuonEndCap, rMaxMuonEndCap, zMaxMuonEndCap) * Settings::m_avgIntLengthMuonEndCap;
-
-        return nInteractionLengths;
+        nInteractionLengthsFromIp = (eCalBarrelPathLength * Settings::m_avgIntLengthECalBarrel) +
+            (hCalBarrelPathLength * Settings::m_avgIntLengthHCalBarrel) +
+            (muonBarrelPathLength * Settings::m_avgIntLengthMuonBarrel) +
+            (eCalEndCapPathLength * Settings::m_avgIntLengthECalEndCap) +
+            (hCalEndCapPathLength * Settings::m_avgIntLengthHCalEndCap) +
+            (muonEndCapPathLength * Settings::m_avgIntLengthMuonEndCap) +
+            (coilPathLength * Settings::m_avgIntLengthCoil);
     }
     catch (gear::Exception &exception)
     {
-        streamlog_out(ERROR) << "InteractionLengthCalculator: failed to extract gear geometry information" << exception.what() << std::endl;
+        streamlog_out(ERROR) << "PathLengthCalculator: failed to extract gear geometry information" << exception.what() << std::endl;
         throw exception;
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float InteractionLengthCalculator::ComputePathLengthFromIPInRectangle(const pandora::CartesianVector &position, float rMin, float zMin,
+float PathLengthCalculator::ComputePathLengthFromIPInRectangle(const pandora::CartesianVector &position, float rMin, float zMin,
     float rMax, float zMax)
 {
     // compute cuts with rectangle borders
@@ -248,7 +267,7 @@ float InteractionLengthCalculator::ComputePathLengthFromIPInRectangle(const pand
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool InteractionLengthCalculator::IntersectLines2D(float lineAXStart, float lineAYStart, float lineAXEnd, float lineAYEnd,
+bool PathLengthCalculator::IntersectLines2D(float lineAXStart, float lineAYStart, float lineAXEnd, float lineAYEnd,
     float lineBXStart, float lineBYStart, float lineBXEnd, float lineBYEnd, float &xIntersect, float &yIntersect)
 {
     // Slopes of the two lines, take max float value instead of infinity

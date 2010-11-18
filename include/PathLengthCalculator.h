@@ -1,22 +1,22 @@
 /**
- *  @file   MarlinPandora/include/InteractionLengthCalculator.h
+ *  @file   MarlinPandora/include/PathLengthCalculator.h
  * 
- *  @brief  Header file for the interaction length calculator class.
+ *  @brief  Header file for the path length calculator class.
  * 
  *  $Log: $
  */
 
-#ifndef INTERACTION_LENGTH_CALCULATOR_H
-#define INTERACTION_LENGTH_CALCULATOR_H 1
+#ifndef PATH_LENGTH_CALCULATOR_H
+#define PATH_LENGTH_CALCULATOR_H 1
 
 #include "EVENT/CalorimeterHit.h"
 
 #include "Api/PandoraApi.h"
 
 /**
- *  @brief  InteractionLengthCalculator class
+ *  @brief  PathLengthCalculator class
  */
-class InteractionLengthCalculator
+class PathLengthCalculator
 {
 public:
     /**
@@ -25,7 +25,14 @@ public:
     class Settings
     {
     public:
-        static float        m_avgIntLengthTracker;                  ///< Average interaction length per mm in the tracker
+        static float        m_avgRadLengthCoil;                     ///< Average radiation length per mm in the coil
+        static float        m_avgRadLengthECalBarrel;               ///< Average radiation length per mm in the ECal barrel
+        static float        m_avgRadLengthHCalBarrel;               ///< Average radiation length per mm in the HCal barrel
+        static float        m_avgRadLengthECalEndCap;               ///< Average radiation length per mm in the ECal endcap
+        static float        m_avgRadLengthHCalEndCap;               ///< Average radiation length per mm in the HCal endcap
+        static float        m_avgRadLengthMuonBarrel;               ///< Average radiation length per mm in the Muon barrel
+        static float        m_avgRadLengthMuonEndCap;               ///< Average radiation length per mm in the Muon endcap
+
         static float        m_avgIntLengthCoil;                     ///< Average interaction length per mm in the coil
         static float        m_avgIntLengthECalBarrel;               ///< Average interaction length per mm in the ECal barrel
         static float        m_avgIntLengthHCalBarrel;               ///< Average interaction length per mm in the HCal barrel
@@ -38,27 +45,27 @@ public:
     /**
      *  @brief  Get the interaction length calculator singleton
      */
-    static InteractionLengthCalculator *GetInstance();
+    static PathLengthCalculator *GetInstance();
 
     /**
      *  @brief  Destructor
      */
-    ~InteractionLengthCalculator();
+    ~PathLengthCalculator();
 
     /**
-     *  @brief  Get the path length from the IP to the position of a calorimeter hit in units of interaction lengths
+     *  @brief  Get the path length from the ip to the position of a calorimeter hit in units of interaction lengths
      * 
      *  @param  pCaloHit address of the calorimeter hit
-     * 
-     *  @return the path length from the IP to the position of a CalorimeterHit
+     *  @param  nRadiationLengthsFromIp to receive the path length in radiation lengths
+     *  @param  nInteractionLengthsFromIp to receive the path length in interaction lengths
      */
-    static float GetNInteractionLengthsFromIP(const EVENT::CalorimeterHit *const pCaloHit);
+    static void GetPathLengths(const EVENT::CalorimeterHit *const pCaloHit, float &nRadiationLengthsFromIp, float &nInteractionLengthsFromIp);
 
 private:
     /**
      *  @brief  Constructor
      */
-    InteractionLengthCalculator();
+    PathLengthCalculator();
 
     /**
      *  @brief  Compute the path length of the intersection of the line from the IP to the position of a CalorimeterHit with a rectangle
@@ -92,8 +99,8 @@ private:
     static bool IntersectLines2D(float lineAXStart, float lineAYStart, float lineAXEnd, float lineAYEnd, float lineBXStart,
         float lineBYStart, float lineBXEnd, float lineBYEnd, float &xIntersect, float &yIntersect);
 
-    static bool                             m_instanceFlag;                         ///< The interaction length calculator instance flag
-    static InteractionLengthCalculator     *m_pInteractionLengthCalculator;         ///< The interaction length calculator instance
+    static bool                     m_instanceFlag;                ///< The path length calculator instance flag
+    static PathLengthCalculator    *m_pPathLengthCalculator;       ///< The path length calculator instance
 };
 
-#endif // #ifndef INTERACTION_LENGTH_CALCULATOR_H
+#endif // #ifndef PATH_LENGTH_CALCULATOR_H

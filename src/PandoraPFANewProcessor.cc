@@ -16,7 +16,7 @@
 #include "Utilities/HighGranularityPseudoLayerCalculator.h"
 
 #include "ExternalClusteringAlgorithm.h"
-#include "InteractionLengthCalculator.h"
+#include "PathLengthCalculator.h"
 #include "PandoraPFANewProcessor.h"
 #include "SimpleBFieldCalculator.h"
 
@@ -381,45 +381,76 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             SimpleBFieldCalculator::m_muonEndCapBField,
                             float(0.01f));
 
-    // Average interaction length parameters
-    registerProcessorParameter("AverageInteractionLengthTracker",
-                            "average number interaction length per mm in the tracker",
-                            InteractionLengthCalculator::Settings::m_avgIntLengthTracker,
-                            float(0.f));
+    // Average radiation length parameters
+    registerProcessorParameter("AverageRadiationLengthCoil",
+                            "Average number of radiation lengths per mm in the coil",
+                            PathLengthCalculator::Settings::m_avgRadLengthCoil,
+                            float(0.0112397f));
 
+    registerProcessorParameter("AverageRadiationLengthECalBarrel",
+                            "Average number of radiation lengths per mm in the ECal Barrel",
+                            PathLengthCalculator::Settings::m_avgRadLengthECalBarrel,
+                            float(0.0040269f)); // TODO set suitable default value
+
+    registerProcessorParameter("AverageRadiationLengthHCalBarrel",
+                            "Average number of radiation lengths per mm in the HCal Barrel",
+                            PathLengthCalculator::Settings::m_avgRadLengthHCalBarrel,
+                            float(0.0033042f)); // TODO set suitable default value
+
+    registerProcessorParameter("AverageRadiationLengthECalEndCap",
+                            "Average number of radiation lengths per mm in the ECal EndCap",
+                            PathLengthCalculator::Settings::m_avgRadLengthECalEndCap,
+                            float(0.0040269f)); // TODO set suitable default value
+
+    registerProcessorParameter("AverageRadiationLengthHCalEndCap",
+                            "Average number of radiation lengths per mm in the HCal EndCap",
+                            PathLengthCalculator::Settings::m_avgRadLengthHCalEndCap,
+                            float(0.0033042f)); // TODO set suitable default value
+
+    registerProcessorParameter("AverageRadiationLengthMuonBarrel",
+                            "Average number of radiation lengths per mm in the Muon Barrel",
+                            PathLengthCalculator::Settings::m_avgRadLengthMuonBarrel,
+                            float(0.0040269f)); // TODO set suitable default value
+
+    registerProcessorParameter("AverageRadiationLengthMuonEndCap",
+                            "Average number of radiation lengths per mm in the Muon EndCap",
+                            PathLengthCalculator::Settings::m_avgRadLengthMuonEndCap,
+                            float(0.0040269f)); // TODO set suitable default value
+
+    // Average interaction length parameters
     registerProcessorParameter("AverageInteractionLengthCoil",
-                            "average number interaction length per mm in the coil",
-                            InteractionLengthCalculator::Settings::m_avgIntLengthCoil,
-                            float(0.0025189));
+                            "Average number of interaction lengths per mm in the coil",
+                            PathLengthCalculator::Settings::m_avgIntLengthCoil,
+                            float(0.0025189f));
 
     registerProcessorParameter("AverageInteractionLengthECalBarrel",
-                            "average number interaction length per mm in the ECal Barrel",
-                            InteractionLengthCalculator::Settings::m_avgIntLengthECalBarrel,
+                            "Average number of interaction lengths per mm in the ECal Barrel",
+                            PathLengthCalculator::Settings::m_avgIntLengthECalBarrel,
                             float(0.0040269f));
 
     registerProcessorParameter("AverageInteractionLengthHCalBarrel",
-                            "average number interaction length per mm in the HCal Barrel",
-                            InteractionLengthCalculator::Settings::m_avgIntLengthHCalBarrel,
-                            float(0.0033041916f));
+                            "Average number of interaction lengths per mm in the HCal Barrel",
+                            PathLengthCalculator::Settings::m_avgIntLengthHCalBarrel,
+                            float(0.0033042f));
 
     registerProcessorParameter("AverageInteractionLengthECalEndCap",
-                            "average number interaction length per mm in the ECal EndCap",
-                            InteractionLengthCalculator::Settings::m_avgIntLengthECalEndCap,
+                            "Average number of interaction lengths per mm in the ECal EndCap",
+                            PathLengthCalculator::Settings::m_avgIntLengthECalEndCap,
                             float(0.0040269f));
 
     registerProcessorParameter("AverageInteractionLengthHCalEndCap",
-                            "average number interaction length per mm in the HCal EndCap",
-                            InteractionLengthCalculator::Settings::m_avgIntLengthHCalEndCap,
-                            float(0.0033041916));
+                            "Average number of interaction lengths per mm in the HCal EndCap",
+                            PathLengthCalculator::Settings::m_avgIntLengthHCalEndCap,
+                            float(0.0033042f));
 
     registerProcessorParameter("AverageInteractionLengthMuonBarrel",
-                            "average number interaction length per mm in the Muon Barrel",
-                            InteractionLengthCalculator::Settings::m_avgIntLengthMuonBarrel,
+                            "Average number of interaction lengths per mm in the Muon Barrel",
+                            PathLengthCalculator::Settings::m_avgIntLengthMuonBarrel,
                             float(0.0040269f));
 
     registerProcessorParameter("AverageInteractionLengthMuonEndCap",
-                            "average number interaction length per mm in the Muon EndCap",
-                            InteractionLengthCalculator::Settings::m_avgIntLengthMuonEndCap,
+                            "Average number of interaction lengths per mm in the Muon EndCap",
+                            PathLengthCalculator::Settings::m_avgIntLengthMuonEndCap,
                             float(0.0040269f));
 
     // Track relationship parameters
