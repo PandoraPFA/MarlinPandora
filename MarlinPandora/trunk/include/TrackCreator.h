@@ -184,10 +184,10 @@ private:
      *  @brief  Project helix to the surface of the ecal
      * 
      *  @param  pHelix helix fit to be projected to ecal surface
-     *  @param  referencePoint helix reference point
      *  @param  signPz sign w.r.t. increasing z direction
+     *  @param  trackParameters the track parameters
      */
-    pandora::TrackState GetECalProjection(const pandora::Helix *const pHelix, const pandora::CartesianVector &referencePoint, int signPz) const;
+    void GetECalProjection(const pandora::Helix *const pHelix, const int signPz, PandoraApi::Track::Parameters &trackParameters) const;
 
     /**
      *  @brief  Decide whether track reaches the ecal surface

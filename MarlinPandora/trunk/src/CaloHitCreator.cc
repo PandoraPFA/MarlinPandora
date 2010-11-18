@@ -21,7 +21,7 @@
 #include "UTIL/CellIDDecoder.h"
 
 #include "CaloHitCreator.h"
-#include "InteractionLengthCalculator.h"
+#include "PathLengthCalculator.h"
 #include "PandoraPFANewProcessor.h"
 
 #include <cmath>
@@ -32,7 +32,7 @@ CalorimeterHitVector CaloHitCreator::m_calorimeterHitVector;
 CaloHitCreator::CaloHitCreator(const Settings &settings) :
     m_settings(settings),
     m_pPandora(PandoraPFANewProcessor::GetPandora()),
-    m_pInteractionLengthCalculator(InteractionLengthCalculator::GetInstance()),
+    m_pPathLengthCalculator(PathLengthCalculator::GetInstance()),
     m_eCalEndCapInnerZ(marlin::Global::GEAR->getEcalEndcapParameters().getExtent()[2]),
     m_eCalBarrelOuterZ(marlin::Global::GEAR->getEcalBarrelParameters().getExtent()[3]),
     m_eCalBarrelInnerPhi0(marlin::Global::GEAR->getEcalBarrelParameters().getPhi0()),
@@ -64,7 +64,7 @@ CaloHitCreator::CaloHitCreator(const Settings &settings) :
 
 CaloHitCreator::~CaloHitCreator()
 {
-    delete m_pInteractionLengthCalculator;
+    delete m_pPathLengthCalculator;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -472,26 +472,29 @@ pandora::StatusCode CaloHitCreator::CreateLHCalCaloHits(const EVENT::LCEvent *co
 void CaloHitCreator::GetCommonCaloHitProperties(const EVENT::CalorimeterHit *const pCaloHit, PandoraApi::CaloHit::Parameters &caloHitParameters) const
 {
     const float *pCaloHitPosition(pCaloHit->getPosition());
-    caloHitParameters.m_positionVector = pandora::CartesianVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
+    const pandora::CartesianVector positionVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
 
+    caloHitParameters.m_positionVector = positionVector;
+    caloHitParameters.m_expectedDirection = positionVector.GetUnitVector();
     caloHitParameters.m_pParentAddress = (void*)pCaloHit;
-
     caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
     caloHitParameters.m_time = pCaloHit->getTime();
 
-    float interactionLengthsFromIp(0.f);
+    float radiationLengthsFromIp(0.f), interactionLengthsFromIp(0.f);
 
     try
     {
-        const gear::Vector3D positionIP(0.f, 0.f, 0.f);
-        const gear::Vector3D positionVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
-        interactionLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNIntlen(positionIP, positionVector);
+        const gear::Vector3D positionIP3D(0.f, 0.f, 0.f);
+        const gear::Vector3D positionVector3D(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
+        radiationLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNRadlen(positionIP3D, positionVector3D);
+        interactionLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNIntlen(positionIP3D, positionVector3D);
     }
     catch (gear::Exception &exception)
     {
-        interactionLengthsFromIp = m_pInteractionLengthCalculator->GetNInteractionLengthsFromIP(pCaloHit);
+        m_pPathLengthCalculator->GetPathLengths(pCaloHit, radiationLengthsFromIp, interactionLengthsFromIp);
     }
 
+    caloHitParameters.m_nRadiationLengthsFromIp = radiationLengthsFromIp;
     caloHitParameters.m_nInteractionLengthsFromIp = interactionLengthsFromIp;
 }
 
@@ -508,8 +511,8 @@ void CaloHitCreator::GetEndCapCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
     const float layerAbsorberThickness(layerLayout.getAbsorberThickness(physicalLayer));
-    caloHitParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * layerAbsorberThickness;
-    caloHitParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * layerAbsorberThickness;
+    caloHitParameters.m_nCellRadiationLengths = m_settings.m_absorberRadiationLength * layerAbsorberThickness;
+    caloHitParameters.m_nCellInteractionLengths = m_settings.m_absorberInteractionLength * layerAbsorberThickness;
 
     absorberCorrection = 1.;
     for (unsigned int i = 0, iMax = layerLayout.getNLayers(); i < iMax; ++i)
@@ -525,7 +528,8 @@ void CaloHitCreator::GetEndCapCaloHitProperties(const EVENT::CalorimeterHit *con
         break;
     }
 
-    caloHitParameters.m_normalVector = (pCaloHit->getPosition()[2] > 0) ? pandora::CartesianVector(0, 0, 1) : pandora::CartesianVector(0, 0, -1);
+    caloHitParameters.m_cellNormalVector = (pCaloHit->getPosition()[2] > 0) ? pandora::CartesianVector(0, 0, 1) :
+        pandora::CartesianVector(0, 0, -1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -542,8 +546,8 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
     const float layerAbsorberThickness(layerLayout.getAbsorberThickness(physicalLayer));
-    caloHitParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * layerAbsorberThickness;
-    caloHitParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * layerAbsorberThickness;
+    caloHitParameters.m_nCellRadiationLengths = m_settings.m_absorberRadiationLength * layerAbsorberThickness;
+    caloHitParameters.m_nCellInteractionLengths = m_settings.m_absorberInteractionLength * layerAbsorberThickness;
 
     absorberCorrection = 1.;
     for (unsigned int i = 0, iMax = layerLayout.getNLayers(); i < iMax; ++i)
@@ -563,7 +567,7 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
     {
         static const float pi(std::acos(-1.));
         const float phi = barrelPhi0 + (2. * pi * static_cast<float>(staveNumber) / static_cast<float>(barrelSymmetryOrder));
-        caloHitParameters.m_normalVector = pandora::CartesianVector(-std::sin(phi), std::cos(phi), 0);
+        caloHitParameters.m_cellNormalVector = pandora::CartesianVector(-std::sin(phi), std::cos(phi), 0);
     }
     else
     {
@@ -572,11 +576,11 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
         if (pCaloHitPosition[1] != 0)
         {
             const float phi = barrelPhi0 + std::atan(pCaloHitPosition[0] / pCaloHitPosition[1]);
-            caloHitParameters.m_normalVector = pandora::CartesianVector(std::sin(phi), std::cos(phi), 0);
+            caloHitParameters.m_cellNormalVector = pandora::CartesianVector(std::sin(phi), std::cos(phi), 0);
         }
         else
         {
-            caloHitParameters.m_normalVector = (pCaloHitPosition[0] > 0) ? pandora::CartesianVector(1, 0, 0) :
+            caloHitParameters.m_cellNormalVector = (pCaloHitPosition[0] > 0) ? pandora::CartesianVector(1, 0, 0) :
                 pandora::CartesianVector(-1, 0, 0);
         }
     }

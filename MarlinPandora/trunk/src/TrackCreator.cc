@@ -489,17 +489,21 @@ void TrackCreator::FitTrackHelices(const EVENT::Track *const pTrack, PandoraApi:
     endMomentum = pHelixFit->GetExtrapolatedMomentum(endPosition);
     trackParameters.m_trackStateAtEnd = pandora::TrackState(endPosition, endMomentum);
 
-    trackParameters.m_trackStateAtECal = this->GetECalProjection(pHelixFit, pHelixFit->GetReferencePoint(), signPz);
+    this->GetECalProjection(pHelixFit, signPz, trackParameters);
 
     delete pHelixFit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::TrackState TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const pandora::CartesianVector &referencePoint, int signPz) const
+void TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const int signPz, PandoraApi::Track::Parameters &trackParameters) const
 {
+    const pandora::CartesianVector &referencePoint(pHelix->GetReferencePoint());
+
     // First project to endcap
     float minTime(std::numeric_limits<float>::max());
+    bool isProjectedToEndCap(true);
+
     pandora::CartesianVector bestECalProjection;
     (void) pHelix->GetPointInZ(static_cast<float>(signPz) * m_eCalEndCapInnerZ, referencePoint, bestECalProjection, minTime);
 
@@ -523,6 +527,7 @@ pandora::TrackState TrackCreator::GetECalProjection(const pandora::Helix *const 
             if ((pandora::STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
             {
                 minTime = time;
+                isProjectedToEndCap = false;
                 bestECalProjection = barrelProjection;
             }
         }
@@ -536,6 +541,7 @@ pandora::TrackState TrackCreator::GetECalProjection(const pandora::Helix *const 
         if ((pandora::STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
         {
             minTime = time;
+            isProjectedToEndCap = false;
             bestECalProjection = barrelProjection;
         }
     }
@@ -543,7 +549,8 @@ pandora::TrackState TrackCreator::GetECalProjection(const pandora::Helix *const 
     if (!bestECalProjection.IsInitialized())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
-    return pandora::TrackState(bestECalProjection, pHelix->GetExtrapolatedMomentum(bestECalProjection));
+    trackParameters.m_trackStateAtECal = pandora::TrackState(bestECalProjection, pHelix->GetExtrapolatedMomentum(bestECalProjection));
+    trackParameters.m_isProjectedToEndCap = isProjectedToEndCap;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
