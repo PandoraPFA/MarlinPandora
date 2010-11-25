@@ -13,7 +13,7 @@
    <processor name="MySimpleLHCalDigi"/>
    <processor name="MyLEPTrackingProcessor"/>
    <processor name="MySiliconTracking"/>
-   <processor name="MyFullLDCTrackingCLIC"/>
+   <processor name="MyFullLDCTracking"/>
    <processor name="MyV0Finder"/>
    <processor name="MyKinkFinder"/>
    <processor name="MyMarlinPandora"/>
@@ -152,7 +152,7 @@
 </processor>
 
 
-<processor name="MyFullLDCTrackingCLIC" type="FullLDCTrackingCLIC">
+<processor name="MyFullLDCTracking" type="FullLDCTracking">
   <!--Assign ETD Hits-->
   <parameter name="AssignETDHits" type="int"> 1 </parameter>
   <!--Assign left over FTD hits-->
@@ -186,15 +186,15 @@
   <!--Activate debugging?-->
   <parameter name="Debug" type="int"> 0 </parameter>
   <!--Cut on Omega difference for forced merging of Si and TPC segments-->
-  <parameter name="CLICOmegaCutForForcedMerging" type="float">2.5 </parameter>
+  <parameter name="OmegaCutForForcedMerging" type="float">0.15 </parameter>
   <!--Cut on Omega difference for merging Si and TPC segments-->
-  <parameter name="CLICOmegaCutForMerging" type="float">2.5 </parameter>
+  <parameter name="OmegaCutForMerging" type="float">0.25 </parameter>
   <!--Cut on Opening Angle for forced merging of Si and TPC segments-->
-  <parameter name="CLICAngleCutForForcedMerging" type="float">3 </parameter>
+  <parameter name="AngleCutForForcedMerging" type="float">0.05 </parameter>
   <!--Cut on Opening Angle for merging Si and TPC segments-->
-  <parameter name="CLICAngleCutForMerging" type="float">3 </parameter>
+  <parameter name="AngleCutForMerging" type="float">0.1 </parameter>
   <!--Cut on dP/P difference for merging TPC segments-->
-  <parameter name="CLICDeltaPCutToMergeTPCSegments" type="float">0.15 </parameter>
+  <parameter name="DeltaPCutToMergeTPCSegments" type="float">0.06 </parameter>
   <!--ETD Hit Collection Name-->
   <parameter name="ETDHitCollection" type="string" lcioInType="TrackerHit">ETDTrackerHits </parameter>
   <!--Cut on distance between track and ETD hits-->
@@ -212,7 +212,7 @@
   <!--Forbid overlap in Z for the merged TPC segments-->
   <parameter name="ForbidOverlapInZTPC" type="int"> 0 </parameter>
   <!--Force merging of Si and TPC segments?-->
-  <parameter name="ForceSiTPCMerging" type="int"> 0 </parameter>
+  <parameter name="ForceSiTPCMerging" type="int"> 1 </parameter>
   <!--Force merging of TPC Segments?-->
   <parameter name="ForceTPCSegmentsMerging" type="int"> 1 </parameter>
   <!--Option for the LDC Track fit-->
@@ -229,8 +229,6 @@
   <parameter name="SITHitCollection" type="string" lcioInType="TrackerHit">SITTrackerHits </parameter>
   <!--Cut on distance between track and SIT hits-->
   <parameter name="SITHitToTrackDistance" type="float"> 1 </parameter>
-  <!--Si Track Collection-->
-  <parameter name="SiTracks" type="string" lcioInType="Track">SiTracks </parameter>
   <!--Store only hits used in fit?-->
   <parameter name="StoreHitsInFit" type="int">0 </parameter>
   <!--Store Refitted Si Tracks ?-->
@@ -241,8 +239,6 @@
   <parameter name="TPCHitCollection" type="string" lcioInType="TrackerHit">UsedTPCTrackerHits </parameter>
   <!--Cut on distance between track and TPC hits-->
   <parameter name="TPCHitToTrackDistance" type="float"> 10 </parameter>
-  <!--TPC Track Collection-->
-  <parameter name="TPCTracks" type="string" lcioInType="Track"> TPCTracks </parameter>
   <!--Use Extra Point in Fit-->
   <parameter name="UseExtraPoint" type="int"> 0 </parameter>
   <!--VTX Hit Collection Name-->
@@ -261,6 +257,18 @@
   <parameter name="bParameterForIPError" type="float">0.0076 </parameter>
   <!--Parameter s to define minimal IP error-->
   <parameter name="sParameterForIPError" type="float">0.75 </parameter>
+  <!--LCD Track Collection-->
+  <parameter name="LDCTrackCollection" type="StringVec">LDCTracks</parameter>
+  <!--LDC Track to MC Relation Collection-->
+  <parameter name="LDCTrackMCPRelCollection" type="StringVec">LDCTracksMCP</parameter>
+  <!--TPC Track Collection-->
+  <parameter name="TPCTracks" type="string" lcioInType="Track">TPCTracks</parameter>
+  <!--TPC Track to MC Relation Collection-->
+  <parameter name="TPCTracksMCPRelColl" type="string" lcioInType="LCRelation">TPCTracksMCP</parameter>
+  <!--Si Track Collection-->
+  <parameter name="SiTracks" type="string" lcioInType="Track">SiTracks</parameter>
+  <!--Si Track to MC Relation Collection-->
+  <parameter name="SiTracksMCPRelColl" type="string" lcioInType="LCRelation">SiTracksMCP</parameter>
 </processor>
 
 
