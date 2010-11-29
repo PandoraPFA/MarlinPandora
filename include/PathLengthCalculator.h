@@ -13,6 +13,8 @@
 
 #include "Api/PandoraApi.h"
 
+#include "Helpers/GeometryHelper.h"
+
 /**
  *  @brief  PathLengthCalculator class
  */
@@ -42,6 +44,100 @@ public:
         static float        m_avgIntLengthMuonEndCap;               ///< Average interaction length per mm in the Muon endcap
     };
 
+    typedef std::vector<pandora::CartesianVector> NormalVectorList;
+
+    /**
+     *  @brief  SubDetectorParameters class
+     */
+    class SubDetectorParameters
+    {
+    public:
+        /**
+         *  @brief  Initialize the subdetector parameters
+         *
+         *  @param  subDetectorParameters the pandora geometry helper subdetector parameters
+         */
+        void Initialize(const pandora::GeometryHelper::SubDetectorParameters &subDetectorParameters);
+
+        /**
+         *  @brief  Initialize the subdetector parameters for a cylindrical subdetector
+         *
+         *  @param  innerRCoordinate the inner r coordinate
+         *  @param  outerRCoordinate the outer r coordinate
+         *  @param  innerZCoordinate the inner z coordinate
+         *  @param  outerZCoordinate the outer z coordinate
+         */
+        void Initialize_Cylinder(const float innerRCoordinate, const float outerRCoordinate, const float innerZCoordinate,
+            const float outerZCoordinate);
+
+        /**
+         *  @brief  Get the subdetector inner r coordinate
+         * 
+         *  @return The subdetector inner r coordinate
+         */
+        float GetInnerRCoordinate() const;
+
+        /**
+         *  @brief  Get the subdetector outer r coordinate
+         * 
+         *  @return The subdetector outer r coordinate
+         */
+        float GetOuterRCoordinate() const;
+
+        /**
+         *  @brief  Get the subdetector inner z coordinate
+         * 
+         *  @return The subdetector inner z coordinate
+         */
+        float GetInnerZCoordinate() const;
+
+        /**
+         *  @brief  Get the subdetector outer z coordinate
+         * 
+         *  @return The subdetector outer z coordinate
+         */
+        float GetOuterZCoordinate() const;
+
+        /**
+         *  @brief  Get the subdetector inner r normal vectors, empty for cylinders
+         * 
+         *  @return The subdetector inner r normal vectors
+         */
+        const NormalVectorList &GetInnerRNormalVectors() const;
+
+        /**
+         *  @brief  Get the subdetector outer r normal vectors, empty for cylinders
+         * 
+         *  @return The subdetector outer r normal vectors
+         */
+        const NormalVectorList &GetOuterRNormalVectors() const;
+
+        /**
+         *  @brief  Get the subdetector z normal vectors
+         * 
+         *  @return The subdetector z normal vectors
+         */
+        const NormalVectorList &GetZNormalVectors() const;
+
+    private:
+        /**
+         *  @brief  Get list of vectors, normal to sides of a specified regular polygon
+         * 
+         *  @param  symmetry the polgon order of symmetry
+         *  @param  phi0 the polygon phi0 coordinate
+         *  @param  normalVectorList to receive the normal vector list
+         */
+        void GetPolygonNormalVectors(const unsigned int symmetry, const float phi0, NormalVectorList &normalVectorList) const;
+
+        float                       m_innerRCoordinate;             ///< The subdetector inner r coordinate
+        float                       m_outerRCoordinate;             ///< The subdetector outer r coordinate
+        float                       m_innerZCoordinate;             ///< The subdetector inner z coordinate
+        float                       m_outerZCoordinate;             ///< The subdetector outer z coordinate
+        NormalVectorList            m_innerRNormalVectors;          ///< The subdetector inner r normal vectors; leave empty for cylinders
+        NormalVectorList            m_outerRNormalVectors;          ///< The subdetector outer r normal vectors; leave empty for cylinders
+        NormalVectorList            m_zNormalVectors;               ///< The subdetector z normal vectors
+    };
+
     /**
      *  @brief  Get the interaction length calculator singleton
      */
@@ -68,39 +164,95 @@ private:
     PathLengthCalculator();
 
     /**
-     *  @brief  Compute the path length of the intersection of the line from the IP to the position of a CalorimeterHit with a rectangle
+     *  @brief  Get the fraction of a straight line path (from the ip to a specified position vector) represented by its traversal
+     *          through a specified subdetector
      * 
-     *  @param  position position of the calorimeter-hit
-     *  @param  rMin minimum radius coordinate of the rectangle (assuming zylindrical coordinates)
-     *  @param  zMin minimum z-position coordinate of the rectangle
-     *  @param  rMax maximum radius coordinate of the rectangle (assuming zylindrical coordinates)
-     *  @param  zMax maximum z-position coordinate of the rectangle
+     *  @param  positionVector the position vector
+     *  @param  subDetectorParameters the subdetector parameters
      * 
-     *  @return length of the line segment within the rectangle
+     *  @return The fraction of the straight line path represented by its traversal through the subdetector
      */
-    static float ComputePathLengthFromIPInRectangle(const pandora::CartesianVector &position, float rMin, float zMin, float rMax, float zMax);
+    static float GetFractionInSubDetector(const pandora::CartesianVector &positionVector, const SubDetectorParameters &subDetectorParameters);
 
     /**
-     *  @brief  Compute the intersection of two lines
+     *  @brief  Get the fraction of a straight line path (from the ip to a specified position vector) represented by the projection
+     *          onto a vector of length "closestDistanceToIp" and direction normal to the most appropriate side of a regular polygon.
      * 
-     *  @param  lineAXStart x coordinate of the start of the first line
-     *  @param  lineAYStart y coordinate of the start of the first line
-     *  @param  lineAXEnd x coordinate of the end of the first line
-     *  @param  lineAYEnd y coordinate of the end of the first line
-     *  @param  lineBXStart x coordinate of the start of the second line
-     *  @param  lineBYStart y coordinate of the start of the second line
-     *  @param  lineBXEnd x coordinate of the end of the second line
-     *  @param  lineBYEnd y coordinate of the end of the second line
-     *  @param  xIntersect to receive the x coordinate of the intersection point
-     *  @param  yIntersect to receive the y coordinate of the intersection point
+     *  @param  positionVector the position vector
+     *  @param  closestDistanceToIp the closest distance to the ip
+     *  @param  normalVectorList the list of unit vectors normal to sides of a regular polygon
      * 
-     *  @return true if the lines are intersecting within their respective start and end points
+     *  @return The fraction of the straight line path represented by the projection
      */
-    static bool IntersectLines2D(float lineAXStart, float lineAYStart, float lineAXEnd, float lineAYEnd, float lineBXStart,
-        float lineBYStart, float lineBXEnd, float lineBYEnd, float &xIntersect, float &yIntersect);
+    static float GetLengthFraction(const pandora::CartesianVector &positionVector, const float closestDistanceToIp,
+        const NormalVectorList &normalVectorList);
 
-    static bool                     m_instanceFlag;                ///< The path length calculator instance flag
-    static PathLengthCalculator    *m_pPathLengthCalculator;       ///< The path length calculator instance
+    /**
+     *  @brief  Initialize the path length calculator geometry
+     */
+    static void InitializeGeometry();
+
+    static bool                     m_instanceFlag;                 ///< The path length calculator instance flag
+    static bool                     m_isGeometryInitialized;        ///< Whether the path length calculator geometry has been initialized
+    static PathLengthCalculator    *m_pPathLengthCalculator;        ///< The path length calculator instance
+
+    static SubDetectorParameters    m_eCalBarrelParameters;         ///< The ecal barrel parameters
+    static SubDetectorParameters    m_hCalBarrelParameters;         ///< The hcal barrel parameters
+    static SubDetectorParameters    m_muonBarrelParameters;         ///< The muon barrel parameters
+    static SubDetectorParameters    m_eCalEndCapParameters;         ///< The ecal endcap parameters
+    static SubDetectorParameters    m_hCalEndCapParameters;         ///< The hcal endcap parameters
+    static SubDetectorParameters    m_muonEndCapParameters;         ///< The muon endcap parameters
+    static SubDetectorParameters    m_coilParameters;               ///< The coil parameters
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float PathLengthCalculator::SubDetectorParameters::GetInnerRCoordinate() const
+{
+    return m_innerRCoordinate;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float PathLengthCalculator::SubDetectorParameters::GetOuterRCoordinate() const
+{
+    return m_outerRCoordinate;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float PathLengthCalculator::SubDetectorParameters::GetInnerZCoordinate() const
+{
+    return m_innerZCoordinate;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float PathLengthCalculator::SubDetectorParameters::GetOuterZCoordinate() const
+{
+    return m_outerZCoordinate;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const PathLengthCalculator::NormalVectorList &PathLengthCalculator::SubDetectorParameters::GetInnerRNormalVectors() const
+{
+    return m_innerRNormalVectors;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const PathLengthCalculator::NormalVectorList &PathLengthCalculator::SubDetectorParameters::GetOuterRNormalVectors() const
+{
+    return m_outerRNormalVectors;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const PathLengthCalculator::NormalVectorList &PathLengthCalculator::SubDetectorParameters::GetZNormalVectors() const
+{
+    return m_zNormalVectors;
+}
 
 #endif // #ifndef PATH_LENGTH_CALCULATOR_H

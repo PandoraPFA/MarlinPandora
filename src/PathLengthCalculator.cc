@@ -6,37 +6,11 @@
  *  $Log: $
  */
 
-#include "marlin/Global.h"
 #include "marlin/Processor.h"
-
-#include "gear/CalorimeterParameters.h"
-#include "gear/GEAR.h"
-#include "gear/TPCParameters.h"
 
 #include "PathLengthCalculator.h"
 
 #include <limits>
-
-bool PathLengthCalculator::m_instanceFlag = false;
-PathLengthCalculator* PathLengthCalculator::m_pPathLengthCalculator = NULL;
-
-float PathLengthCalculator::Settings::m_avgRadLengthCoil = 0.f;
-float PathLengthCalculator::Settings::m_avgRadLengthECalBarrel = 0.f;
-float PathLengthCalculator::Settings::m_avgRadLengthHCalBarrel = 0.f;
-float PathLengthCalculator::Settings::m_avgRadLengthECalEndCap = 0.f;
-float PathLengthCalculator::Settings::m_avgRadLengthHCalEndCap = 0.f;
-float PathLengthCalculator::Settings::m_avgRadLengthMuonBarrel = 0.f;
-float PathLengthCalculator::Settings::m_avgRadLengthMuonEndCap = 0.f;
-
-float PathLengthCalculator::Settings::m_avgIntLengthCoil = 0.f;
-float PathLengthCalculator::Settings::m_avgIntLengthECalBarrel = 0.f;
-float PathLengthCalculator::Settings::m_avgIntLengthHCalBarrel = 0.f;
-float PathLengthCalculator::Settings::m_avgIntLengthECalEndCap = 0.f;
-float PathLengthCalculator::Settings::m_avgIntLengthHCalEndCap = 0.f;
-float PathLengthCalculator::Settings::m_avgIntLengthMuonBarrel = 0.f;
-float PathLengthCalculator::Settings::m_avgIntLengthMuonEndCap = 0.f;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 PathLengthCalculator *PathLengthCalculator::GetInstance()
 {
@@ -60,6 +34,7 @@ PathLengthCalculator::PathLengthCalculator()
 PathLengthCalculator::~PathLengthCalculator()
 {
     m_instanceFlag = false;
+    m_isGeometryInitialized = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -67,288 +42,209 @@ PathLengthCalculator::~PathLengthCalculator()
 void PathLengthCalculator::GetPathLengths(const EVENT::CalorimeterHit *const pCaloHit, float &nRadiationLengthsFromIp,
     float &nInteractionLengthsFromIp)
 {
-    try
-    {
-        static bool initialized = false;
+    if (!m_isGeometryInitialized)
+        PathLengthCalculator::InitializeGeometry();
 
-        // Coordinates of the sub-detectors in one quadrant
-        static float rMinECalBarrel = 0.f;
-        static float rMaxECalBarrel = 0.f;
-        static float zMinECalBarrel = 0.f;
-        static float zMaxECalBarrel = 0.f;
+    const pandora::CartesianVector positionVector(pCaloHit->getPosition()[0], pCaloHit->getPosition()[1], pCaloHit->getPosition()[2]);
+    const float lineLength(positionVector.GetMagnitude());
 
-        static float rMinECalEndCap = 0.f;
-        static float rMaxECalEndCap = 0.f;
-        static float zMinECalEndCap = 0.f;
-        static float zMaxECalEndCap = 0.f;
+    const float eCalBarrelPathLength(lineLength * GetFractionInSubDetector(positionVector, m_eCalBarrelParameters));
+    const float hCalBarrelPathLength(lineLength * GetFractionInSubDetector(positionVector, m_hCalBarrelParameters));
+    const float muonBarrelPathLength(lineLength * GetFractionInSubDetector(positionVector, m_muonBarrelParameters));
+    const float eCalEndCapPathLength(lineLength * GetFractionInSubDetector(positionVector, m_eCalEndCapParameters));
+    const float hCalEndCapPathLength(lineLength * GetFractionInSubDetector(positionVector, m_hCalEndCapParameters));
+    const float muonEndCapPathLength(lineLength * GetFractionInSubDetector(positionVector, m_muonEndCapParameters));
+    const float coilPathLength(lineLength * GetFractionInSubDetector(positionVector, m_coilParameters));
 
-        static float rMinHCalBarrel = 0.f;
-        static float rMaxHCalBarrel = 0.f;
-        static float zMinHCalBarrel = 0.f;
-        static float zMaxHCalBarrel = 0.f;
+    nRadiationLengthsFromIp = (eCalBarrelPathLength * Settings::m_avgRadLengthECalBarrel) +
+        (hCalBarrelPathLength * Settings::m_avgRadLengthHCalBarrel) +
+        (muonBarrelPathLength * Settings::m_avgRadLengthMuonBarrel) +
+        (eCalEndCapPathLength * Settings::m_avgRadLengthECalEndCap) +
+        (hCalEndCapPathLength * Settings::m_avgRadLengthHCalEndCap) +
+        (muonEndCapPathLength * Settings::m_avgRadLengthMuonEndCap) +
+        (coilPathLength * Settings::m_avgRadLengthCoil);
 
-        static float rMinHCalEndCap = 0.f;
-        static float rMaxHCalEndCap = 0.f;
-        static float zMinHCalEndCap = 0.f;
-        static float zMaxHCalEndCap = 0.f;
-
-        static float rMinCoil = 0.f;
-        static float rMaxCoil = 0.f;
-        static float zMinCoil = 0.f;
-        static float zMaxCoil = 0.f;
-
-        static float rMinTracker = 0.f;
-        static float rMaxTracker = 0.f;
-        static float zMinTracker = 0.f;
-        static float zMaxTracker = 0.f;
-
-        static float rMinMuonBarrel = 0.f;
-        static float rMaxMuonBarrel = 0.f;
-        static float zMinMuonBarrel = 0.f;
-        static float zMaxMuonBarrel = 0.f;
-
-        static float rMinMuonEndCap = 0.f;
-        static float rMaxMuonEndCap = 0.f;
-        static float zMinMuonEndCap = 0.f;
-        static float zMaxMuonEndCap = 0.f;
-
-        if (!initialized)
-        {
-            const PandoraApi::Geometry::Parameters geometryParameters;
-
-            const gear::TPCParameters &tpcParameters = marlin::Global::GEAR->getTPCParameters();
-            const gear::PadRowLayout2D &tpcPadLayout = tpcParameters.getPadLayout();
-            rMinTracker = tpcPadLayout.getPlaneExtent()[0];
-            rMaxTracker = tpcPadLayout.getPlaneExtent()[1];
-            zMinTracker = 0;
-            zMaxTracker = tpcParameters.getMaxDriftLength();
-
-            const gear::GearParameters &coilParameters = marlin::Global::GEAR->getGearParameters("CoilParameters");
-            rMinCoil = coilParameters.getDoubleVal("Coil_cryostat_inner_radius");
-            rMaxCoil = coilParameters.getDoubleVal("Coil_cryostat_outer_radius");
-            zMinCoil = 0.f;
-            zMaxCoil = coilParameters.getDoubleVal("Coil_cryostat_half_z");
-
-            const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
-            const gear::CalorimeterParameters &hCalEndCapParameters = marlin::Global::GEAR->getHcalEndcapParameters();
-            const gear::CalorimeterParameters &eCalBarrelParameters = marlin::Global::GEAR->getEcalBarrelParameters();
-            const gear::CalorimeterParameters &eCalEndCapParameters = marlin::Global::GEAR->getEcalEndcapParameters();
-            const gear::CalorimeterParameters &muonBarrelParameters = marlin::Global::GEAR->getYokeBarrelParameters();
-            const gear::CalorimeterParameters &muonEndCapParameters = marlin::Global::GEAR->getYokeEndcapParameters();
-
-            rMinECalBarrel =  eCalBarrelParameters.getExtent()[0];
-            rMaxECalBarrel =  eCalBarrelParameters.getExtent()[1];
-            zMinECalBarrel =  eCalBarrelParameters.getExtent()[2];
-            zMaxECalBarrel =  eCalBarrelParameters.getExtent()[3];
-
-            rMinHCalBarrel =  hCalBarrelParameters.getExtent()[0];
-            rMaxHCalBarrel =  hCalBarrelParameters.getExtent()[1];
-            zMinHCalBarrel =  hCalBarrelParameters.getExtent()[2];
-            zMaxHCalBarrel =  hCalBarrelParameters.getExtent()[3];
-
-            rMinECalEndCap =  eCalEndCapParameters.getExtent()[0];
-            rMaxECalEndCap =  eCalEndCapParameters.getExtent()[1];
-            zMinECalEndCap =  eCalEndCapParameters.getExtent()[2];
-            zMaxECalEndCap =  eCalEndCapParameters.getExtent()[3];
-
-            rMinHCalEndCap =  hCalEndCapParameters.getExtent()[0];
-            rMaxHCalEndCap =  hCalEndCapParameters.getExtent()[1];
-            zMinHCalEndCap =  hCalEndCapParameters.getExtent()[2];
-            zMaxHCalEndCap =  hCalEndCapParameters.getExtent()[3];
-
-            rMinMuonBarrel =  muonBarrelParameters.getExtent()[0];
-            rMaxMuonBarrel =  muonBarrelParameters.getExtent()[1];
-            zMinMuonBarrel =  muonBarrelParameters.getExtent()[2];
-            zMaxMuonBarrel =  muonBarrelParameters.getExtent()[3];
-
-            rMinMuonEndCap =  muonEndCapParameters.getExtent()[0];
-            rMaxMuonEndCap =  muonEndCapParameters.getExtent()[1];
-            zMinMuonEndCap =  muonEndCapParameters.getExtent()[2];
-            zMaxMuonEndCap =  muonEndCapParameters.getExtent()[3];
-
-            initialized = true;
-        }
-
-        const float *pPosition = pCaloHit->getPosition();
-        pandora::CartesianVector positionVector(pPosition[0], pPosition[1], pPosition[2]);
-
-        float radius, phi, z;
-        positionVector.GetCylindricalCoordinates(radius, phi, z);
-        positionVector.SetValues(radius, 0.f, std::fabs(z));
-
-        const float eCalBarrelPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinECalBarrel, zMinECalBarrel, rMaxECalBarrel, zMaxECalBarrel));
-        const float hCalBarrelPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinHCalBarrel, zMinHCalBarrel, rMaxHCalBarrel, zMaxHCalBarrel));
-        const float muonBarrelPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinMuonBarrel, zMinMuonBarrel, rMaxMuonBarrel, zMaxMuonBarrel));
-
-        const float eCalEndCapPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinECalEndCap, zMinECalEndCap, rMaxECalEndCap, zMaxECalEndCap));
-        const float hCalEndCapPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinHCalEndCap, zMinHCalEndCap, rMaxHCalEndCap, zMaxHCalEndCap));
-        const float muonEndCapPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinMuonEndCap, zMinMuonEndCap, rMaxMuonEndCap, zMaxMuonEndCap));
-
-        const float coilPathLength(ComputePathLengthFromIPInRectangle(positionVector, rMinCoil, zMinCoil, rMaxCoil, zMaxCoil));
-
-        nRadiationLengthsFromIp = (eCalBarrelPathLength * Settings::m_avgRadLengthECalBarrel) +
-            (hCalBarrelPathLength * Settings::m_avgRadLengthHCalBarrel) +
-            (muonBarrelPathLength * Settings::m_avgRadLengthMuonBarrel) +
-            (eCalEndCapPathLength * Settings::m_avgRadLengthECalEndCap) +
-            (hCalEndCapPathLength * Settings::m_avgRadLengthHCalEndCap) +
-            (muonEndCapPathLength * Settings::m_avgRadLengthMuonEndCap) +
-            (coilPathLength * Settings::m_avgRadLengthCoil);
-
-        nInteractionLengthsFromIp = (eCalBarrelPathLength * Settings::m_avgIntLengthECalBarrel) +
-            (hCalBarrelPathLength * Settings::m_avgIntLengthHCalBarrel) +
-            (muonBarrelPathLength * Settings::m_avgIntLengthMuonBarrel) +
-            (eCalEndCapPathLength * Settings::m_avgIntLengthECalEndCap) +
-            (hCalEndCapPathLength * Settings::m_avgIntLengthHCalEndCap) +
-            (muonEndCapPathLength * Settings::m_avgIntLengthMuonEndCap) +
-            (coilPathLength * Settings::m_avgIntLengthCoil);
-    }
-    catch (gear::Exception &exception)
-    {
-        streamlog_out(ERROR) << "PathLengthCalculator: failed to extract gear geometry information" << exception.what() << std::endl;
-        throw exception;
-    }
+    nInteractionLengthsFromIp = (eCalBarrelPathLength * Settings::m_avgIntLengthECalBarrel) +
+        (hCalBarrelPathLength * Settings::m_avgIntLengthHCalBarrel) +
+        (muonBarrelPathLength * Settings::m_avgIntLengthMuonBarrel) +
+        (eCalEndCapPathLength * Settings::m_avgIntLengthECalEndCap) +
+        (hCalEndCapPathLength * Settings::m_avgIntLengthHCalEndCap) +
+        (muonEndCapPathLength * Settings::m_avgIntLengthMuonEndCap) +
+        (coilPathLength * Settings::m_avgIntLengthCoil);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float PathLengthCalculator::ComputePathLengthFromIPInRectangle(const pandora::CartesianVector &position, float rMin, float zMin,
-    float rMax, float zMax)
+float PathLengthCalculator::GetFractionInSubDetector(const pandora::CartesianVector &positionVector, const SubDetectorParameters &subDetectorParameters)
 {
-    // compute cuts with rectangle borders
-    float phi, radius, z;
-    position.GetCylindricalCoordinates(radius, phi, z);
+    const float rCoordinate(std::sqrt(positionVector.GetX() * positionVector.GetX() + positionVector.GetY() * positionVector.GetY()));
+    const float zCoordinate(std::fabs(positionVector.GetZ()));
 
-    bool valid[4];
-    float xInt[4], zInt[4];
-
-    valid[0] = IntersectLines2D(0.f, 0.f, radius, z, rMin, zMin, rMin, zMax, xInt[0], zInt[0]); // first edge of rectangle at rMin
-    valid[1] = IntersectLines2D(0.f, 0.f, radius, z, rMin, zMin, rMax, zMin, xInt[1], zInt[1]); // first edge of rectangle at zMin
-    valid[2] = IntersectLines2D(0.f, 0.f, radius, z, rMax, zMax, rMax, zMin, xInt[2], zInt[2]); // first edge of rectangle at rMax
-    valid[3] = IntersectLines2D(0.f, 0.f, radius, z, rMax, zMax, rMin, zMax, xInt[3], zInt[3]); // first edge of rectangle at zMax
-
-    int indexFirstPoint = -1;
-    int indexSecondPoint = -1;
-
-    for (int i = 0; i < 4; ++i)
-    {
-        if (valid[i])
-        {
-            if (indexFirstPoint == -1)
-            {
-                indexFirstPoint = i;
-            }
-            else if (indexSecondPoint == -1)
-            {
-                indexSecondPoint = i;
-            }
-            else
-            {
-                std::cout << "ERROR calohitcreator problem at computing path length from IP to calohit in rectangle" << std::endl;
-            }
-        }
-    }
-
-    if (indexFirstPoint == -1)
+    if ((rCoordinate < subDetectorParameters.GetInnerRCoordinate()) && (zCoordinate < subDetectorParameters.GetInnerZCoordinate()))
         return 0.f;
 
-    pandora::CartesianVector intersectionA( xInt[indexFirstPoint], 0.f, zInt[indexFirstPoint] );
+    // Use r over z ratios to determine where line enters/exits the subdetector
+    const float rOverZ((zCoordinate == 0.f) ? std::numeric_limits<float>::max() : rCoordinate / zCoordinate);
 
-    if (indexSecondPoint == -1)
+    const float innerROverZ((subDetectorParameters.GetInnerZCoordinate() == 0.f) ? std::numeric_limits<float>::max() :
+        subDetectorParameters.GetInnerRCoordinate() / subDetectorParameters.GetInnerZCoordinate());
+
+    const float outerROverZ((subDetectorParameters.GetOuterZCoordinate() == 0.f) ? std::numeric_limits<float>::max() :
+        subDetectorParameters.GetOuterRCoordinate() / subDetectorParameters.GetOuterZCoordinate());
+
+    // Find point at which line enters subdetector
+    float innerFraction(0.f);
+
+    if (rOverZ <= innerROverZ)
     {
-        const float length(pandora::CartesianVector(position - intersectionA).GetMagnitude());
-        return length;
+        innerFraction = GetLengthFraction(positionVector, subDetectorParameters.GetInnerRCoordinate(), subDetectorParameters.GetInnerRNormalVectors());
+    }
+    else
+    {
+        innerFraction = GetLengthFraction(positionVector, subDetectorParameters.GetInnerZCoordinate(), subDetectorParameters.GetZNormalVectors());
     }
 
-    pandora::CartesianVector intersectionB(xInt[indexSecondPoint], 0.f, zInt[indexSecondPoint]);
+    if ((innerFraction <= 0.f) || (innerFraction >= 1.f))
+        return 0.f;
 
-    const float length(pandora::CartesianVector(intersectionA - intersectionB).GetMagnitude());
-    return length;
+    // Point at which line exits subdetector
+    float outerFraction(0.f);
+
+    if (rOverZ >= outerROverZ)
+    {
+        outerFraction = GetLengthFraction(positionVector, subDetectorParameters.GetOuterRCoordinate(), subDetectorParameters.GetOuterRNormalVectors());
+    }
+    else
+    {
+        outerFraction = GetLengthFraction(positionVector, subDetectorParameters.GetOuterZCoordinate(), subDetectorParameters.GetZNormalVectors());
+    }
+
+    return (std::min(1.f, outerFraction) - innerFraction);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool PathLengthCalculator::IntersectLines2D(float lineAXStart, float lineAYStart, float lineAXEnd, float lineAYEnd,
-    float lineBXStart, float lineBYStart, float lineBXEnd, float lineBYEnd, float &xIntersect, float &yIntersect)
+float PathLengthCalculator::GetLengthFraction(const pandora::CartesianVector &positionVector, const float closestDistanceToIp,
+    const NormalVectorList &normalVectorList)
 {
-    // Slopes of the two lines, take max float value instead of infinity
-    float k0(std::numeric_limits<float>::max()), k1(std::numeric_limits<float>::max());
-
-    bool parallelToY_A = false;
-    bool parallelToY_B = false;
-
-    if (std::fabs(lineAXEnd-lineAXStart) > std::numeric_limits<float>::epsilon())
+    // Deal with cylindrical case
+    if (normalVectorList.empty())
     {
-        k0 = (lineAYEnd - lineAYStart) / (lineAXEnd - lineAXStart);
-    }
-    else
-    {
-        parallelToY_A = true;
+        const float radius(std::sqrt(positionVector.GetX() * positionVector.GetX() + positionVector.GetY() * positionVector.GetY()));
+        return closestDistanceToIp / radius;
     }
 
-    if (std::fabs(lineBXEnd - lineBXStart) > std::numeric_limits<float>::epsilon())
-    {
-        k1 = (lineBYEnd - lineBYStart) / (lineBXEnd - lineBXStart);
-    }
-    else
-    {
-        parallelToY_B = true;
-    }
+    // Deal with regular polygon case
+    float maxDotProduct(0.f);
 
-    if (parallelToY_A && parallelToY_B)
+    for (NormalVectorList::const_iterator iter = normalVectorList.begin(), iterEnd = normalVectorList.end(); iter != iterEnd; ++iter)
     {
-        xIntersect = 0.f;
-        yIntersect = 0.f;
+        const float dotProduct(positionVector.GetDotProduct(*iter));
 
-        return false;
+        if (dotProduct > maxDotProduct)
+            maxDotProduct = dotProduct;
     }
 
-    if (parallelToY_A)
+    if (maxDotProduct <= 0.f)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+
+    return closestDistanceToIp / maxDotProduct;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PathLengthCalculator::InitializeGeometry()
+{
+    try
     {
-        xIntersect = lineAXStart;
-        yIntersect = lineBXStart + k1 * (xIntersect - lineBXStart);
+        const pandora::GeometryHelper *const pGeometryHelper(pandora::GeometryHelper::GetInstance());
+
+        m_eCalBarrelParameters.Initialize(pGeometryHelper->GetECalBarrelParameters());
+        m_hCalBarrelParameters.Initialize(pGeometryHelper->GetHCalBarrelParameters());
+        m_muonBarrelParameters.Initialize(pGeometryHelper->GetMuonBarrelParameters());
+        m_eCalEndCapParameters.Initialize(pGeometryHelper->GetECalEndCapParameters());
+        m_hCalEndCapParameters.Initialize(pGeometryHelper->GetHCalEndCapParameters());
+        m_muonEndCapParameters.Initialize(pGeometryHelper->GetMuonEndCapParameters());
+        m_coilParameters.Initialize_Cylinder(pGeometryHelper->GetCoilInnerRadius(), pGeometryHelper->GetCoilOuterRadius(),
+            0.f, pGeometryHelper->GetCoilZExtent());
+
+        m_isGeometryInitialized = true;
     }
-    else if (parallelToY_B)
+    catch (pandora::StatusCodeException &statusCodeException)
     {
-        xIntersect = lineBXStart;
-        yIntersect = lineAXStart + k0 * (xIntersect - lineAXStart);
+        streamlog_out(ERROR) << "PathLengthCalculator: Failed to initialize geometry: " << statusCodeException.ToString() << std::endl;
+        throw statusCodeException;
     }
-    else
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PathLengthCalculator::SubDetectorParameters::Initialize(const pandora::GeometryHelper::SubDetectorParameters &subDetectorParameters)
+{
+    m_innerRCoordinate = subDetectorParameters.GetInnerRCoordinate();
+    m_outerRCoordinate = subDetectorParameters.GetOuterRCoordinate();
+    m_innerZCoordinate = subDetectorParameters.GetInnerZCoordinate();
+    m_outerZCoordinate = subDetectorParameters.GetOuterZCoordinate();
+
+    this->GetPolygonNormalVectors(subDetectorParameters.GetInnerSymmetryOrder(), subDetectorParameters.GetInnerPhiCoordinate(), m_innerRNormalVectors);
+    this->GetPolygonNormalVectors(subDetectorParameters.GetOuterSymmetryOrder(), subDetectorParameters.GetOuterPhiCoordinate(), m_outerRNormalVectors);
+    m_zNormalVectors.push_back(pandora::CartesianVector(0, 0, 1));
+    m_zNormalVectors.push_back(pandora::CartesianVector(0, 0, -1));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PathLengthCalculator::SubDetectorParameters::Initialize_Cylinder(const float innerRCoordinate, const float outerRCoordinate,
+    const float innerZCoordinate, const float outerZCoordinate)
+{
+    m_innerRCoordinate = innerRCoordinate;
+    m_outerRCoordinate = outerRCoordinate;
+    m_innerZCoordinate = innerZCoordinate;
+    m_outerZCoordinate = outerZCoordinate;
+
+    m_zNormalVectors.push_back(pandora::CartesianVector(0, 0, 1));
+    m_zNormalVectors.push_back(pandora::CartesianVector(0, 0, -1));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PathLengthCalculator::SubDetectorParameters::GetPolygonNormalVectors(const unsigned int symmetry, const float phi0, NormalVectorList &normalVectorList) const
+{
+    for (unsigned int iSymmetry = 0; iSymmetry < symmetry; ++iSymmetry)
     {
-        const float b0 = -1;
-        const float b1 = -1;
-
-        const float c0 = (lineAYStart - k0 * lineAXStart);
-        const float c1 = (lineBYStart - k1 * lineBXStart);
-
-        const float determinant(k0 * b1 - k1 * b0);
-
-        if (0.f == determinant)
-        {
-            std::cout << "ERROR zero determinant in interaction length calculator" << std::endl;
-            return false;
-        }
-
-        // use Kramers rule to compute xi and yi
-        xIntersect=((b0 * c1 - b1 * c0) / determinant);
-        yIntersect=((k1 * c0 - k0 * c1) / determinant);
+        static const float pi(std::acos(-1.));
+        const float phi = phi0 + (2. * pi * static_cast<float>(iSymmetry) / static_cast<float>(symmetry));
+        normalVectorList.push_back(pandora::CartesianVector(std::sin(phi), std::cos(phi), 0));
     }
+}
 
-    // check if intersections are within end-points of lines
-    // check x coordinate, line A
-    if (!((xIntersect >= lineAXStart && xIntersect <= lineAXEnd) || (xIntersect >= lineAXEnd && xIntersect <= lineAXStart)))
-        return false;
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-    // check x coordinate, line B
-    if (!((xIntersect >= lineBXStart && xIntersect <= lineBXEnd) || (xIntersect >= lineBXEnd && xIntersect <= lineBXStart)))
-        return false;
+bool PathLengthCalculator::m_instanceFlag = false;
+bool PathLengthCalculator::m_isGeometryInitialized = false;
+PathLengthCalculator* PathLengthCalculator::m_pPathLengthCalculator = NULL;
 
-    // check y coordinate, line A
-    if (!((yIntersect >= lineAYStart && yIntersect <= lineAYEnd) || (yIntersect >= lineAYEnd && yIntersect <= lineAYStart)))
-        return false;
+PathLengthCalculator::SubDetectorParameters PathLengthCalculator::m_eCalBarrelParameters;
+PathLengthCalculator::SubDetectorParameters PathLengthCalculator::m_hCalBarrelParameters;
+PathLengthCalculator::SubDetectorParameters PathLengthCalculator::m_muonBarrelParameters;
+PathLengthCalculator::SubDetectorParameters PathLengthCalculator::m_eCalEndCapParameters;
+PathLengthCalculator::SubDetectorParameters PathLengthCalculator::m_hCalEndCapParameters;
+PathLengthCalculator::SubDetectorParameters PathLengthCalculator::m_muonEndCapParameters;
+PathLengthCalculator::SubDetectorParameters PathLengthCalculator::m_coilParameters;
 
-    // check y coordinate, line B
-    if (!((yIntersect >= lineBYStart && yIntersect <= lineBYEnd) || (yIntersect >= lineBYEnd && yIntersect <= lineBYStart)))
-        return false;
+float PathLengthCalculator::Settings::m_avgRadLengthCoil = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthECalBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthHCalBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthECalEndCap = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthHCalEndCap = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthMuonBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgRadLengthMuonEndCap = 0.f;
 
-    return true;
-} 
+float PathLengthCalculator::Settings::m_avgIntLengthCoil = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthECalBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthHCalBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthECalEndCap = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthHCalEndCap = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthMuonBarrel = 0.f;
+float PathLengthCalculator::Settings::m_avgIntLengthMuonEndCap = 0.f;

@@ -563,7 +563,7 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
         break;
     }
 
-    if (barrelSymmetryOrder > 0)
+    if (barrelSymmetryOrder > 2)
     {
         static const float pi(std::acos(-1.));
         const float phi = barrelPhi0 + (2. * pi * static_cast<float>(staveNumber) / static_cast<float>(barrelSymmetryOrder));
