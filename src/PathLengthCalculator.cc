@@ -119,6 +119,9 @@ float PathLengthCalculator::GetFractionInSubDetector(const pandora::CartesianVec
         outerFraction = GetLengthFraction(positionVector, subDetectorParameters.GetOuterZCoordinate(), subDetectorParameters.GetZNormalVectors());
     }
 
+    if (outerFraction < innerFraction)
+        return 0.f;
+
     return (std::min(1.f, outerFraction) - innerFraction);
 }
 

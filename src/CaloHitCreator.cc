@@ -480,18 +480,22 @@ void CaloHitCreator::GetCommonCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
     caloHitParameters.m_time = pCaloHit->getTime();
 
+    // TODO When available, use gear to calculate path length properties.
+    // const gear::Vector3D positionIP3D(0.f, 0.f, 0.f);
+    // const gear::Vector3D positionVector3D(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
+    // radiationLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNRadlen(positionIP3D, positionVector3D);
+    // interactionLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNIntlen(positionIP3D, positionVector3D);
+
     float radiationLengthsFromIp(0.f), interactionLengthsFromIp(0.f);
 
     try
     {
-        const gear::Vector3D positionIP3D(0.f, 0.f, 0.f);
-        const gear::Vector3D positionVector3D(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
-        radiationLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNRadlen(positionIP3D, positionVector3D);
-        interactionLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNIntlen(positionIP3D, positionVector3D);
-    }
-    catch (gear::Exception &exception)
-    {
         m_pPathLengthCalculator->GetPathLengths(pCaloHit, radiationLengthsFromIp, interactionLengthsFromIp);
+    }
+    catch (pandora::StatusCodeException &statusCodeException)
+    {
+        streamlog_out(ERROR) << "Failed to calculate calo hit path lengths from ip: " << statusCodeException.ToString() << std::endl;
+        throw statusCodeException;
     }
 
     caloHitParameters.m_nRadiationLengthsFromIp = radiationLengthsFromIp;
