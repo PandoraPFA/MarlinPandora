@@ -1,3 +1,17 @@
+Updated path length to interaction length (and radiation length) conversion constants.
+Added new approach to calculating path lengths through ILD-like subdetectors.
+Updated to specify new api parameters, required in order to help remove geometry dependence from pandora algorithms.
+Removed outdated geometry parameters.
+
+************************************************************************
+CREATE CLIC_CDR BRANCH
+************************************************************************
+Deal with yoke plug hits and also hits that have zero absorber thickness.
+Updated to reflect namespace changes to pandora::StatusCode enum and pandora::StatusCodeException class.
+Added SimpleBFieldCalculator class and chose to use HighGranularityPseudoLayerCalculator class provided with PandoraPFANew library.
+Updated PandoraSettings files to reflect recent changes and provided file that uses separate muon reconstruction.
+Provided a gnu makefile.
+
 ************************************************************************
 TAG V00-02 FOR ILCSOFT USAGE
 ************************************************************************
