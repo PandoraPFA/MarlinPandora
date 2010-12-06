@@ -52,7 +52,8 @@ public:
 
         float           m_eCalToEMGeV;                          ///< The calibration from deposited ECal energy to EM energy
         float           m_hCalToEMGeV;                          ///< The calibration from deposited HCal energy to EM energy
-        float           m_eCalToHadGeV;                         ///< The calibration from deposited ECal energy to hadronic energy
+        float           m_eCalBarrelToHadGeV;                         ///< The calibration from deposited ECal energy to hadronic energy
+        float           m_eCalEndcapToHadGeV;                         ///< The calibration from deposited ECal energy to hadronic energy
         float           m_hCalToHadGeV;                         ///< The calibration from deposited HCal energy to hadronic energy
         int             m_muonDigitalHits;                      ///< Muon hits are treated as digital (energy from hit count)
         float           m_muonHitEnergy;                        ///< The energy for a digital muon calorimeter hit, units GeV
