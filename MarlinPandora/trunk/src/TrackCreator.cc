@@ -549,6 +549,7 @@ void TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const i
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
     trackParameters.m_trackStateAtECal = pandora::TrackState(bestECalProjection, pHelix->GetExtrapolatedMomentum(bestECalProjection));
+    trackParameters.m_timeAtECal = minTime;
     trackParameters.m_isProjectedToEndCap = isProjectedToEndCap;
 }
 
