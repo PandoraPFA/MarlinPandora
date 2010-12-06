@@ -51,9 +51,9 @@ public:
         float           m_muonMipThreshold;                     ///< Threshold for creating calo hits in the HCal, units mip
 
         float           m_eCalToEMGeV;                          ///< The calibration from deposited ECal energy to EM energy
+        float           m_eCalToHadGeVBarrel;                   ///< The calibration from deposited ECal barrel energy to hadronic energy
+        float           m_eCalToHadGeVEndCap;                   ///< The calibration from deposited ECal endcap energy to hadronic energy
         float           m_hCalToEMGeV;                          ///< The calibration from deposited HCal energy to EM energy
-        float           m_eCalBarrelToHadGeV;                         ///< The calibration from deposited ECal energy to hadronic energy
-        float           m_eCalEndcapToHadGeV;                         ///< The calibration from deposited ECal energy to hadronic energy
         float           m_hCalToHadGeV;                         ///< The calibration from deposited HCal energy to hadronic energy
         int             m_muonDigitalHits;                      ///< Muon hits are treated as digital (energy from hit count)
         float           m_muonHitEnergy;                        ///< The energy for a digital muon calorimeter hit, units GeV

@@ -431,7 +431,6 @@ pandora::StatusCode TrackCreator::CreateTracks(const EVENT::LCEvent *const pLCEv
                     this->TrackReachesECAL(pTrack, trackParameters);
                     this->DefineTrackPfoUsage(pTrack, trackParameters);
 
-
                     PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(*m_pPandora, trackParameters));
                     m_trackVector.push_back(pTrack);
                 }
@@ -564,7 +563,7 @@ void TrackCreator::TrackReachesECAL(const EVENT::Track *const pTrack, PandoraApi
 
     int nTpcHits(0);
     int nFtdHits(0);
-    int iFtdMaxLayer(0);
+    int maxOccupiedFtdLayer(0);
 
     const EVENT::TrackerHitVec &trackerHitVec(pTrack->getTrackerHits());
     const unsigned int nTrackHits(trackerHitVec.size());
@@ -597,27 +596,29 @@ void TrackCreator::TrackReachesECAL(const EVENT::Track *const pTrack, PandoraApi
                 (std::fabs(z) - m_settings.m_reachesECalFtdZMaxDistance < m_ftdZPositions[j]) &&
                 (std::fabs(z) + m_settings.m_reachesECalFtdZMaxDistance > m_ftdZPositions[j]))
             {
-	      if(int(j)>iFtdMaxLayer)iFtdMaxLayer = int(j);
+                if (static_cast<int>(j) > maxOccupiedFtdLayer)
+                    maxOccupiedFtdLayer = static_cast<int>(j);
+
                 nFtdHits++;
                 break;
             }
         }
     }
-  
+
     // Look to see if there are hits in etd or set, implying track has reached edge of ecal
     if ((hitOuterR > m_minSetRadius) || (hitZMax > m_minEtdZPosition))
     {
         trackParameters.m_reachesECal = true;
         return;
     }
-    
+
     // Require sufficient hits in tpc or ftd, then compare extremal hit positions with tracker dimensions
     if ((nTpcHits >= m_settings.m_reachesECalNTpcHits) || (nFtdHits >= m_settings.m_reachesECalNFtdHits))
     {
         if ((hitOuterR - m_tpcOuterR > m_settings.m_reachesECalTpcOuterDistance) ||
             (std::fabs(hitZMax) - m_tpcZmax > m_settings.m_reachesECalTpcZMaxDistance) ||
             (std::fabs(hitZMin) - m_tpcZmax > m_settings.m_reachesECalTpcZMaxDistance) ||
-	    (iFtdMaxLayer >= m_settings.m_reachesEcalFtdLayerMin)) 
+            (maxOccupiedFtdLayer >= m_settings.m_reachesECalMinFtdLayer))
         {
             trackParameters.m_reachesECal = true;
             return;
@@ -629,9 +630,10 @@ void TrackCreator::TrackReachesECAL(const EVENT::Track *const pTrack, PandoraApi
     const float cosAngleAtDca(std::fabs(momentumAtDca.GetZ()) / momentumAtDca.GetMagnitude());
     const float pX(momentumAtDca.GetX()), pY(momentumAtDca.GetY());
     const float pT(std::sqrt(pX * pX + pY * pY));
+
     if ((cosAngleAtDca > m_cosTpc) || (pT < m_settings.m_curvatureToMomentumFactor * m_bField * m_tpcOuterR))
     {
-      trackParameters.m_reachesECal = true;
+        trackParameters.m_reachesECal = true;
         return;
     }
 
