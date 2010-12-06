@@ -64,6 +64,7 @@ public:
         int             m_reachesECalNTpcHits;                  ///< Minimum number of tpc hits to consider track as reaching ecal
         int             m_reachesECalNFtdHits;                  ///< Minimum number of ftd hits to consider track as reaching ecal
         float           m_reachesECalTpcOuterDistance;          ///< Max distance from track to tpc r max to id whether track reaches ecal
+        int             m_reachesEcalFtdLayerMin;               ///< Min layer in Ftd for tracks to be considered to have reached decal
         float           m_reachesECalTpcZMaxDistance;           ///< Max distance from track to tpc z max to id whether track reaches ecal
         float           m_reachesECalFtdZMaxDistance;           ///< Max distance from track hit to ftd z position to identify ftd hits
         float           m_curvatureToMomentumFactor;            ///< Constant relating track curvature in b field to momentum
