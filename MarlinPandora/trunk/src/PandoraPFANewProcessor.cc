@@ -8,12 +8,10 @@
 
 #include "marlin/Global.h"
 #include "marlin/Exceptions.h"
-#include "marlin/Processor.h"
 
 #include "gear/BField.h"
 
 #include "Api/PandoraApi.h"
-#include "EVENT/LCCollection.h"
 
 #include "Utilities/HighGranularityPseudoLayerCalculator.h"
 
@@ -102,19 +100,6 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
         ++eventCounter;
         throw marlin::SkipEventException(this);
     }
-
-  
-  // Dump the collection sizes
-    typedef const std::vector<std::string> StringVec ;
-    StringVec* strVec = pLCEvent->getCollectionNames() ;
-    for(StringVec::const_iterator name=strVec->begin(); name!=strVec->end(); name++){    
-      const LCCollection* col = pLCEvent->getCollection(*name);
-      int nelem(col->getNumberOfElements());
-      // on the first event print out available collections 
-      streamlog_out(WARNING) << "PandoraPFA::processEvent   Input Collections : " << *name << "  elements : " << nelem << std::endl;
-    }  
-
-
 
     try
     {
@@ -350,14 +335,14 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_caloHitCreatorSettings.m_hCalToEMGeV,
                             float(1.));
 
-    registerProcessorParameter("ECalToHadGeVCalibrationEndcap",
+    registerProcessorParameter("ECalToHadGeVCalibrationEndCap",
                             "The calibration from deposited ECal energy to hadronic energy",
-                            m_caloHitCreatorSettings.m_eCalEndcapToHadGeV,
+                            m_caloHitCreatorSettings.m_eCalToHadGeVEndCap,
                             float(1.));
 
     registerProcessorParameter("ECalToHadGeVCalibrationBarrel",
                             "The calibration from deposited ECal energy to hadronic energy",
-                            m_caloHitCreatorSettings.m_eCalBarrelToHadGeV,
+                            m_caloHitCreatorSettings.m_eCalToHadGeVBarrel,
                             float(1.));
 
     registerProcessorParameter("HCalToHadGeVCalibration",
@@ -559,10 +544,8 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
 
     registerProcessorParameter("ReachesECalMinFtdLayer",
                             "Min FTD layer for track to be considered to have reached ecal",
-                            m_trackCreatorSettings.m_reachesEcalFtdLayerMin,
+                            m_trackCreatorSettings.m_reachesECalMinFtdLayer,
                             int(9));
-
-
 
     registerProcessorParameter("ReachesECalTpcZMaxDistance",
                             "Max distance from track to tpc z max to id whether track reaches ecal",
