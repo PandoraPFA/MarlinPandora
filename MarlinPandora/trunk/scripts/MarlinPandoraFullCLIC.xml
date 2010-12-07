@@ -410,8 +410,8 @@
   <parameter name="HCalMipThreshold" type="float">0.3</parameter>
   <parameter name="ECalToEMGeVCalibration" type="float">1.0</parameter>
   <parameter name="HCalToEMGeVCalibration" type="float">1.0</parameter>
-  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.03></parameter>
-  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.03></parameter>
+  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.03</parameter>
+  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.03</parameter>
   <parameter name="HCalToHadGeVCalibration" type="float">1.0</parameter>
   <parameter name="MuonToMipCalibration" type="float">5.0</parameter>
   <parameter name="DigitalMuonHits" type="int">0</parameter>
