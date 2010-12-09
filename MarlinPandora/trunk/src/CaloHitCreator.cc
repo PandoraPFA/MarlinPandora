@@ -33,22 +33,22 @@ CaloHitCreator::CaloHitCreator(const Settings &settings) :
     m_settings(settings),
     m_pPandora(PandoraPFANewProcessor::GetPandora()),
     m_pPathLengthCalculator(PathLengthCalculator::GetInstance()),
-    m_eCalEndCapInnerZ(marlin::Global::GEAR->getEcalEndcapParameters().getExtent()[2]),
     m_eCalBarrelOuterZ(marlin::Global::GEAR->getEcalBarrelParameters().getExtent()[3]),
+    m_hCalBarrelOuterZ(marlin::Global::GEAR->getHcalBarrelParameters().getExtent()[3]),
+    m_muonBarrelOuterZ(marlin::Global::GEAR->getYokeBarrelParameters().getExtent()[3]),
+    m_coilOuterR(marlin::Global::GEAR->getGearParameters("CoilParameters").getDoubleVal("Coil_cryostat_outer_radius")),
     m_eCalBarrelInnerPhi0(marlin::Global::GEAR->getEcalBarrelParameters().getPhi0()),
     m_eCalBarrelInnerSymmetry(marlin::Global::GEAR->getEcalBarrelParameters().getSymmetryOrder()),
-    m_hCalEndCapOuterR(marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[1]),
-    m_hCalEndCapInnerZ(marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[2]),
-    m_hCalEndCapOuterZ(marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[3]),
     m_hCalBarrelInnerPhi0(marlin::Global::GEAR->getHcalBarrelParameters().getPhi0()),
     m_hCalBarrelInnerSymmetry(marlin::Global::GEAR->getHcalBarrelParameters().getSymmetryOrder()),
+    m_muonBarrelInnerPhi0(marlin::Global::GEAR->getYokeBarrelParameters().getPhi0()),
+    m_muonBarrelInnerSymmetry(marlin::Global::GEAR->getYokeBarrelParameters().getSymmetryOrder()),
+    m_hCalEndCapOuterR(marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[1]),
+    m_hCalEndCapOuterZ(marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[3]),
     m_hCalBarrelOuterR(marlin::Global::GEAR->getHcalBarrelParameters().getExtent()[1]),
     m_hCalBarrelOuterPhi0(marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_phi0")),
-    m_hCalBarrelOuterSymmetry(marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_order")),
-    m_coilOuterR(marlin::Global::GEAR->getGearParameters("CoilParameters").getDoubleVal("Coil_cryostat_outer_radius")),
-    m_muonEndCapInnerZ(marlin::Global::GEAR->getYokeEndcapParameters().getExtent()[2]),
-    m_muonBarrelInnerPhi0(marlin::Global::GEAR->getYokeBarrelParameters().getPhi0()),
-    m_muonBarrelInnerSymmetry(marlin::Global::GEAR->getYokeBarrelParameters().getSymmetryOrder())
+    m_hCalBarrelOuterSymmetry(marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_order"))
+
 {
     const gear::LayerLayout &hCalEndCapLayerLayout(marlin::Global::GEAR->getHcalEndcapParameters().getLayerLayout());
     const gear::LayerLayout &hCalBarrelLayerLayout(marlin::Global::GEAR->getHcalBarrelParameters().getLayerLayout()); 
@@ -119,7 +119,7 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
 
                     float absorberCorrection(1.);
 
-                    if (std::fabs(pCaloHit->getPosition()[2]) < m_eCalEndCapInnerZ)
+                    if (std::fabs(pCaloHit->getPosition()[2]) < m_eCalBarrelOuterZ)
                     {
                         this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_eCalBarrelInnerSymmetry, m_eCalBarrelInnerPhi0,
                             cellIdDecoder(pCaloHit)["S-1"], caloHitParameters, absorberCorrection);
@@ -197,7 +197,7 @@ pandora::StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *con
 
                     float absorberCorrection(1.);
 
-                    if (std::fabs(pCaloHit->getPosition()[2]) < m_hCalEndCapInnerZ)
+                    if (std::fabs(pCaloHit->getPosition()[2]) < m_hCalBarrelOuterZ)
                     {
                         this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_hCalBarrelInnerSymmetry, m_hCalBarrelInnerPhi0,
                             m_hCalBarrelInnerSymmetry - int(cellIdDecoder(pCaloHit)["S-1"] / 2), caloHitParameters, absorberCorrection);
@@ -276,7 +276,7 @@ pandora::StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *con
                         pCaloHit->getPosition()[1] * pCaloHit->getPosition()[1]));
 
                     const bool isWithinCoil(radius < m_coilOuterR);
-                    const bool isInBarrelRegion(std::fabs(pCaloHit->getPosition()[2]) < m_muonEndCapInnerZ);
+                    const bool isInBarrelRegion(std::fabs(pCaloHit->getPosition()[2]) < m_muonBarrelOuterZ);
 
                     float absorberCorrection(1.);
 
@@ -602,7 +602,7 @@ int CaloHitCreator::GetNLayersFromEdge(const EVENT::CalorimeterHit *const pCaloH
     // Distance from radial outer
     float radialDistanceToEdge(std::numeric_limits<float>::max());
 
-    if (caloHitAbsZ < m_eCalEndCapInnerZ)
+    if (caloHitAbsZ < m_eCalBarrelOuterZ)
     {
         radialDistanceToEdge = (m_hCalBarrelOuterR - barrelMaximumRadius) / m_hCalBarrelLayerThickness;
     }
@@ -614,7 +614,7 @@ int CaloHitCreator::GetNLayersFromEdge(const EVENT::CalorimeterHit *const pCaloH
     // Distance from rear of endcap outer
     float rearDistanceToEdge(std::numeric_limits<float>::max());
 
-    if (caloHitAbsZ >= m_eCalEndCapInnerZ)
+    if (caloHitAbsZ >= m_eCalBarrelOuterZ)
     {
         rearDistanceToEdge = (m_hCalEndCapOuterZ - caloHitAbsZ) / m_hCalEndCapLayerThickness;
     }
