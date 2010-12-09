@@ -190,26 +190,24 @@ private:
     const pandora::Pandora             *m_pPandora;                         ///< Address of the pandora object to create calo hits
     const PathLengthCalculator         *m_pPathLengthCalculator;            ///< Address of the path length calculator
 
-    const float                         m_eCalEndCapInnerZ;                 ///< ECal endcap inner z coordinate
+
     const float                         m_eCalBarrelOuterZ;                 ///< ECal barrel outer z coordinate
+    const float                         m_hCalBarrelOuterZ;                 ///< HCal barrel outer z coordinate
+    const float                         m_muonBarrelOuterZ;                 ///< Muon barrel outer z coordinate
+    const float                         m_coilOuterR;                       ///< Coil outer r coordinate
+
     const float                         m_eCalBarrelInnerPhi0;              ///< ECal barrel inner phi0 coordinate
     const unsigned int                  m_eCalBarrelInnerSymmetry;          ///< ECal barrel inner symmetry order
-
-    const float                         m_hCalEndCapOuterR;                 ///< HCal endcap outer r coordinate
-    const float                         m_hCalEndCapInnerZ;                 ///< HCal endcap inner z coordinate
-    const float                         m_hCalEndCapOuterZ;                 ///< HCal endcap outer z coordinate
-
     const float                         m_hCalBarrelInnerPhi0;              ///< HCal barrel inner phi0 coordinate
     const unsigned int                  m_hCalBarrelInnerSymmetry;          ///< HCal barrel inner symmetry order
+    const float                         m_muonBarrelInnerPhi0;              ///< Muon barrel inner phi0 coordinate
+    const unsigned int                  m_muonBarrelInnerSymmetry;          ///< Muon barrel inner symmetry order
+
+    const float                         m_hCalEndCapOuterR;                 ///< HCal endcap outer r coordinate
+    const float                         m_hCalEndCapOuterZ;                 ///< HCal endcap outer z coordinate
     const float                         m_hCalBarrelOuterR;                 ///< HCal barrel outer r coordinate
     const float                         m_hCalBarrelOuterPhi0;              ///< HCal barrel outer phi0 coordinate
     const unsigned int                  m_hCalBarrelOuterSymmetry;          ///< HCal barrel outer symmetry order
-
-    const float                         m_coilOuterR;                       ///< Coil outer r coordinate
-
-    const float                         m_muonEndCapInnerZ;                 ///< Muon endcap inner z coordinate
-    const float                         m_muonBarrelInnerPhi0;              ///< Muon barrel inner phi0 coordinate
-    const unsigned int                  m_muonBarrelInnerSymmetry;          ///< Muon barrel inner symmetry order
 
     float                               m_hCalBarrelLayerThickness;         ///< HCal barrel layer thickness
     float                               m_hCalEndCapLayerThickness;         ///< HCal endcap layer thickness
