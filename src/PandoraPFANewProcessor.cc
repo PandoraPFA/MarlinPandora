@@ -13,7 +13,7 @@
 
 #include "Api/PandoraApi.h"
 
-#include "Utilities/HighGranularityPseudoLayerCalculator.h"
+#include "Utilities/FineGranularityPseudoLayerCalculator.h"
 
 #include "ExternalClusteringAlgorithm.h"
 #include "PathLengthCalculator.h"
@@ -178,7 +178,7 @@ pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
         new ExternalClusteringAlgorithm::Factory));
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerCalculator(*m_pPandora,
-        new pandora::HighGranularityPseudoLayerCalculator()));
+        new pandora::FineGranularityPseudoLayerCalculator()));
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldCalculator(*m_pPandora,
         new SimpleBFieldCalculator()));
