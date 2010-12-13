@@ -548,8 +548,8 @@ void TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const i
     if (!bestECalProjection.IsInitialized())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
-    trackParameters.m_trackStateAtECal = pandora::TrackState(bestECalProjection, pHelix->GetExtrapolatedMomentum(bestECalProjection));
-    trackParameters.m_timeAtECal = minTime;
+    trackParameters.m_trackStateAtCalorimeter = pandora::TrackState(bestECalProjection, pHelix->GetExtrapolatedMomentum(bestECalProjection));
+    trackParameters.m_timeAtCalorimeter = minTime;
     trackParameters.m_isProjectedToEndCap = isProjectedToEndCap;
 }
 
@@ -609,7 +609,7 @@ void TrackCreator::TrackReachesECAL(const EVENT::Track *const pTrack, PandoraApi
     // Look to see if there are hits in etd or set, implying track has reached edge of ecal
     if ((hitOuterR > m_minSetRadius) || (hitZMax > m_minEtdZPosition))
     {
-        trackParameters.m_reachesECal = true;
+        trackParameters.m_reachesCalorimeter = true;
         return;
     }
 
@@ -621,7 +621,7 @@ void TrackCreator::TrackReachesECAL(const EVENT::Track *const pTrack, PandoraApi
             (std::fabs(hitZMin) - m_tpcZmax > m_settings.m_reachesECalTpcZMaxDistance) ||
             (maxOccupiedFtdLayer >= m_settings.m_reachesECalMinFtdLayer))
         {
-            trackParameters.m_reachesECal = true;
+            trackParameters.m_reachesCalorimeter = true;
             return;
         }
     }
@@ -634,11 +634,11 @@ void TrackCreator::TrackReachesECAL(const EVENT::Track *const pTrack, PandoraApi
 
     if ((cosAngleAtDca > m_cosTpc) || (pT < m_settings.m_curvatureToMomentumFactor * m_bField * m_tpcOuterR))
     {
-        trackParameters.m_reachesECal = true;
+        trackParameters.m_reachesCalorimeter = true;
         return;
     }
 
-    trackParameters.m_reachesECal = false;
+    trackParameters.m_reachesCalorimeter = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -648,7 +648,7 @@ void TrackCreator::DefineTrackPfoUsage(const EVENT::Track *const pTrack, Pandora
     bool canFormPfo(false);
     bool canFormClusterlessPfo(false);
 
-    if (trackParameters.m_reachesECal.Get() && !this->IsParent(pTrack))
+    if (trackParameters.m_reachesCalorimeter.Get() && !this->IsParent(pTrack))
     {
         const float d0(std::fabs(pTrack->getD0())), z0(std::fabs(pTrack->getZ0()));
 
@@ -726,7 +726,7 @@ void TrackCreator::DefineTrackPfoUsage(const EVENT::Track *const pTrack, Pandora
 bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters) const
 {
     // First simple sanity checks
-    if (trackParameters.m_trackStateAtECal.Get().GetPosition().GetMagnitude() < m_settings.m_minTrackECalDistanceFromIp)
+    if (trackParameters.m_trackStateAtCalorimeter.Get().GetPosition().GetMagnitude() < m_settings.m_minTrackECalDistanceFromIp)
         return false;
 
     if (pTrack->getOmega() == 0.f)
