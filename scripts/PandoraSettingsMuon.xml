@@ -18,13 +18,13 @@
     <!-- Standalone muon clustering -->
     <algorithm type = "MuonReconstruction">
         <algorithm type = "Clustering" description = "MuonClusterFormation">
-            <TanConeAngleHCal>0.3</TanConeAngleHCal>
+            <TanConeAngleCoarse>0.3</TanConeAngleCoarse>
             <ConeApproachMaxSeparation>2000.f</ConeApproachMaxSeparation>
             <MaxClusterDirProjection>2000.f</MaxClusterDirProjection>
             <ShouldUseIsolatedHits>true</ShouldUseIsolatedHits>
-            <LayersToStepBackHCal>6</LayersToStepBackHCal>
-            <AdditionalPadWidthsHCal>1</AdditionalPadWidthsHCal>
-            <SameLayerPadWidthsHCal>1.8</SameLayerPadWidthsHCal>
+            <LayersToStepBackCoarse>6</LayersToStepBackCoarse>
+            <AdditionalPadWidthsCoarse>1</AdditionalPadWidthsCoarse>
+            <SameLayerPadWidthsCoarse>1.8</SameLayerPadWidthsCoarse>
             <ShouldUseTrackSeed>false</ShouldUseTrackSeed>
             <MaxTrackSeedSeparation>0</MaxTrackSeedSeparation>
             <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
@@ -72,108 +72,108 @@
             <algorithm type = "SplitTrackAssociations" instance = "SplitTrackAssociations1">
                 <clusteringAlgorithms>
                     <algorithm type = "Clustering" instance = "Reclustering1">
-                        <TanConeAngleECal>0.24</TanConeAngleECal>
-                        <TanConeAngleHCal>0.4</TanConeAngleHCal>
-                        <AdditionalPadWidthsECal>2</AdditionalPadWidthsECal>
-                        <AdditionalPadWidthsHCal>2</AdditionalPadWidthsHCal>
-                        <SameLayerPadWidthsECal>2.24</SameLayerPadWidthsECal>
-                        <SameLayerPadWidthsHCal>1.44</SameLayerPadWidthsHCal>
+                        <TanConeAngleFine>0.24</TanConeAngleFine>
+                        <TanConeAngleCoarse>0.4</TanConeAngleCoarse>
+                        <AdditionalPadWidthsFine>2</AdditionalPadWidthsFine>
+                        <AdditionalPadWidthsCoarse>2</AdditionalPadWidthsCoarse>
+                        <SameLayerPadWidthsFine>2.24</SameLayerPadWidthsFine>
+                        <SameLayerPadWidthsCoarse>1.44</SameLayerPadWidthsCoarse>
                         <MaxTrackSeedSeparation>100</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
                     <algorithm type = "Clustering" instance = "Reclustering2">
-                        <TanConeAngleECal>0.18</TanConeAngleECal>
-                        <TanConeAngleHCal>0.3</TanConeAngleHCal>
-                        <AdditionalPadWidthsECal>1.5</AdditionalPadWidthsECal>
-                        <AdditionalPadWidthsHCal>1.5</AdditionalPadWidthsHCal>
-                        <SameLayerPadWidthsECal>1.68</SameLayerPadWidthsECal>
-                        <SameLayerPadWidthsHCal>1.08</SameLayerPadWidthsHCal>
+                        <TanConeAngleFine>0.18</TanConeAngleFine>
+                        <TanConeAngleCoarse>0.3</TanConeAngleCoarse>
+                        <AdditionalPadWidthsFine>1.5</AdditionalPadWidthsFine>
+                        <AdditionalPadWidthsCoarse>1.5</AdditionalPadWidthsCoarse>
+                        <SameLayerPadWidthsFine>1.68</SameLayerPadWidthsFine>
+                        <SameLayerPadWidthsCoarse>1.08</SameLayerPadWidthsCoarse>
                         <MaxTrackSeedSeparation>100</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
                     <algorithm type = "Clustering" instance = "Reclustering3">
-                        <TanConeAngleECal>0.15</TanConeAngleECal>
-                        <TanConeAngleHCal>0.25</TanConeAngleHCal>
-                        <AdditionalPadWidthsECal>1.25</AdditionalPadWidthsECal>
-                        <AdditionalPadWidthsHCal>1.25</AdditionalPadWidthsHCal>
-                        <SameLayerPadWidthsECal>1.4</SameLayerPadWidthsECal>
-                        <SameLayerPadWidthsHCal>0.9</SameLayerPadWidthsHCal>
+                        <TanConeAngleFine>0.15</TanConeAngleFine>
+                        <TanConeAngleCoarse>0.25</TanConeAngleCoarse>
+                        <AdditionalPadWidthsFine>1.25</AdditionalPadWidthsFine>
+                        <AdditionalPadWidthsCoarse>1.25</AdditionalPadWidthsCoarse>
+                        <SameLayerPadWidthsFine>1.4</SameLayerPadWidthsFine>
+                        <SameLayerPadWidthsCoarse>0.9</SameLayerPadWidthsCoarse>
                         <MaxTrackSeedSeparation>100</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
                     <algorithm type = "Clustering" instance = "Reclustering4">
-                        <TanConeAngleECal>0.12</TanConeAngleECal>
-                        <TanConeAngleHCal>0.2</TanConeAngleHCal>
-                        <AdditionalPadWidthsECal>1</AdditionalPadWidthsECal>
-                        <AdditionalPadWidthsHCal>1</AdditionalPadWidthsHCal>
-                        <SameLayerPadWidthsECal>1.12</SameLayerPadWidthsECal>
-                        <SameLayerPadWidthsHCal>0.72</SameLayerPadWidthsHCal>
+                        <TanConeAngleFine>0.12</TanConeAngleFine>
+                        <TanConeAngleCoarse>0.2</TanConeAngleCoarse>
+                        <AdditionalPadWidthsFine>1</AdditionalPadWidthsFine>
+                        <AdditionalPadWidthsCoarse>1</AdditionalPadWidthsCoarse>
+                        <SameLayerPadWidthsFine>1.12</SameLayerPadWidthsFine>
+                        <SameLayerPadWidthsCoarse>0.72</SameLayerPadWidthsCoarse>
                         <MaxTrackSeedSeparation>100</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
                     <algorithm type = "Clustering" instance = "Reclustering5">
-                        <TanConeAngleECal>0.09</TanConeAngleECal>
-                        <TanConeAngleHCal>0.15</TanConeAngleHCal>
-                        <AdditionalPadWidthsECal>0.75</AdditionalPadWidthsECal>
-                        <AdditionalPadWidthsHCal>0.75</AdditionalPadWidthsHCal>
-                        <SameLayerPadWidthsECal>0.84</SameLayerPadWidthsECal>
-                        <SameLayerPadWidthsHCal>0.54</SameLayerPadWidthsHCal>
+                        <TanConeAngleFine>0.09</TanConeAngleFine>
+                        <TanConeAngleCoarse>0.15</TanConeAngleCoarse>
+                        <AdditionalPadWidthsFine>0.75</AdditionalPadWidthsFine>
+                        <AdditionalPadWidthsCoarse>0.75</AdditionalPadWidthsCoarse>
+                        <SameLayerPadWidthsFine>0.84</SameLayerPadWidthsFine>
+                        <SameLayerPadWidthsCoarse>0.54</SameLayerPadWidthsCoarse>
                         <MaxTrackSeedSeparation>100</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
                     <algorithm type = "Clustering" instance = "Reclustering6">
-                        <TanConeAngleECal>0.075</TanConeAngleECal>
-                        <TanConeAngleHCal>0.125</TanConeAngleHCal>
-                        <AdditionalPadWidthsECal>0.625</AdditionalPadWidthsECal>
-                        <AdditionalPadWidthsHCal>0.625</AdditionalPadWidthsHCal>
-                        <SameLayerPadWidthsECal>0.7</SameLayerPadWidthsECal>
-                        <SameLayerPadWidthsHCal>0.45</SameLayerPadWidthsHCal>
+                        <TanConeAngleFine>0.075</TanConeAngleFine>
+                        <TanConeAngleCoarse>0.125</TanConeAngleCoarse>
+                        <AdditionalPadWidthsFine>0.625</AdditionalPadWidthsFine>
+                        <AdditionalPadWidthsCoarse>0.625</AdditionalPadWidthsCoarse>
+                        <SameLayerPadWidthsFine>0.7</SameLayerPadWidthsFine>
+                        <SameLayerPadWidthsCoarse>0.45</SameLayerPadWidthsCoarse>
                         <MaxTrackSeedSeparation>100</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
                     <algorithm type = "Clustering" instance = "Reclustering7">
-                        <TanConeAngleECal>0.06</TanConeAngleECal>
-                        <TanConeAngleHCal>0.1</TanConeAngleHCal>
-                        <AdditionalPadWidthsECal>0.5</AdditionalPadWidthsECal>
-                        <AdditionalPadWidthsHCal>0.5</AdditionalPadWidthsHCal>
-                        <SameLayerPadWidthsECal>0.56</SameLayerPadWidthsECal>
-                        <SameLayerPadWidthsHCal>0.36</SameLayerPadWidthsHCal>
+                        <TanConeAngleFine>0.06</TanConeAngleFine>
+                        <TanConeAngleCoarse>0.1</TanConeAngleCoarse>
+                        <AdditionalPadWidthsFine>0.5</AdditionalPadWidthsFine>
+                        <AdditionalPadWidthsCoarse>0.5</AdditionalPadWidthsCoarse>
+                        <SameLayerPadWidthsFine>0.56</SameLayerPadWidthsFine>
+                        <SameLayerPadWidthsCoarse>0.36</SameLayerPadWidthsCoarse>
                         <MaxTrackSeedSeparation>100</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
                     <algorithm type = "Clustering" instance = "Reclustering8">
-                        <TanConeAngleECal>0.045</TanConeAngleECal>
-                        <TanConeAngleHCal>0.075</TanConeAngleHCal>
-                        <AdditionalPadWidthsECal>0.375</AdditionalPadWidthsECal>
-                        <AdditionalPadWidthsHCal>0.375</AdditionalPadWidthsHCal>
-                        <SameLayerPadWidthsECal>0.42</SameLayerPadWidthsECal>
-                        <SameLayerPadWidthsHCal>0.27</SameLayerPadWidthsHCal>
+                        <TanConeAngleFine>0.045</TanConeAngleFine>
+                        <TanConeAngleCoarse>0.075</TanConeAngleCoarse>
+                        <AdditionalPadWidthsFine>0.375</AdditionalPadWidthsFine>
+                        <AdditionalPadWidthsCoarse>0.375</AdditionalPadWidthsCoarse>
+                        <SameLayerPadWidthsFine>0.42</SameLayerPadWidthsFine>
+                        <SameLayerPadWidthsCoarse>0.27</SameLayerPadWidthsCoarse>
                         <MaxTrackSeedSeparation>100</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
                     <algorithm type = "Clustering" instance = "Reclustering9">
-                        <TanConeAngleECal>0.03</TanConeAngleECal>
-                        <TanConeAngleHCal>0.05</TanConeAngleHCal>
-                        <AdditionalPadWidthsECal>0.25</AdditionalPadWidthsECal>
-                        <AdditionalPadWidthsHCal>0.25</AdditionalPadWidthsHCal>
-                        <SameLayerPadWidthsECal>0.28</SameLayerPadWidthsECal>
-                        <SameLayerPadWidthsHCal>0.18</SameLayerPadWidthsHCal>
+                        <TanConeAngleFine>0.03</TanConeAngleFine>
+                        <TanConeAngleCoarse>0.05</TanConeAngleCoarse>
+                        <AdditionalPadWidthsFine>0.25</AdditionalPadWidthsFine>
+                        <AdditionalPadWidthsCoarse>0.25</AdditionalPadWidthsCoarse>
+                        <SameLayerPadWidthsFine>0.28</SameLayerPadWidthsFine>
+                        <SameLayerPadWidthsCoarse>0.18</SameLayerPadWidthsCoarse>
                         <MaxTrackSeedSeparation>100</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
@@ -308,9 +308,9 @@
     <!-- Muon clustering -->
     <algorithm type = "PrimaryClustering">
         <algorithm type = "Clustering" description = "ClusterFormation">
-            <TanConeAngleHCal>0.75</TanConeAngleHCal>
-            <AdditionalPadWidthsHCal>12.5</AdditionalPadWidthsHCal>
-            <SameLayerPadWidthsHCal>14</SameLayerPadWidthsHCal>
+            <TanConeAngleCoarse>0.75</TanConeAngleCoarse>
+            <AdditionalPadWidthsCoarse>12.5</AdditionalPadWidthsCoarse>
+            <SameLayerPadWidthsCoarse>14</SameLayerPadWidthsCoarse>
             <ShouldUseTrackSeed>false</ShouldUseTrackSeed>
             <MaxClusterDirProjection>1000</MaxClusterDirProjection>
             <MaxTrackSeedSeparation>0</MaxTrackSeedSeparation>
