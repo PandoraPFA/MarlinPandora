@@ -178,7 +178,7 @@ pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
         new ExternalClusteringAlgorithm::Factory));
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerCalculator(*m_pPandora,
-        new pandora::FineGranularityPseudoLayerCalculator()));
+        new FineGranularityPseudoLayerCalculator()));
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldCalculator(*m_pPandora,
         new SimpleBFieldCalculator()));
