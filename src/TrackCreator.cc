@@ -474,7 +474,7 @@ void TrackCreator::FitTrackHelices(const EVENT::Track *const pTrack, PandoraApi:
             zMin = hitZ;
     }
 
-    const int signPz(std::fabs(zMin) < std::fabs(zMax) ? 1 : -1);
+    const int signPz((pHelixFit->GetMomentum().GetZ() > 0.f) ? 1 : -1);
     const float zStart((signPz > 0) ? zMin : zMax);
     const float zEnd((signPz > 0) ? zMax : zMin);
 
@@ -741,10 +741,9 @@ bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const Pan
 
     if (sigmaPOverP > m_settings.m_maxTrackSigmaPOverP)
     {
-        const EVENT::TrackerHitVec &trackerHitVec(pTrack->getTrackerHits());
-
         streamlog_out(WARNING) << " Dropping track : " << momentumAtDca.GetMagnitude() << "+-" << sigmaPOverP * (momentumAtDca.GetMagnitude())
-                               << " chi2 = " <<  pTrack->getChi2() << " " << pTrack->getNdf() << " from " << trackerHitVec.size() << std::endl;
+                               << " chi2 = " <<  pTrack->getChi2() << " " << pTrack->getNdf()
+                               << " from " << pTrack->getTrackerHits().size() << std::endl;
         return false;
     }
 
