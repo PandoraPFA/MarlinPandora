@@ -97,6 +97,7 @@ void GeometryCreator::SetDefaultSubDetectorParameters(const gear::CalorimeterPar
     subDetectorParameters.m_outerZCoordinate    = inputParameters.getExtent()[3];
     subDetectorParameters.m_outerPhiCoordinate  = inputParameters.getPhi0();
     subDetectorParameters.m_outerSymmetryOrder  = inputParameters.getSymmetryOrder();
+    subDetectorParameters.m_isMirroredInZ       = true;
     subDetectorParameters.m_nLayers             = layerLayout.getNLayers();
 
     for (int i = 0; i < layerLayout.getNLayers(); ++i)
