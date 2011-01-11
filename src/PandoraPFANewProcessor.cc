@@ -13,8 +13,7 @@
 
 #include "Api/PandoraApi.h"
 
-#include "Utilities/FineGranularityPseudoLayerCalculator.h"
-
+#include "FineGranularityPseudoLayerCalculator.h"
 #include "FineGranularityAlgorithms.h"
 #include "KMeansClusteringAlgorithms.h"
 
