@@ -15,6 +15,9 @@
 
 #include "Utilities/FineGranularityPseudoLayerCalculator.h"
 
+#include "FineGranularityAlgorithms.h"
+#include "KMeansClusteringAlgorithms.h"
+
 #include "ExternalClusteringAlgorithm.h"
 #include "PathLengthCalculator.h"
 #include "PandoraPFANewProcessor.h"
@@ -165,15 +168,12 @@ void PandoraPFANewProcessor::end()
 
 pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 {
-    //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionFunction(*m_pPandora,
-    //    "MyHadronicEnergyCorrection", pandora::HADRONIC, &PandoraPFANewProcessor::MyHadronicEnergyCorrection));
+    // Register pandora content libraries
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityAlgorithms::RegisterContent(*m_pPandora));
 
-    //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterParticleIdFunction(*m_pPandora, "MyParticleId",
-    //    &PandoraPFANewProcessor::MyParticleId));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, KMeansClusteringAlgorithms::RegisterContent(*m_pPandora));
 
-    //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "MyAlgorithm",
-    //    new MyAlgorithm::Factory));
-
+    // Register local content
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ExternalClustering",
         new ExternalClusteringAlgorithm::Factory));
 
@@ -182,6 +182,16 @@ pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldCalculator(*m_pPandora,
         new SimpleBFieldCalculator()));
+
+    // Example registrations
+    //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionFunction(*m_pPandora,
+    //    "MyHadronicEnergyCorrection", pandora::HADRONIC, &PandoraPFANewProcessor::MyHadronicEnergyCorrection));
+
+    //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterParticleIdFunction(*m_pPandora, "MyParticleId",
+    //    &PandoraPFANewProcessor::MyParticleId));
+
+    //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "MyAlgorithm",
+    //    new MyAlgorithm::Factory));
 
     return pandora::STATUS_CODE_SUCCESS;
 }
