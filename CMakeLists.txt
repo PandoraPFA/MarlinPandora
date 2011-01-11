@@ -1,5 +1,5 @@
 ########################################################
-# cmake file for building Marlin example Package
+# cmake file for building MarlinPandora
 # @author Jan Engels, DESY
 ########################################################
 
@@ -37,7 +37,7 @@ OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" ON )
 
 # project dependencies
 # e.g. SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil LCIO GEAR CLHEP GSL RAIDA ROOT" )
-SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil LCIO GEAR PandoraPFANew" )
+SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil LCIO GEAR" )
 
 # set default cmake build type to RelWithDebInfo
 # possible options are: None Debug Release RelWithDebInfo MinSizeRel
@@ -79,7 +79,10 @@ ENDIF()
 
 #include directories
 INCLUDE_DIRECTORIES( "${PROJECT_SOURCE_DIR}/include")
-INCLUDE_DIRECTORIES( "${PandoraPFANew_HOME}/include")
+
+INCLUDE_DIRECTORIES( "${PandoraPFANew_HOME}/Framework/include")
+INCLUDE_DIRECTORIES( "${PandoraPFANew_HOME}/Algorithms/include")
+INCLUDE_DIRECTORIES( "${PandoraPFANew_HOME}/KMeansClustering/include")
 
 # install include files
 INSTALL( DIRECTORY "${PROJECT_SOURCE_DIR}/include"
@@ -189,24 +192,27 @@ SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
     # avoid conflicts between library and binary target names
     OUTPUT_NAME ${PROJECT_NAME} )
 
+TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${PandoraPFANew_HOME}/lib/libPandoraAlgorithms.so )
+TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${PandoraPFANew_HOME}/lib/libPandoraKMeansClustering.so )
+
 # install library
 INSTALL( TARGETS lib_${PROJECT_NAME} DESTINATION lib PERMISSIONS
-        OWNER_READ OWNER_WRITE OWNER_EXECUTE
-        GROUP_READ GROUP_EXECUTE
-        WORLD_READ WORLD_EXECUTE )
+    OWNER_READ OWNER_WRITE OWNER_EXECUTE
+    GROUP_READ GROUP_EXECUTE
+    WORLD_READ WORLD_EXECUTE )
 
 # create uninstall configuration file 
 CONFIGURE_FILE( "${PROJECT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-                "${PROJECT_BINARY_DIR}/cmake_uninstall.cmake"
-                IMMEDIATE @ONLY )
+    "${PROJECT_BINARY_DIR}/cmake_uninstall.cmake"
+    IMMEDIATE @ONLY )
 
 # create uninstall target
 ADD_CUSTOM_TARGET( uninstall
-  "${CMAKE_COMMAND}" -P "${PROJECT_BINARY_DIR}/cmake_uninstall.cmake" )
+    "${CMAKE_COMMAND}" -P "${PROJECT_BINARY_DIR}/cmake_uninstall.cmake" )
 
 # create configuration file from .in file
 CONFIGURE_FILE( "${PROJECT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in"
-                "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" @ONLY )
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" @ONLY )
 
 # install configuration file
 INSTALL( FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" DESTINATION . )

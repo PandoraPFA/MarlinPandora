@@ -8,7 +8,7 @@
 #ifndef EXTERNAL_CLUSTERING_ALGORITHM_H
 #define EXTERNAL_CLUSTERING_ALGORITHM_H 1
 
-#include "Algorithms/Algorithm.h"
+#include "Pandora/Algorithm.h"
 
 /**
  *  @brief  ExternalClusteringAlgorithm class
