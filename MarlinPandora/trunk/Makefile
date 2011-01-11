@@ -23,13 +23,14 @@ INCLUDES += -I$(GEAR_DIR)/include/
 INCLUDES += -I$(LCIO_DIR)/include/
 INCLUDES += -I$(MARLIN_DIR)/include/
 INCLUDES += -I$(MARLINUTIL_DIR)/include/
-INCLUDES += -I$(PANDORAPFANEW_DIR)/include/
+INCLUDES += -I$(PANDORAPFANEW_DIR)/Framework/include/
+INCLUDES += -I$(PANDORAPFANEW_DIR)/Algorithms/include/ -I$(PANDORAPFANEW_DIR)/KMeansClustering/include/
 ifdef MONITORING
     INCLUDES += -I$(PANDORAMONITORING_DIR)/include/
 endif
 
 CC = gcc
-CFLAGS = -c -Wall -g -w -fPIC -m32
+CFLAGS = -c -Wall -g -w -fPIC
 CFLAGS += $(INCLUDES)
 ifdef BUILD_32BIT_COMPATIBLE
     CFLAGS += -m32
@@ -43,7 +44,7 @@ LIBS = -L$(GEAR_DIR)/lib -lgear
 LIBS += -L$(LCIO_DIR)/lib -llcio
 LIBS += -L$(MARLIN_DIR)/lib -lMarlin
 LIBS += -L$(MARLINUTIL_DIR)/lib -lMarlinUtil
-LIBS += -L$(PANDORAPFANEW_DIR)/lib -lPandoraPFANew
+LIBS += -L$(PANDORAPFANEW_DIR)/lib -lPandoraAlgorithms -lPandoraKMeansClustering
 ifdef BUILD_32BIT_COMPATIBLE
     LIBS += -m32
 endif
