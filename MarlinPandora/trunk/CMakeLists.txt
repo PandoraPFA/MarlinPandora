@@ -81,8 +81,8 @@ ENDIF()
 INCLUDE_DIRECTORIES( "${PROJECT_SOURCE_DIR}/include")
 
 INCLUDE_DIRECTORIES( "${PandoraPFANew_HOME}/Framework/include")
-INCLUDE_DIRECTORIES( "${PandoraPFANew_HOME}/Algorithms/include")
-INCLUDE_DIRECTORIES( "${PandoraPFANew_HOME}/KMeansClustering/include")
+INCLUDE_DIRECTORIES( "${PandoraPFANew_HOME}/FineGranularityContent/include")
+INCLUDE_DIRECTORIES( "${PandoraPFANew_HOME}/KMeansContent/include")
 
 # install include files
 INSTALL( DIRECTORY "${PROJECT_SOURCE_DIR}/include"
@@ -192,8 +192,8 @@ SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
     # avoid conflicts between library and binary target names
     OUTPUT_NAME ${PROJECT_NAME} )
 
-TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${PandoraPFANew_HOME}/lib/libPandoraAlgorithms.so )
-TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${PandoraPFANew_HOME}/lib/libPandoraKMeansClustering.so )
+TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${PandoraPFANew_HOME}/lib/libPandoraFineGranularityContent.so )
+TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${PandoraPFANew_HOME}/lib/libPandoraKMeansContent.so )
 
 # install library
 INSTALL( TARGETS lib_${PROJECT_NAME} DESTINATION lib PERMISSIONS
