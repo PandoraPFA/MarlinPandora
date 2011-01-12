@@ -14,7 +14,6 @@
 #include "Api/PandoraApi.h"
 
 #include "FineGranularityContent.h"
-#include "FineGranularityPseudoLayerCalculator.h"
 #include "KMeansContent.h"
 
 #include "ExternalClusteringAlgorithm.h"
@@ -168,12 +167,9 @@ void PandoraPFANewProcessor::end()
 pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 {
     // Register pandora content libraries
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::Register(*m_pPandora));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterAll(*m_pPandora));
 
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, KMeansContent::Register(*m_pPandora));
-
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerCalculator(*m_pPandora,
-        new FineGranularityPseudoLayerCalculator()));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, KMeansContent::RegisterAll(*m_pPandora));
 
     // Register local content
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ExternalClustering",
