@@ -8,9 +8,9 @@
 
     <!-- Plugin helper functions -->
     <HadronicEnergyCorrectionFunctions> CleanClusters ScaleHotHadrons MuonCoilCorrection </HadronicEnergyCorrectionFunctions>
-    <PhotonFastFunction> PhotonFastDefault </PhotonFastFunction>
-    <ElectronFastFunction> ElectronFastDefault </ElectronFastFunction>
-    <MuonFastFunction> MuonFastDefault </MuonFastFunction>
+    <PhotonFastFunction> FineGranularityPhotonId </PhotonFastFunction>
+    <ElectronFastFunction> FineGranularityElectronId </ElectronFastFunction>
+    <MuonFastFunction> FineGranularityMuonId </MuonFastFunction>
 
     <!-- Select tracks and hits to use for clustering -->
     <algorithm type = "EventPreparation"/>
