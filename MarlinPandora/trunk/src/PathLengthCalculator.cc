@@ -160,16 +160,14 @@ void PathLengthCalculator::InitializeGeometry()
 {
     try
     {
-        const pandora::GeometryHelper *const pGeometryHelper(pandora::GeometryHelper::GetInstance());
-
-        m_eCalBarrelParameters.Initialize(pGeometryHelper->GetECalBarrelParameters());
-        m_hCalBarrelParameters.Initialize(pGeometryHelper->GetHCalBarrelParameters());
-        m_muonBarrelParameters.Initialize(pGeometryHelper->GetMuonBarrelParameters());
-        m_eCalEndCapParameters.Initialize(pGeometryHelper->GetECalEndCapParameters());
-        m_hCalEndCapParameters.Initialize(pGeometryHelper->GetHCalEndCapParameters());
-        m_muonEndCapParameters.Initialize(pGeometryHelper->GetMuonEndCapParameters());
-        m_coilParameters.Initialize_Cylinder(pGeometryHelper->GetCoilInnerRadius(), pGeometryHelper->GetCoilOuterRadius(),
-            0.f, pGeometryHelper->GetCoilZExtent());
+        m_eCalBarrelParameters.Initialize(pandora::GeometryHelper::GetECalBarrelParameters());
+        m_hCalBarrelParameters.Initialize(pandora::GeometryHelper::GetHCalBarrelParameters());
+        m_muonBarrelParameters.Initialize(pandora::GeometryHelper::GetMuonBarrelParameters());
+        m_eCalEndCapParameters.Initialize(pandora::GeometryHelper::GetECalEndCapParameters());
+        m_hCalEndCapParameters.Initialize(pandora::GeometryHelper::GetHCalEndCapParameters());
+        m_muonEndCapParameters.Initialize(pandora::GeometryHelper::GetMuonEndCapParameters());
+        m_coilParameters.Initialize_Cylinder(pandora::GeometryHelper::GetCoilInnerRadius(), pandora::GeometryHelper::GetCoilOuterRadius(),
+            0.f, pandora::GeometryHelper::GetCoilZExtent());
 
         m_isGeometryInitialized = true;
     }
