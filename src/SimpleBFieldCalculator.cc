@@ -6,8 +6,6 @@
  *  $Log: $
  */
 
-#include "Helpers/GeometryHelper.h"
-
 #include "SimpleBFieldCalculator.h"
 
 #include <cmath>
