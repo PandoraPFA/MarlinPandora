@@ -500,11 +500,11 @@ void TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const i
     const pandora::CartesianVector &referencePoint(pHelix->GetReferencePoint());
 
     // First project to endcap
-    float minTime(std::numeric_limits<float>::max());
+    float minGenericTime(std::numeric_limits<float>::max());
     bool isProjectedToEndCap(true);
 
     pandora::CartesianVector bestECalProjection;
-    (void) pHelix->GetPointInZ(static_cast<float>(signPz) * m_eCalEndCapInnerZ, referencePoint, bestECalProjection, minTime);
+    (void) pHelix->GetPointInZ(static_cast<float>(signPz) * m_eCalEndCapInnerZ, referencePoint, bestECalProjection, minGenericTime);
 
     // Then project to barrel surface(s)
     static const float pi(std::acos(-1.));
@@ -517,15 +517,15 @@ void TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const i
 
         for (int i = 0; i < m_eCalBarrelInnerSymmetry; ++i)
         {
-            float time(std::numeric_limits<float>::max());
+            float genericTime(std::numeric_limits<float>::max());
             const float phi(twopi_n * static_cast<float>(i) + m_eCalBarrelInnerPhi0);
 
             const pandora::StatusCode statusCode(pHelix->GetPointInXY(m_eCalBarrelInnerR * std::cos(phi), m_eCalBarrelInnerR * std::sin(phi),
-                std::cos(phi + 0.5 * pi), std::sin(phi + 0.5 * pi), referencePoint, barrelProjection, time));
+                std::cos(phi + 0.5 * pi), std::sin(phi + 0.5 * pi), referencePoint, barrelProjection, genericTime));
 
-            if ((pandora::STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
+            if ((pandora::STATUS_CODE_SUCCESS == statusCode) && (genericTime < minGenericTime))
             {
-                minTime = time;
+                minGenericTime = genericTime;
                 isProjectedToEndCap = false;
                 bestECalProjection = barrelProjection;
             }
@@ -534,12 +534,12 @@ void TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const i
     else
     {
         // Cylinder
-        float time(std::numeric_limits<float>::max());
-        const pandora::StatusCode statusCode(pHelix->GetPointOnCircle(m_eCalBarrelInnerR, referencePoint, barrelProjection, time));
+        float genericTime(std::numeric_limits<float>::max());
+        const pandora::StatusCode statusCode(pHelix->GetPointOnCircle(m_eCalBarrelInnerR, referencePoint, barrelProjection, genericTime));
 
-        if ((pandora::STATUS_CODE_SUCCESS == statusCode) && (time < minTime))
+        if ((pandora::STATUS_CODE_SUCCESS == statusCode) && (genericTime < minGenericTime))
         {
-            minTime = time;
+            minGenericTime = genericTime;
             isProjectedToEndCap = false;
             bestECalProjection = barrelProjection;
         }
@@ -549,8 +549,12 @@ void TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const i
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
     trackParameters.m_trackStateAtCalorimeter = pandora::TrackState(bestECalProjection, pHelix->GetExtrapolatedMomentum(bestECalProjection));
-    trackParameters.m_timeAtCalorimeter = minTime;
     trackParameters.m_isProjectedToEndCap = isProjectedToEndCap;
+
+    // Convert generic time (length from reference point to intersection, divided by momentum) into nanoseconds
+    const float particleMass(trackParameters.m_mass.Get());
+    const float particleEnergy(std::sqrt(particleMass * particleMass + trackParameters.m_momentumAtDca.Get().GetMagnitudeSquared()));
+    trackParameters.m_timeAtCalorimeter = minGenericTime * particleEnergy / 300.f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
