@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Helpers/GeometryHelper.h"
+
 #include "SimpleBFieldCalculator.h"
 
 #include <cmath>
@@ -16,10 +18,10 @@ float SimpleBFieldCalculator::m_muonEndCapBField = 0.01f;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SimpleBFieldCalculator::Initialize(const pandora::GeometryHelper *const pGeometryHelper)
+void SimpleBFieldCalculator::InitializeGeometry()
 {
-    m_muonEndCapInnerZ = pGeometryHelper->GetMuonEndCapParameters().GetInnerZCoordinate();
-    m_coilMidPointR = (0.5f * (pGeometryHelper->GetCoilInnerRadius() + pGeometryHelper->GetCoilOuterRadius()));
+    m_muonEndCapInnerZ = pandora::GeometryHelper::GetMuonEndCapParameters().GetInnerZCoordinate();
+    m_coilMidPointR = (0.5f * (pandora::GeometryHelper::GetCoilInnerRadius() + pandora::GeometryHelper::GetCoilOuterRadius()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -22,7 +22,7 @@ public:
     static float        m_muonEndCapBField;         ///< The bfield in the muon endcap, units Tesla
 
 private:
-    void Initialize(const pandora::GeometryHelper *const pGeometryHelper);
+    void InitializeGeometry();
     float GetBField(const pandora::CartesianVector &positionVector) const;
 
     float               m_muonEndCapInnerZ;         ///< The muon endcap inner z coordinate, units mm
