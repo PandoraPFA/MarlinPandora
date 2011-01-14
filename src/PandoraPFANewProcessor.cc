@@ -166,17 +166,23 @@ void PandoraPFANewProcessor::end()
 
 pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 {
-    // Register pandora content libraries
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterAll(*m_pPandora));
+    // Register content from external pandora libraries
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerCalculator(*m_pPandora,
+        new FineGranularityPseudoLayerCalculator()));
 
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, KMeansContent::RegisterAll(*m_pPandora));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetShowerProfileCalculator(*m_pPandora,
+        new FineGranularityShowerProfileCalculator()));
+
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterAlgorithms(*m_pPandora));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterHelperFunctions(*m_pPandora));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, KMeansContent::RegisterAlgorithms(*m_pPandora));
 
     // Register local content
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ExternalClustering",
-        new ExternalClusteringAlgorithm::Factory));
-
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldCalculator(*m_pPandora,
         new SimpleBFieldCalculator()));
+
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ExternalClustering",
+        new ExternalClusteringAlgorithm::Factory));
 
     // Example registrations
     //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionFunction(*m_pPandora,
