@@ -192,6 +192,7 @@ SET_TARGET_PROPERTIES( lib_${PROJECT_NAME} PROPERTIES
     # avoid conflicts between library and binary target names
     OUTPUT_NAME ${PROJECT_NAME} )
 
+TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${PandoraPFANew_HOME}/lib/libPandoraFramework.so )
 TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${PandoraPFANew_HOME}/lib/libPandoraFineGranularityContent.so )
 TARGET_LINK_LIBRARIES( lib_${PROJECT_NAME} ${PandoraPFANew_HOME}/lib/libPandoraKMeansContent.so )
 
