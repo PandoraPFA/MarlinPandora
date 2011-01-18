@@ -1,3 +1,22 @@
+Updated CMake files to reflect restructuring of PandoraPFANew.
+Updated standalone makefile to reflect restructuring of PandoraPFANew.
+Made use of interfaces to pandora content libraries, allowing for quick registration of multiple algorithms and helper functions.
+Added registration of FineGranularity PseudoLayerCalculator and ShowerProfileCalculator.
+Changed references to "track state at ecal" to "track state at calorimeter".
+Specified track (projected) time at calorimeter.
+Used results of track fit to determine track direction in z.
+Added new definition of reaches calorimeter for FTD tracks.
+Allowed for different barrel/endcap ECalToHadGeV calibration constants.
+Corrected cell unit vectors for HCal ring and other endcap-like detectors, located between the main barrels and endcaps.
+Updated to reflect changes to GeometryHelper.
+Made use of IsMirroredInZ subdetector parameter functionality.
+Updated pandorasettings, adding new (and renaming existing) entries for particle id and energy correction functions.
+Updated pandorasettings clustering parameters, specifying parameters for regions of fine or coarse granularity.
+Updated steering file scripts to specify separate ECalToHadGeV calibration constants for barrel and endcap.
+
+************************************************************************
+TAG V00-03 FOR ILCSOFT USAGE
+************************************************************************
 Updated path length to interaction length (and radiation length) conversion constants.
 Added new approach to calculating path lengths through ILD-like subdetectors.
 Updated to specify new api parameters, required in order to help remove geometry dependence from pandora algorithms.
