@@ -1,3 +1,8 @@
+************************************************************************
+TAG V00-04 FOR ILCSOFT USAGE
+************************************************************************
+Updated default path length to interaction length (and radiation length) conversion constants to CLIC_ILD_CDR values.
+Updated CMake files to use new ILCUTIL package.
 Updated CMake files to reflect restructuring of PandoraPFANew.
 Updated standalone makefile to reflect restructuring of PandoraPFANew.
 Made use of interfaces to pandora content libraries, allowing for quick registration of multiple algorithms and helper functions.
@@ -17,7 +22,7 @@ Updated steering file scripts to specify separate ECalToHadGeV calibration const
 ************************************************************************
 TAG V00-03 FOR ILCSOFT USAGE
 ************************************************************************
-Updated path length to interaction length (and radiation length) conversion constants.
+Updated path length to interaction length (and radiation length) conversion constants. Default values are for CLIC_ILD_01.
 Added new approach to calculating path lengths through ILD-like subdetectors.
 Updated to specify new api parameters, required in order to help remove geometry dependence from pandora algorithms.
 Removed outdated geometry parameters.
