@@ -81,6 +81,13 @@ private:
     pandora::StatusCode SetILDSpecificGeometry(PandoraApi::GeometryParameters &geometryParameters) const;
 
     /**
+     *  @brief  Add information missing from GEAR parameters file for ILD SDHCAL detector
+     * 
+     *  @param  geometryParameters the pandora geometry parameters
+     */
+    pandora::StatusCode SetILD_SDHCALSpecificGeometry(PandoraApi::GeometryParameters &geometryParameters) const;
+
+    /**
      *  @brief  Specify positions of hcal barrel box gaps - ILD specific
      */
     pandora::StatusCode CreateHCalBarrelBoxGaps() const;
