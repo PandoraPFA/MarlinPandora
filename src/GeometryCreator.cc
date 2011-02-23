@@ -68,7 +68,14 @@ pandora::StatusCode GeometryCreator::CreateGeometry() const
         // Set positions of gaps in ILD detector and add information missing from GEAR parameters file
         if (std::string::npos != marlin::Global::GEAR->getDetectorName().find("ILD"))
         {
-            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->SetILDSpecificGeometry(geometryParameters));
+            if (std::string::npos != marlin::Global::GEAR->getDetectorName().find("Dhcal"))
+            {
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->SetILD_SDHCALSpecificGeometry(geometryParameters));
+            }
+            else
+            {
+                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->SetILDSpecificGeometry(geometryParameters));
+            }
         }
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::Create(*m_pPandora, geometryParameters));
@@ -186,6 +193,33 @@ pandora::StatusCode GeometryCreator::SetILDSpecificGeometry(PandoraApi::Geometry
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelBoxGaps());
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalEndCapBoxGaps());
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelConcentricGaps());
+
+    return pandora::STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::StatusCode GeometryCreator::SetILD_SDHCALSpecificGeometry(PandoraApi::GeometryParameters &geometryParameters) const
+{
+    // Non-default values (and those missing from GEAR parameters file)...
+    // The following 2 parameters have no sense for Videau Geometry, set them to 0
+    geometryParameters.m_hCalBarrelParameters.m_outerPhiCoordinate = 0;
+    geometryParameters.m_hCalBarrelParameters.m_outerSymmetryOrder = 0;
+
+    // Endcap is identical to standard ILD geometry, only HCAL barrel is different
+    geometryParameters.m_eCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_eCalEndCapInnerSymmetryOrder;
+    geometryParameters.m_eCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_eCalEndCapInnerPhiCoordinate;
+    geometryParameters.m_eCalEndCapParameters.m_outerSymmetryOrder = m_settings.m_eCalEndCapOuterSymmetryOrder;
+    geometryParameters.m_eCalEndCapParameters.m_outerPhiCoordinate = m_settings.m_eCalEndCapOuterPhiCoordinate;
+
+    geometryParameters.m_hCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_hCalEndCapInnerSymmetryOrder;
+    geometryParameters.m_hCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_hCalEndCapInnerPhiCoordinate;
+    geometryParameters.m_hCalEndCapParameters.m_outerSymmetryOrder = m_settings.m_hCalEndCapOuterSymmetryOrder;
+    geometryParameters.m_hCalEndCapParameters.m_outerPhiCoordinate = m_settings.m_hCalEndCapOuterPhiCoordinate;
+
+    // Gaps in detector active material
+    // TODO, implement Gap between module.
+    //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelConcentricGaps());
 
     return pandora::STATUS_CODE_SUCCESS;
 }

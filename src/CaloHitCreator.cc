@@ -24,6 +24,7 @@
 #include "PathLengthCalculator.h"
 #include "PandoraPFANewProcessor.h"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -46,9 +47,16 @@ CaloHitCreator::CaloHitCreator(const Settings &settings) :
     m_hCalEndCapOuterR(marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[1]),
     m_hCalEndCapOuterZ(marlin::Global::GEAR->getHcalEndcapParameters().getExtent()[3]),
     m_hCalBarrelOuterR(marlin::Global::GEAR->getHcalBarrelParameters().getExtent()[1]),
-    m_hCalBarrelOuterPhi0(marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_phi0")),
-    m_hCalBarrelOuterSymmetry(marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_order"))
-
+    m_hCalBarrelOuterPhi0((std::find(marlin::Global::GEAR->getHcalBarrelParameters().getIntKeys().begin(),
+        marlin::Global::GEAR->getHcalBarrelParameters().getIntKeys().end(),
+        "Hcal_outer_polygon_phi0") != marlin::Global::GEAR->getHcalBarrelParameters().getIntKeys().end() ?
+        marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_phi0")
+        : 0)),
+    m_hCalBarrelOuterSymmetry((std::find(marlin::Global::GEAR->getHcalBarrelParameters().getIntKeys().begin(),
+        marlin::Global::GEAR->getHcalBarrelParameters().getIntKeys().end(),
+        "Hcal_outer_polygon_order") != marlin::Global::GEAR->getHcalBarrelParameters().getIntKeys().end() ?
+        marlin::Global::GEAR->getHcalBarrelParameters().getIntVal("Hcal_outer_polygon_order")
+        : 0))
 {
     const gear::LayerLayout &hCalEndCapLayerLayout(marlin::Global::GEAR->getHcalEndcapParameters().getLayerLayout());
     const gear::LayerLayout &hCalBarrelLayerLayout(marlin::Global::GEAR->getHcalBarrelParameters().getLayerLayout()); 
