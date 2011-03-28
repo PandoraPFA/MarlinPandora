@@ -27,6 +27,8 @@ public:
     public:
         std::string     m_clusterCollectionName;                ///< The name of the cluster output collection
         std::string     m_pfoCollectionName;                    ///< The name of the pfo output collection
+        std::string     m_reclusterMonitoringCollectionName;    ///< The name of the recluster monitoring collection
+        std::string     m_reclusterRelationsCollectionName;     ///< The name of the collection relating recluster monitoring to tracks
     };
 
     /**

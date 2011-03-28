@@ -14,6 +14,8 @@
 #include "IMPL/ClusterImpl.h"
 #include "IMPL/LCCollectionVec.h"
 #include "IMPL/LCFlagImpl.h"
+#include "IMPL/LCGenericObjectImpl.h"
+#include "IMPL/LCRelationImpl.h"
 #include "IMPL/ReconstructedParticleImpl.h"
 
 #include "CalorimeterHitType.h"
@@ -45,10 +47,12 @@ PfoCreator::~PfoCreator()
 pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEvent)
 {
     pandora::ParticleFlowObjectList particleFlowObjectList;
-    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::GetParticleFlowObjects(*m_pPandora, particleFlowObjectList));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::GetParticleFlowObjects(*m_pPandora, particleFlowObjectList));
 
     IMPL::LCCollectionVec *pClusterCollection = new IMPL::LCCollectionVec(LCIO::CLUSTER);
     IMPL::LCCollectionVec *pReconstructedParticleCollection = new IMPL::LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
+    IMPL::LCCollectionVec *pReclusterMonitoringCollection = new IMPL::LCCollectionVec(LCIO::LCGENERICOBJECT);
+    IMPL::LCCollectionVec *pReclusterRelationsCollection = new IMPL::LCCollectionVec(LCIO::LCRELATION);
 
     IMPL::LCFlagImpl lcFlagImpl(pClusterCollection->getFlag());
     lcFlagImpl.setBit(LCIO::CLBIT_HITS);
@@ -68,13 +72,13 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
     for (pandora::ParticleFlowObjectList::iterator itPFO = particleFlowObjectList.begin(), itPFOEnd = particleFlowObjectList.end();
          itPFO != itPFOEnd; ++itPFO)
     {
-        IMPL::ReconstructedParticleImpl *pReconstructedParticle= new ReconstructedParticleImpl();
+        IMPL::ReconstructedParticleImpl *pReconstructedParticle = new ReconstructedParticleImpl();
 
-        pandora::ClusterAddressList clusterAddressList = (*itPFO)->GetClusterAddressList();
-        pandora::TrackAddressList trackAddressList = (*itPFO)->GetTrackAddressList();
+        const pandora::ClusterAddressList clusterAddressList((*itPFO)->GetClusterAddressList());
+        const pandora::TrackAddressList trackAddressList((*itPFO)->GetTrackAddressList());
 
         // Create lcio clusters
-        for (pandora::ClusterAddressList::iterator itCluster = clusterAddressList.begin(), itClusterEnd = clusterAddressList.end();
+        for (pandora::ClusterAddressList::const_iterator itCluster = clusterAddressList.begin(), itClusterEnd = clusterAddressList.end();
             itCluster != itClusterEnd; ++itCluster)
         {
             IMPL::ClusterImpl *pCluster = new ClusterImpl();
@@ -130,10 +134,26 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
         }
 
         // Add tracks to the lcio reconstructed particles
-        for (pandora::TrackAddressList::iterator itTrack = trackAddressList.begin(), itTrackEnd = trackAddressList.end(); itTrack != itTrackEnd;
-            ++itTrack)
+        for (pandora::TrackAddressList::const_iterator itTrack = trackAddressList.begin(), itTrackEnd = trackAddressList.end();
+            itTrack != itTrackEnd; ++itTrack)
         {
             pReconstructedParticle->addTrack((Track*)(*itTrack));
+
+            float netEnergyChange(0.f), sumModulusEnergyChanges(0.f), sumSquaredEnergyChanges(0.f);
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::GetReclusterMonitoringResults(*m_pPandora, *itTrack,
+                netEnergyChange, sumModulusEnergyChanges, sumSquaredEnergyChanges));
+
+            if (sumSquaredEnergyChanges > 0.f)
+            {
+                IMPL::LCGenericObjectImpl *pLCGenericObject = new LCGenericObjectImpl(0, 3, 0);
+                pLCGenericObject->setFloatVal(0, netEnergyChange);
+                pLCGenericObject->setFloatVal(1, sumModulusEnergyChanges);
+                pLCGenericObject->setFloatVal(2, sumSquaredEnergyChanges);
+                pReclusterMonitoringCollection->addElement(pLCGenericObject);
+
+                IMPL::LCRelationImpl *pLCRelation = new LCRelationImpl(pLCGenericObject, (Track*)(*itTrack));
+                pReclusterRelationsCollection->addElement(pLCRelation);
+           }
         }
 
         float momentum[3] = {(*itPFO)->GetMomentum().GetX(), (*itPFO)->GetMomentum().GetY(), (*itPFO)->GetMomentum().GetZ()};
@@ -148,6 +168,8 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
 
     pLCEvent->addCollection(pClusterCollection, m_settings.m_clusterCollectionName.c_str());
     pLCEvent->addCollection(pReconstructedParticleCollection, m_settings.m_pfoCollectionName.c_str());
+    pLCEvent->addCollection(pReclusterMonitoringCollection, m_settings.m_reclusterMonitoringCollectionName.c_str());
+    pLCEvent->addCollection(pReclusterRelationsCollection, m_settings.m_reclusterRelationsCollectionName.c_str());
 
     return pandora::STATUS_CODE_SUCCESS;
 }
