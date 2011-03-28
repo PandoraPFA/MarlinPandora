@@ -299,16 +299,28 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
 
     // Name of PFO collection written by MarlinPandora
     registerOutputCollection( LCIO::CLUSTER,
-                              "ClusterCollectionName" , 
-                              "Cluster Collection Name "  ,
+                              "ClusterCollectionName",
+                              "Cluster Collection Name",
                               m_pfoCreatorSettings.m_clusterCollectionName,
                               std::string("PandoraPFANewClusters"));
 
     registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-                              "PFOCollectionName" , 
-                              "PFO Collection Name "  ,
+                              "PFOCollectionName",
+                              "PFO Collection Name",
                               m_pfoCreatorSettings.m_pfoCollectionName,
                               std::string("PandoraPFANewPFOs"));
+
+    registerOutputCollection( LCIO::LCGENERICOBJECT,
+                              "ReclusterMonitoringCollectionName",
+                              "Recluster Monitoring Collection Name",
+                              m_pfoCreatorSettings.m_reclusterMonitoringCollectionName,
+                              std::string("PandoraPFANewReclusterMonitoring"));
+
+    registerOutputCollection( LCIO::LCRELATION,
+                              "ReclusterRelationsCollectionName",
+                              "Recluster Relations Collection Name",
+                              m_pfoCreatorSettings.m_reclusterRelationsCollectionName,
+                              std::string("PandoraPFANewReclusterRelations"));
 
     // Calibration constants
     registerProcessorParameter("ECalToMipCalibration",
