@@ -55,6 +55,9 @@ pandora::StatusCode MCParticleCreator::CreateMCParticles(const EVENT::LCEvent *c
                 {
                     EVENT::MCParticle *pMcParticle = dynamic_cast<MCParticle*>(pMCParticleCollection->getElementAt(i));
 
+                    if (NULL == pMcParticle)
+                        throw EVENT::Exception("Collection type mismatch");
+
                     PandoraApi::MCParticle::Parameters mcParticleParameters;
                     mcParticleParameters.m_energy = pMcParticle->getEnergy();
                     mcParticleParameters.m_particleId = pMcParticle->getPDG();

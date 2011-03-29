@@ -110,6 +110,9 @@ pandora::StatusCode TrackCreator::ExtractKinks(const EVENT::LCEvent *const pLCEv
                 {
                     EVENT::Vertex *pVertex = dynamic_cast<Vertex*>(pKinkCollection->getElementAt(i));
 
+                    if (NULL == pVertex)
+                        throw EVENT::Exception("Collection type mismatch");
+
                     EVENT::ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
                     const EVENT::TrackVec &trackVec(pReconstructedParticle->getTracks());
 
@@ -215,6 +218,9 @@ pandora::StatusCode TrackCreator::ExtractProngsAndSplits(const EVENT::LCEvent *c
                 {
                     EVENT::Vertex *pVertex = dynamic_cast<Vertex*>(pProngOrSplitCollection->getElementAt(i));
 
+                    if (NULL == pVertex)
+                        throw EVENT::Exception("Collection type mismatch");
+
                     EVENT::ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
                     const EVENT::TrackVec &trackVec(pReconstructedParticle->getTracks());
 
@@ -283,6 +289,9 @@ pandora::StatusCode TrackCreator::ExtractV0s(const EVENT::LCEvent *const pLCEven
                 try
                 {
                     EVENT::Vertex *pVertex = dynamic_cast<Vertex*>(pV0Collection->getElementAt(i));
+
+                    if (NULL == pVertex)
+                        throw EVENT::Exception("Collection type mismatch");
 
                     EVENT::ReconstructedParticle *pReconstructedParticle = pVertex->getAssociatedParticle();
                     const EVENT::TrackVec &trackVec(pReconstructedParticle->getTracks());
@@ -379,6 +388,9 @@ pandora::StatusCode TrackCreator::CreateTracks(const EVENT::LCEvent *const pLCEv
                 try
                 {
                     EVENT::Track *pTrack = dynamic_cast<Track*>(pTrackCollection->getElementAt(i));
+
+                    if (NULL == pTrack)
+                        throw EVENT::Exception("Collection type mismatch");
 
                     int minTrackHits = m_settings.m_minTrackHits;
                     const float tanLambda(std::fabs(pTrack->getTanLambda()));
