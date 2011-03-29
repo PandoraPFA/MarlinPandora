@@ -118,6 +118,9 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
                 {
                     EVENT::CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
 
+                    if (NULL == pCaloHit)
+                        throw EVENT::Exception("Collection type mismatch");
+
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::ECAL;
                     caloHitParameters.m_isDigital = false;
@@ -195,6 +198,9 @@ pandora::StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *con
                 try
                 {
                     EVENT::CalorimeterHit *pCaloHit = dynamic_cast<CalorimeterHit*>(pCaloHitCollection->getElementAt(i));
+
+                    if (NULL == pCaloHit)
+                        throw EVENT::Exception("Collection type mismatch");
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::HCAL;
