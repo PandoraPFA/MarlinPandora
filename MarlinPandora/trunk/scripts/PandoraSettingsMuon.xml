@@ -18,7 +18,7 @@
 
     <!-- Standalone muon clustering -->
     <algorithm type = "MuonReconstruction">
-        <algorithm type = "Clustering" description = "MuonClusterFormation">
+        <algorithm type = "ConeClustering" description = "MuonClusterFormation">
             <TanConeAngleCoarse>0.3</TanConeAngleCoarse>
             <ConeApproachMaxSeparation>2000.f</ConeApproachMaxSeparation>
             <MaxClusterDirProjection>2000.f</MaxClusterDirProjection>
@@ -34,11 +34,11 @@
         </algorithm>
     </algorithm>
 
-    <!-- Primary clustering algorithm runs Clustering algorithm -->
-    <algorithm type = "PrimaryClustering">
-        <algorithm type = "Clustering" description = "ClusterFormation" instance = "mainClustering"/>
+    <!-- Clustering parent algorithm runs a daughter clustering algorithm -->
+    <algorithm type = "ClusteringParent">
+        <algorithm type = "ConeClustering" description = "ClusterFormation" instance = "mainClustering"/>
 
-        <algorithm type = "TopologicalAssociation" description = "ClusterAssociation" instance = "mainTopologicalAssoc">
+        <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc">
             <associationAlgorithms>
                 <algorithm type = "LoopingTracks"/>
                 <algorithm type = "BrokenTracks"/>
@@ -66,13 +66,13 @@
         <ClusterListName> PrimaryClusterList </ClusterListName>
     </algorithm>
 
-    <!-- Reclustering algorithm runs multiple Clustering algorithms -->
-    <algorithm type = "Reclustering">
+    <!-- Reclustering algorithms run multiple clustering algorithms -->
+    <algorithm type = "ReclusteringParent">
         <reclusteringAlgorithms>
 
             <algorithm type = "SplitTrackAssociations" instance = "SplitTrackAssociations1">
                 <clusteringAlgorithms>
-                    <algorithm type = "Clustering" instance = "Reclustering1">
+                    <algorithm type = "ConeClustering" instance = "Reclustering1">
                         <TanConeAngleFine>0.24</TanConeAngleFine>
                         <TanConeAngleCoarse>0.4</TanConeAngleCoarse>
                         <AdditionalPadWidthsFine>2</AdditionalPadWidthsFine>
@@ -84,7 +84,7 @@
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
-                    <algorithm type = "Clustering" instance = "Reclustering2">
+                    <algorithm type = "ConeClustering" instance = "Reclustering2">
                         <TanConeAngleFine>0.18</TanConeAngleFine>
                         <TanConeAngleCoarse>0.3</TanConeAngleCoarse>
                         <AdditionalPadWidthsFine>1.5</AdditionalPadWidthsFine>
@@ -96,7 +96,7 @@
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
-                    <algorithm type = "Clustering" instance = "Reclustering3">
+                    <algorithm type = "ConeClustering" instance = "Reclustering3">
                         <TanConeAngleFine>0.15</TanConeAngleFine>
                         <TanConeAngleCoarse>0.25</TanConeAngleCoarse>
                         <AdditionalPadWidthsFine>1.25</AdditionalPadWidthsFine>
@@ -108,7 +108,7 @@
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
-                    <algorithm type = "Clustering" instance = "Reclustering4">
+                    <algorithm type = "ConeClustering" instance = "Reclustering4">
                         <TanConeAngleFine>0.12</TanConeAngleFine>
                         <TanConeAngleCoarse>0.2</TanConeAngleCoarse>
                         <AdditionalPadWidthsFine>1</AdditionalPadWidthsFine>
@@ -120,7 +120,7 @@
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
-                    <algorithm type = "Clustering" instance = "Reclustering5">
+                    <algorithm type = "ConeClustering" instance = "Reclustering5">
                         <TanConeAngleFine>0.09</TanConeAngleFine>
                         <TanConeAngleCoarse>0.15</TanConeAngleCoarse>
                         <AdditionalPadWidthsFine>0.75</AdditionalPadWidthsFine>
@@ -132,7 +132,7 @@
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
-                    <algorithm type = "Clustering" instance = "Reclustering6">
+                    <algorithm type = "ConeClustering" instance = "Reclustering6">
                         <TanConeAngleFine>0.075</TanConeAngleFine>
                         <TanConeAngleCoarse>0.125</TanConeAngleCoarse>
                         <AdditionalPadWidthsFine>0.625</AdditionalPadWidthsFine>
@@ -144,7 +144,7 @@
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
-                    <algorithm type = "Clustering" instance = "Reclustering7">
+                    <algorithm type = "ConeClustering" instance = "Reclustering7">
                         <TanConeAngleFine>0.06</TanConeAngleFine>
                         <TanConeAngleCoarse>0.1</TanConeAngleCoarse>
                         <AdditionalPadWidthsFine>0.5</AdditionalPadWidthsFine>
@@ -156,7 +156,7 @@
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
-                    <algorithm type = "Clustering" instance = "Reclustering8">
+                    <algorithm type = "ConeClustering" instance = "Reclustering8">
                         <TanConeAngleFine>0.045</TanConeAngleFine>
                         <TanConeAngleCoarse>0.075</TanConeAngleCoarse>
                         <AdditionalPadWidthsFine>0.375</AdditionalPadWidthsFine>
@@ -168,7 +168,7 @@
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
-                    <algorithm type = "Clustering" instance = "Reclustering9">
+                    <algorithm type = "ConeClustering" instance = "Reclustering9">
                         <TanConeAngleFine>0.03</TanConeAngleFine>
                         <TanConeAngleCoarse>0.05</TanConeAngleCoarse>
                         <AdditionalPadWidthsFine>0.25</AdditionalPadWidthsFine>
@@ -180,27 +180,27 @@
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
-                    <algorithm type = "Clustering" instance = "Reclustering10">
+                    <algorithm type = "ConeClustering" instance = "Reclustering10">
                         <MaxTrackSeedSeparation>250</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>3</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>3</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>2</TrackPathWidth>
                     </algorithm>
-                    <algorithm type = "Clustering" instance = "Reclustering11">
+                    <algorithm type = "ConeClustering" instance = "Reclustering11">
                         <ShouldUseTrackSeed>false</ShouldUseTrackSeed>
                         <MaxTrackSeedSeparation>0</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
-                    <algorithm type = "Clustering" instance = "Reclustering12">
+                    <algorithm type = "ConeClustering" instance = "Reclustering12">
                         <MaxTrackSeedSeparation>1000</MaxTrackSeedSeparation>
                         <MaxLayersToTrackSeed>6</MaxLayersToTrackSeed>
                         <MaxLayersToTrackLikeHit>3</MaxLayersToTrackLikeHit>
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
                 </clusteringAlgorithms>
-                <algorithm type = "TopologicalAssociation" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
+                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
                 <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
@@ -209,20 +209,20 @@
 
             <algorithm type = "SplitMergedClusters" instance = "SplitMergedClusters1">
                 <clusteringAlgorithms>
-                    <algorithm type = "Clustering" instance = "Reclustering1"/>
-                    <algorithm type = "Clustering" instance = "Reclustering2"/>
-                    <algorithm type = "Clustering" instance = "Reclustering3"/>
-                    <algorithm type = "Clustering" instance = "Reclustering4"/>
-                    <algorithm type = "Clustering" instance = "Reclustering5"/>
-                    <algorithm type = "Clustering" instance = "Reclustering6"/>
-                    <algorithm type = "Clustering" instance = "Reclustering7"/>
-                    <algorithm type = "Clustering" instance = "Reclustering8"/>
-                    <algorithm type = "Clustering" instance = "Reclustering9"/>
-                    <algorithm type = "Clustering" instance = "Reclustering10"/>
-                    <algorithm type = "Clustering" instance = "Reclustering11"/>
-                    <algorithm type = "Clustering" instance = "Reclustering12"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering1"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering2"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering3"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering4"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering5"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering6"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering7"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering8"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering9"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering10"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering11"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering12"/>
                 </clusteringAlgorithms>
-                <algorithm type = "TopologicalAssociation" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
+                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
                 <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
@@ -235,20 +235,20 @@
 
             <algorithm type = "ResolveTrackAssociations">
                 <clusteringAlgorithms>
-                    <algorithm type = "Clustering" instance = "Reclustering1"/>
-                    <algorithm type = "Clustering" instance = "Reclustering2"/>
-                    <algorithm type = "Clustering" instance = "Reclustering3"/>
-                    <algorithm type = "Clustering" instance = "Reclustering4"/>
-                    <algorithm type = "Clustering" instance = "Reclustering5"/>
-                    <algorithm type = "Clustering" instance = "Reclustering6"/>
-                    <algorithm type = "Clustering" instance = "Reclustering7"/>
-                    <algorithm type = "Clustering" instance = "Reclustering8"/>
-                    <algorithm type = "Clustering" instance = "Reclustering9"/>
-                    <algorithm type = "Clustering" instance = "Reclustering10"/>
-                    <algorithm type = "Clustering" instance = "Reclustering11"/>
-                    <algorithm type = "Clustering" instance = "Reclustering12"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering1"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering2"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering3"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering4"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering5"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering6"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering7"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering8"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering9"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering10"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering11"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering12"/>
                 </clusteringAlgorithms>
-                <algorithm type = "TopologicalAssociation" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
+                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
                 <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
@@ -260,20 +260,20 @@
 
             <algorithm type = "TrackDrivenAssociation">
                 <clusteringAlgorithms>
-                    <algorithm type = "Clustering" instance = "Reclustering1"/>
-                    <algorithm type = "Clustering" instance = "Reclustering2"/>
-                    <algorithm type = "Clustering" instance = "Reclustering3"/>
-                    <algorithm type = "Clustering" instance = "Reclustering4"/>
-                    <algorithm type = "Clustering" instance = "Reclustering5"/>
-                    <algorithm type = "Clustering" instance = "Reclustering6"/>
-                    <algorithm type = "Clustering" instance = "Reclustering7"/>
-                    <algorithm type = "Clustering" instance = "Reclustering8"/>
-                    <algorithm type = "Clustering" instance = "Reclustering9"/>
-                    <algorithm type = "Clustering" instance = "Reclustering10"/>
-                    <algorithm type = "Clustering" instance = "Reclustering11"/>
-                    <algorithm type = "Clustering" instance = "Reclustering12"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering1"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering2"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering3"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering4"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering5"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering6"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering7"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering8"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering9"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering10"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering11"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering12"/>
                 </clusteringAlgorithms>
-                <algorithm type = "TopologicalAssociation" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
+                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
             </algorithm>
@@ -283,20 +283,20 @@
 
             <algorithm type = "ExitingTrack">
                 <clusteringAlgorithms>
-                    <algorithm type = "Clustering" instance = "Reclustering1"/>
-                    <algorithm type = "Clustering" instance = "Reclustering2"/>
-                    <algorithm type = "Clustering" instance = "Reclustering3"/>
-                    <algorithm type = "Clustering" instance = "Reclustering4"/>
-                    <algorithm type = "Clustering" instance = "Reclustering5"/>
-                    <algorithm type = "Clustering" instance = "Reclustering6"/>
-                    <algorithm type = "Clustering" instance = "Reclustering7"/>
-                    <algorithm type = "Clustering" instance = "Reclustering8"/>
-                    <algorithm type = "Clustering" instance = "Reclustering9"/>
-                    <algorithm type = "Clustering" instance = "Reclustering10"/>
-                    <algorithm type = "Clustering" instance = "Reclustering11"/>
-                    <algorithm type = "Clustering" instance = "Reclustering12"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering1"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering2"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering3"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering4"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering5"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering6"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering7"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering8"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering9"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering10"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering11"/>
+                    <algorithm type = "ConeClustering" instance = "Reclustering12"/>
                 </clusteringAlgorithms>
-                <algorithm type = "TopologicalAssociation" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
+                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
                 <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
@@ -307,8 +307,8 @@
     </algorithm>
 
     <!-- Muon clustering -->
-    <algorithm type = "PrimaryClustering">
-        <algorithm type = "Clustering" description = "ClusterFormation">
+    <algorithm type = "ClusteringParent">
+        <algorithm type = "ConeClustering" description = "ClusterFormation">
             <TanConeAngleCoarse>0.75</TanConeAngleCoarse>
             <AdditionalPadWidthsCoarse>12.5</AdditionalPadWidthsCoarse>
             <SameLayerPadWidthsCoarse>14</SameLayerPadWidthsCoarse>
@@ -355,7 +355,7 @@
         </trackClusterAssociationAlgorithms>
     </algorithm>
 
-    <algorithm type = "FragmentRemoval">
+    <algorithm type = "FragmentRemovalParent">
         <fragmentRemovalAlgorithms>
             <algorithm type = "MainFragmentRemoval"/>
             <algorithm type = "NeutralFragmentRemoval"/>
