@@ -490,12 +490,12 @@ void TrackCreator::FitTrackHelices(const EVENT::Track *const pTrack, PandoraApi:
     const float zStart((signPz > 0) ? zMin : zMax);
     const float zEnd((signPz > 0) ? zMax : zMin);
 
-    pandora::CartesianVector startPosition, startMomentum;
+    pandora::CartesianVector startPosition(0.f, 0.f, 0.f), startMomentum(0.f, 0.f, 0.f);
     PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, pHelixFit->GetPointInZ(zStart, pHelixFit->GetReferencePoint(), startPosition));
     startMomentum = pHelixFit->GetExtrapolatedMomentum(startPosition);
     trackParameters.m_trackStateAtStart = pandora::TrackState(startPosition, startMomentum);
 
-    pandora::CartesianVector endPosition, endMomentum;
+    pandora::CartesianVector endPosition(0.f, 0.f, 0.f), endMomentum(0.f, 0.f, 0.f);
     PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, pHelixFit->GetPointInZ(zEnd, pHelixFit->GetReferencePoint(), endPosition));
     endMomentum = pHelixFit->GetExtrapolatedMomentum(endPosition);
     trackParameters.m_trackStateAtEnd = pandora::TrackState(endPosition, endMomentum);
@@ -515,12 +515,12 @@ void TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const i
     float minGenericTime(std::numeric_limits<float>::max());
     bool isProjectedToEndCap(true);
 
-    pandora::CartesianVector bestECalProjection;
+    pandora::CartesianVector bestECalProjection(0.f, 0.f, 0.f);
     (void) pHelix->GetPointInZ(static_cast<float>(signPz) * m_eCalEndCapInnerZ, referencePoint, bestECalProjection, minGenericTime);
 
     // Then project to barrel surface(s)
     static const float pi(std::acos(-1.));
-    pandora::CartesianVector barrelProjection;
+    pandora::CartesianVector barrelProjection(0.f, 0.f, 0.f);
 
     if (m_eCalBarrelInnerSymmetry > 0)
     {
@@ -557,7 +557,7 @@ void TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const i
         }
     }
 
-    if (!bestECalProjection.IsInitialized())
+    if (pandora::CartesianVector(0.f, 0.f, 0.f) == bestECalProjection)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
     trackParameters.m_trackStateAtCalorimeter = pandora::TrackState(bestECalProjection, pHelix->GetExtrapolatedMomentum(bestECalProjection));
