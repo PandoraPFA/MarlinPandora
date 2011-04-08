@@ -3,7 +3,6 @@
 <pandora>
     <!-- Global pandora settings -->
     <IsMonitoringEnabled> true </IsMonitoringEnabled>
-    <ShouldUseSimpleIsolationScheme> false </ShouldUseSimpleIsolationScheme>
     <ShouldDisplayAlgorithmInfo> false </ShouldDisplayAlgorithmInfo>
 
     <!-- Plugin helper functions -->
