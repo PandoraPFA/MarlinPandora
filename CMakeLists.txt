@@ -26,7 +26,7 @@ INCLUDE( ilcsoft_default_settings )
 
 FIND_PACKAGE( Marlin 1.0 REQUIRED )
 FIND_PACKAGE( MarlinUtil REQUIRED )
-FIND_PACKAGE( PandoraPFANew REQUIRED )
+FIND_PACKAGE( PandoraPFANew 0.6 REQUIRED )
 
 FOREACH( pkg Marlin MarlinUtil PandoraPFANew )
     IF( ${pkg}_FOUND )
