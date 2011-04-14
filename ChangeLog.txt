@@ -1,4 +1,15 @@
 ************************************************************************
+TAG V00-05 FOR ILCSOFT USAGE
+************************************************************************
+Added ability to read pandora recluster monitoring output, writing results to collections of lcio GenericObjects and lcio Relations.
+Modifications for use with ILD SDHCal.
+Updated to reflect changes to pandora::CartesianVector class.
+Addressed issues raised by Coverity.
+Updated PandoraSettings scripts to reflect recent algorithm changes.
+Turned off DensityWeight and SurroundingEnergy calculations via PandoraSettings file.
+Updated standalone Makefile: changed default compiler to g++ and added -O2 optimization flag.
+
+************************************************************************
 TAG V00-04 FOR ILCSOFT USAGE
 ************************************************************************
 Updated default path length to interaction length (and radiation length) conversion constants to CLIC_ILD_CDR values.
