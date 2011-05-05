@@ -68,7 +68,19 @@ pandora::StatusCode GeometryCreator::CreateGeometry() const
         // Set positions of gaps in ILD detector and add information missing from GEAR parameters file
         if (std::string::npos != marlin::Global::GEAR->getDetectorName().find("ILD"))
         {
-            if (std::string::npos != marlin::Global::GEAR->getDetectorName().find("Dhcal"))
+            bool aLaVideauGeometry(false);
+
+            try
+            {
+                hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
+                hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
+            }
+            catch (gear::Exception &)
+            {
+                aLaVideauGeometry = true;
+            }
+
+            if (aLaVideauGeometry)
             {
                 PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->SetILD_SDHCALSpecificGeometry(geometryParameters));
             }
