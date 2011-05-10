@@ -41,6 +41,19 @@
         </algorithm>
     </algorithm>
 
+    <!-- Standalone photon clustering -->
+    <algorithm type = "PhotonReconstruction">
+        <algorithm type = "ConeClustering" description = "PhotonClusterFormation">
+            <ClusterSeedStrategy>0</ClusterSeedStrategy>
+            <ShouldUseTrackSeed>false</ShouldUseTrackSeed>
+            <ShouldUseOnlyECalHits>true</ShouldUseOnlyECalHits>
+            <ConeApproachMaxSeparation>250.</ConeApproachMaxSeparation>
+        </algorithm>
+        <ClusterListName>PhotonClusters</ClusterListName>
+        <ShouldMakePdfHistograms>false</ShouldMakePdfHistograms>
+        <HistogramFile>PandoraLikelihoodData.xml</HistogramFile>
+    </algorithm>
+
     <!-- Clustering parent algorithm runs a daughter clustering algorithm -->
     <algorithm type = "ClusteringParent">
         <algorithm type = "ConeClustering" description = "ClusterFormation" instance = "mainClustering"/>
@@ -364,6 +377,10 @@
             <algorithm type = "NeutralFragmentRemoval"/>
             <algorithm type = "PhotonFragmentRemoval"/>
         </fragmentRemovalAlgorithms>
+    </algorithm>
+
+    <algorithm type = "ClusterPreparation">
+        <CandidateListNames>PrimaryClusterList PhotonClusters</CandidateListNames>
     </algorithm>
 
     <!-- Create particle flow objects -->

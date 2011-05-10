@@ -327,10 +327,6 @@
     </algorithm>
 
     <!-- Prepare particle flow objects -->
-    <algorithm type = "ClusterPreparation">
-        <CandidateListNames>PrimaryClusterList</CandidateListNames>
-    </algorithm>
-
     <algorithm type = "TrackPreparation">
         <CandidateListNames>Input</CandidateListNames>
         <trackClusterAssociationAlgorithms>
