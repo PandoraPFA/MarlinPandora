@@ -23,22 +23,17 @@
     <!-- Select tracks and hits to use for clustering -->
     <algorithm type = "EventPreparation"/>
 
-    <!-- Standalone muon clustering -->
-    <algorithm type = "MuonReconstruction">
-        <algorithm type = "ConeClustering" description = "MuonClusterFormation">
-            <TanConeAngleCoarse>0.3</TanConeAngleCoarse>
-            <ConeApproachMaxSeparation>2000.f</ConeApproachMaxSeparation>
-            <MaxClusterDirProjection>2000.f</MaxClusterDirProjection>
-            <ShouldUseIsolatedHits>true</ShouldUseIsolatedHits>
-            <LayersToStepBackCoarse>30</LayersToStepBackCoarse>
-            <AdditionalPadWidthsCoarse>1</AdditionalPadWidthsCoarse>
-            <SameLayerPadWidthsCoarse>1.8</SameLayerPadWidthsCoarse>
+    <!-- Standalone photon clustering -->
+    <algorithm type = "PhotonReconstruction">
+        <algorithm type = "ConeClustering" description = "PhotonClusterFormation">
+            <ClusterSeedStrategy>0</ClusterSeedStrategy>
             <ShouldUseTrackSeed>false</ShouldUseTrackSeed>
-            <MaxTrackSeedSeparation>0</MaxTrackSeedSeparation>
-            <MaxLayersToTrackSeed>0</MaxLayersToTrackSeed>
-            <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
-            <TrackPathWidth>0</TrackPathWidth>
+            <ShouldUseOnlyECalHits>true</ShouldUseOnlyECalHits>
+            <ConeApproachMaxSeparation>250.</ConeApproachMaxSeparation>
         </algorithm>
+        <ClusterListName>PhotonClusters</ClusterListName>
+        <ShouldMakePdfHistograms>false</ShouldMakePdfHistograms>
+        <HistogramFile>PandoraLikelihoodData.xml</HistogramFile>
     </algorithm>
 
     <!-- Clustering parent algorithm runs a daughter clustering algorithm -->
@@ -327,15 +322,13 @@
             <TrackPathWidth>0</TrackPathWidth>
         </algorithm>
 
-        <InputCaloHitListName> MuonRemovedYokeHits </InputCaloHitListName>
+        <InputCaloHitListName> MuonYokeHits </InputCaloHitListName>
         <RestoreOriginalCaloHitList> true </RestoreOriginalCaloHitList>
-        <ClusterListName> MuonRemovedYokeClusterList </ClusterListName>
+        <ClusterListName> MuonClusterList </ClusterListName>
         <ReplaceCurrentClusterList> false </ReplaceCurrentClusterList>
     </algorithm>
 
-    <algorithm type = "MuonClusterAssociation">
-        <MuonClusterListName>MuonRemovedYokeClusterList</MuonClusterListName>
-    </algorithm>
+    <algorithm type = "MuonClusterAssociation"/>
 
     <!-- Photon recovery -->
     <algorithm type = "PhotonRecovery">
@@ -364,6 +357,10 @@
             <algorithm type = "NeutralFragmentRemoval"/>
             <algorithm type = "PhotonFragmentRemoval"/>
         </fragmentRemovalAlgorithms>
+    </algorithm>
+
+    <algorithm type = "ClusterPreparation">
+        <CandidateListNames>PrimaryClusterList PhotonClusters</CandidateListNames>
     </algorithm>
 
     <!-- Create particle flow objects -->
