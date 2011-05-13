@@ -25,9 +25,8 @@
 
     <!-- Clustering parent algorithm runs a daughter clustering algorithm -->
     <algorithm type = "ClusteringParent">
-        <algorithm type = "ConeClustering" description = "ClusterFormation" instance = "mainClustering"/>
-
-        <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc">
+        <algorithm type = "ConeClustering" description = "ClusterFormation"/>
+        <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation">
             <associationAlgorithms>
                 <algorithm type = "LoopingTracks"/>
                 <algorithm type = "BrokenTracks"/>
@@ -58,7 +57,6 @@
     <!-- Reclustering algorithms run multiple clustering algorithms -->
     <algorithm type = "ReclusteringParent">
         <reclusteringAlgorithms>
-
             <algorithm type = "SplitTrackAssociations" instance = "SplitTrackAssociations1">
                 <clusteringAlgorithms>
                     <algorithm type = "ConeClustering" instance = "Reclustering1">
@@ -189,7 +187,31 @@
                         <TrackPathWidth>0</TrackPathWidth>
                     </algorithm>
                 </clusteringAlgorithms>
-                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
+                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "reclusterAssociation">
+                    <associationAlgorithms>
+                        <algorithm type = "LoopingTracks"/>
+                        <algorithm type = "BrokenTracks"/>
+                        <algorithm type = "ShowerMipMerging"/>
+                        <algorithm type = "ShowerMipMerging2"/>
+                        <algorithm type = "BackscatteredTracks"/>
+                        <algorithm type = "BackscatteredTracks2"/>
+                        <algorithm type = "ShowerMipMerging3"/>
+                        <algorithm type = "ShowerMipMerging4"/>
+                        <algorithm type = "ProximityBasedMerging">
+                            <algorithm type = "TrackClusterAssociation"/>
+                        </algorithm>
+                        <algorithm type = "ConeBasedMerging">
+                            <algorithm type = "TrackClusterAssociation"/>
+                        </algorithm>
+                        <algorithm type = "MipPhotonSeparation">
+                            <algorithm type = "TrackClusterAssociation"/>
+                        </algorithm>
+                        <algorithm type = "SoftClusterMerging">
+                            <algorithm type = "TrackClusterAssociation"/>
+                        </algorithm>
+                        <algorithm type = "IsolatedHitMerging"/>
+                    </associationAlgorithms>
+                </algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
                 <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
@@ -211,7 +233,7 @@
                     <algorithm type = "ConeClustering" instance = "Reclustering11"/>
                     <algorithm type = "ConeClustering" instance = "Reclustering12"/>
                 </clusteringAlgorithms>
-                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
+                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "reclusterAssociation"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
                 <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
@@ -237,7 +259,7 @@
                     <algorithm type = "ConeClustering" instance = "Reclustering11"/>
                     <algorithm type = "ConeClustering" instance = "Reclustering12"/>
                 </clusteringAlgorithms>
-                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
+                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "reclusterAssociation"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
                 <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
@@ -262,7 +284,7 @@
                     <algorithm type = "ConeClustering" instance = "Reclustering11"/>
                     <algorithm type = "ConeClustering" instance = "Reclustering12"/>
                 </clusteringAlgorithms>
-                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
+                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "reclusterAssociation"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
             </algorithm>
@@ -285,7 +307,7 @@
                     <algorithm type = "ConeClustering" instance = "Reclustering11"/>
                     <algorithm type = "ConeClustering" instance = "Reclustering12"/>
                 </clusteringAlgorithms>
-                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "mainTopologicalAssoc"></algorithm>
+                <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation" instance = "reclusterAssociation"></algorithm>
                 <algorithm type = "TrackClusterAssociation" description = "TrackClusterAssociation"></algorithm>
                 <UsingOrderedAlgorithms>true</UsingOrderedAlgorithms>
                 <ShouldUseForcedClustering>true</ShouldUseForcedClustering>
@@ -308,14 +330,15 @@
             <MaxLayersToTrackLikeHit>0</MaxLayersToTrackLikeHit>
             <TrackPathWidth>0</TrackPathWidth>
         </algorithm>
-
         <InputCaloHitListName> MuonYokeHits </InputCaloHitListName>
         <RestoreOriginalCaloHitList> true </RestoreOriginalCaloHitList>
         <ClusterListName> MuonClusterList </ClusterListName>
         <ReplaceCurrentClusterList> false </ReplaceCurrentClusterList>
     </algorithm>
 
-    <algorithm type = "MuonClusterAssociation"/>
+    <algorithm type = "MuonClusterAssociation">
+        <MuonClusterListName>MuonClusterList</MuonClusterListName>
+    </algorithm>
 
     <!-- Photon recovery -->
     <algorithm type = "PhotonRecovery">
