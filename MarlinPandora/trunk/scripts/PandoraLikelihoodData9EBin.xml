@@ -1,3 +1,4 @@
+<EnergyBinLowerEdges>0 0.5 1 1.5 2.5 5 10 20 50 </EnergyBinLowerEdges>
 <PhotonSigPeakRms_0>
     <NBinsX>50</NBinsX>
     <XLow>0</XLow>
