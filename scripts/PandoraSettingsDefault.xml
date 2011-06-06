@@ -51,7 +51,8 @@
         </algorithm>
         <ClusterListName>PhotonClusters</ClusterListName>
         <ShouldMakePdfHistograms>false</ShouldMakePdfHistograms>
-        <HistogramFile>PandoraLikelihoodData.xml</HistogramFile>
+        <NEnergyBins>9</NEnergyBins>
+        <HistogramFile>PandoraLikelihoodData9EBin.xml</HistogramFile>
     </algorithm>
 
     <!-- Clustering parent algorithm runs a daughter clustering algorithm -->
