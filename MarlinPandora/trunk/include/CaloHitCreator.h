@@ -17,10 +17,6 @@
 
 typedef std::vector<CalorimeterHit *> CalorimeterHitVector;
 
-class PathLengthCalculator;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 /**
  *  @brief  CaloHitCreator class
  */
@@ -188,8 +184,6 @@ private:
     const Settings                      m_settings;                         ///< The calo hit creator settings
 
     const pandora::Pandora             *m_pPandora;                         ///< Address of the pandora object to create calo hits
-    const PathLengthCalculator         *m_pPathLengthCalculator;            ///< Address of the path length calculator
-
 
     const float                         m_eCalBarrelOuterZ;                 ///< ECal barrel outer z coordinate
     const float                         m_hCalBarrelOuterZ;                 ///< HCal barrel outer z coordinate

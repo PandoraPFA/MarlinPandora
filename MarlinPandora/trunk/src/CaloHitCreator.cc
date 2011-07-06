@@ -21,7 +21,6 @@
 #include "UTIL/CellIDDecoder.h"
 
 #include "CaloHitCreator.h"
-#include "PathLengthCalculator.h"
 #include "PandoraPFANewProcessor.h"
 
 #include <algorithm>
@@ -33,7 +32,6 @@ CalorimeterHitVector CaloHitCreator::m_calorimeterHitVector;
 CaloHitCreator::CaloHitCreator(const Settings &settings) :
     m_settings(settings),
     m_pPandora(PandoraPFANewProcessor::GetPandora()),
-    m_pPathLengthCalculator(PathLengthCalculator::GetInstance()),
     m_eCalBarrelOuterZ(marlin::Global::GEAR->getEcalBarrelParameters().getExtent()[3]),
     m_hCalBarrelOuterZ(marlin::Global::GEAR->getHcalBarrelParameters().getExtent()[3]),
     m_muonBarrelOuterZ(marlin::Global::GEAR->getYokeBarrelParameters().getExtent()[3]),
@@ -72,7 +70,6 @@ CaloHitCreator::CaloHitCreator(const Settings &settings) :
 
 CaloHitCreator::~CaloHitCreator()
 {
-    delete m_pPathLengthCalculator;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -502,27 +499,6 @@ void CaloHitCreator::GetCommonCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_pParentAddress = (void*)pCaloHit;
     caloHitParameters.m_inputEnergy = pCaloHit->getEnergy();
     caloHitParameters.m_time = pCaloHit->getTime();
-
-    // TODO When available, use gear to calculate path length properties.
-    // const gear::Vector3D positionIP3D(0.f, 0.f, 0.f);
-    // const gear::Vector3D positionVector3D(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
-    // radiationLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNRadlen(positionIP3D, positionVector3D);
-    // interactionLengthsFromIp = marlin::Global::GEAR->getDistanceProperties().getNIntlen(positionIP3D, positionVector3D);
-
-    float radiationLengthsFromIp(0.f), interactionLengthsFromIp(0.f);
-
-    try
-    {
-        m_pPathLengthCalculator->GetPathLengths(pCaloHit, radiationLengthsFromIp, interactionLengthsFromIp);
-    }
-    catch (pandora::StatusCodeException &statusCodeException)
-    {
-        streamlog_out(ERROR) << "Failed to calculate calo hit path lengths from ip: " << statusCodeException.ToString() << std::endl;
-        throw statusCodeException;
-    }
-
-    caloHitParameters.m_nRadiationLengthsFromIp = radiationLengthsFromIp;
-    caloHitParameters.m_nInteractionLengthsFromIp = interactionLengthsFromIp;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -17,7 +17,6 @@
 #include "KMeansContent.h"
 
 #include "ExternalClusteringAlgorithm.h"
-#include "PathLengthCalculator.h"
 #include "PandoraPFANewProcessor.h"
 #include "SimpleBFieldCalculator.h"
 
@@ -408,78 +407,6 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "The bfield in the muon endcap, units Tesla",
                             SimpleBFieldCalculator::m_muonEndCapBField,
                             float(0.01f));
-
-    // Average radiation length parameters
-    registerProcessorParameter("AverageRadiationLengthCoil",
-                            "Average number of radiation lengths per mm in the coil",
-                            PathLengthCalculator::Settings::m_avgRadLengthCoil,
-                            float(0.011240f)); // CLIC_ILD_CDR, CLIC_ILD_01, ILD_00 value
-
-    registerProcessorParameter("AverageRadiationLengthECalBarrel",
-                            "Average number of radiation lengths per mm in the ECal Barrel",
-                            PathLengthCalculator::Settings::m_avgRadLengthECalBarrel,
-                            float(0.13355)); // CLIC_ILD_CDR, CLIC_ILD_01, ILD_00 value
-
-    registerProcessorParameter("AverageRadiationLengthECalEndCap",
-                            "Average number of radiation lengths per mm in the ECal EndCap",
-                            PathLengthCalculator::Settings::m_avgRadLengthECalEndCap,
-                            float(0.13355)); // CLIC_ILD_CDR, CLIC_ILD_01, ILD_00 value
-
-    registerProcessorParameter("AverageRadiationLengthHCalBarrel",
-                            "Average number of radiation lengths per mm in the HCal Barrel",
-                            PathLengthCalculator::Settings::m_avgRadLengthHCalBarrel,
-                            float(0.17392)); // CLIC_ILD_CDR, CLIC_ILD_01 value. ILD_00 value is 0.043549
-
-    registerProcessorParameter("AverageRadiationLengthHCalEndCap",
-                            "Average number of radiation lengths per mm in the HCal EndCap",
-                            PathLengthCalculator::Settings::m_avgRadLengthHCalEndCap,
-                            float(0.035448)); // CLIC_ILD_CDR value. CLIC_ILD_01 value is 0.17392. ILD_00 value is 0.043549
-
-    registerProcessorParameter("AverageRadiationLengthMuonBarrel",
-                            "Average number of radiation lengths per mm in the Muon Barrel",
-                            PathLengthCalculator::Settings::m_avgRadLengthMuonBarrel,
-                            float(0.047512)); // CLIC_ILD_CDR, CLIC_ILD_01, ILD_00 value
-
-    registerProcessorParameter("AverageRadiationLengthMuonEndCap",
-                            "Average number of radiation lengths per mm in the Muon EndCap",
-                            PathLengthCalculator::Settings::m_avgRadLengthMuonEndCap,
-                            float(0.047512)); // CLIC_ILD_CDR, CLIC_ILD_01, ILD_00 value
-
-    // Average interaction length parameters
-    registerProcessorParameter("AverageInteractionLengthCoil",
-                            "Average number of interaction lengths per mm in the coil",
-                            PathLengthCalculator::Settings::m_avgIntLengthCoil,
-                            float(0.0025189f)); // CLIC_ILD_CDR, CLIC_ILD_01, ILD_00 value
-
-    registerProcessorParameter("AverageInteractionLengthECalBarrel",
-                            "Average number of interaction lengths per mm in the ECal Barrel",
-                            PathLengthCalculator::Settings::m_avgIntLengthECalBarrel,
-                            float(0.0053555)); // CLIC_ILD_CDR, CLIC_ILD_01, ILD_00 value
-
-    registerProcessorParameter("AverageInteractionLengthECalEndCap",
-                            "Average number of interaction lengths per mm in the ECal EndCap",
-                            PathLengthCalculator::Settings::m_avgIntLengthECalEndCap,
-                            float(0.0053555)); // CLIC_ILD_CDR, CLIC_ILD_01, ILD_00 value
-
-    registerProcessorParameter("AverageInteractionLengthHCalBarrel",
-                            "Average number of interaction lengths per mm in the HCal Barrel",
-                            PathLengthCalculator::Settings::m_avgIntLengthHCalBarrel,
-                            float(0.0066047)); // CLIC_ILD_CDR, CLIC_ILD_01 value. ILD_00 value is 0.0048187
-
-    registerProcessorParameter("AverageInteractionLengthHCalEndCap",
-                            "Average number of interaction lengths per mm in the HCal EndCap",
-                            PathLengthCalculator::Settings::m_avgIntLengthHCalEndCap,
-                            float(0.0041251)); // CLIC_ILD_CDR value. CLIC_ILD_01 value is 0.0066047. ILD_00 value is 0.0048187
-
-    registerProcessorParameter("AverageInteractionLengthMuonBarrel",
-                            "Average number of interaction lengths per mm in the Muon Barrel",
-                            PathLengthCalculator::Settings::m_avgIntLengthMuonBarrel,
-                            float(0.0051580)); // CLIC_ILD_CDR, CLIC_ILD_01, ILD_00 value
-
-    registerProcessorParameter("AverageInteractionLengthMuonEndCap",
-                            "Average number of interaction lengths per mm in the Muon EndCap",
-                            PathLengthCalculator::Settings::m_avgIntLengthMuonEndCap,
-                            float(0.0051580)); // CLIC_ILD_CDR, CLIC_ILD_01, ILD_00 value
 
     // Track relationship parameters
     registerProcessorParameter("ShouldFormTrackRelationships",
