@@ -128,7 +128,7 @@ pandora::StatusCode TrackCreator::ExtractKinks(const EVENT::LCEvent *const pLCEv
                         (0 == iTrack) ? m_parentTrackList.insert(pTrack) : m_daughterTrackList.insert(pTrack);
                         streamlog_out(DEBUG) << "KinkTrack " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
 
-                        int trackPdgCode = pandora::UNKNOWN;
+                        int trackPdgCode = pandora::UNKNOWN_PARTICLE_TYPE;
 
                         if (0 == iTrack)
                         {
@@ -308,7 +308,7 @@ pandora::StatusCode TrackCreator::ExtractV0s(const EVENT::LCEvent *const pLCEven
                         m_v0TrackList.insert(pTrack);
                         streamlog_out(DEBUG) << "V0Track " << iTrack << ", nHits " << pTrack->getTrackerHits().size() << std::endl;
 
-                        int trackPdgCode = pandora::UNKNOWN;
+                        int trackPdgCode = pandora::UNKNOWN_PARTICLE_TYPE;
 
                         switch (vertexPdgCode)
                         {
