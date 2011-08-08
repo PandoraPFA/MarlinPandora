@@ -21,10 +21,10 @@ StatusCode ExternalClusteringAlgorithm::Run()
 {
     try
     {
-        const OrderedCaloHitList *pOrderedCaloHitList = NULL;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentOrderedCaloHitList(*this, pOrderedCaloHitList));
+        const CaloHitList *pCaloHitList = NULL;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentCaloHitList(*this, pCaloHitList));
 
-        if (pOrderedCaloHitList->empty())
+        if (pCaloHitList->empty())
             return STATUS_CODE_SUCCESS;
 
         // Get external photon cluster collection
@@ -39,13 +39,10 @@ StatusCode ExternalClusteringAlgorithm::Run()
         // Populate pandora parent address to calo hit map
         ParentAddressToCaloHitMap parentAddressToCaloHitMap;
 
-        for (OrderedCaloHitList::const_iterator iter = pOrderedCaloHitList->begin(), iterEnd = pOrderedCaloHitList->end(); iter != iterEnd; ++iter)
+        for (CaloHitList::const_iterator hitIter = pCaloHitList->begin(), hitIterEnd = pCaloHitList->end(); hitIter != hitIterEnd; ++hitIter)
         {
-            for (CaloHitList::const_iterator hitIter = iter->second->begin(), hitIterEnd = iter->second->end(); hitIter != hitIterEnd; ++hitIter)
-            {
-                pandora::CaloHit *pCaloHit = *hitIter;
-                parentAddressToCaloHitMap.insert(ParentAddressToCaloHitMap::value_type(pCaloHit->GetParentCaloHitAddress(), pCaloHit));
-            }
+            pandora::CaloHit *pCaloHit = *hitIter;
+            parentAddressToCaloHitMap.insert(ParentAddressToCaloHitMap::value_type(pCaloHit->GetParentCaloHitAddress(), pCaloHit));
         }
 
         // Recreate external clusters within the pandora framework
