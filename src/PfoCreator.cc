@@ -46,8 +46,8 @@ PfoCreator::~PfoCreator()
 
 pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEvent)
 {
-    pandora::ParticleFlowObjectList particleFlowObjectList;
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::GetParticleFlowObjects(*m_pPandora, particleFlowObjectList));
+    const pandora::PfoList *pPfoList = NULL;
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pPandora, pPfoList));
 
     IMPL::LCCollectionVec *pClusterCollection = new IMPL::LCCollectionVec(LCIO::CLUSTER);
     IMPL::LCCollectionVec *pReconstructedParticleCollection = new IMPL::LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
@@ -69,8 +69,7 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
     pClusterCollection->parameters().setValues("ClusterSubdetectorNames", subDetectorNames);
 
     // Create lcio "reconstructed particles" from the pandora "particle flow objects"
-    for (pandora::ParticleFlowObjectList::iterator itPFO = particleFlowObjectList.begin(), itPFOEnd = particleFlowObjectList.end();
-         itPFO != itPFOEnd; ++itPFO)
+    for (pandora::PfoList::const_iterator itPFO = pPfoList->begin(), itPFOEnd = pPfoList->end(); itPFO != itPFOEnd; ++itPFO)
     {
         IMPL::ReconstructedParticleImpl *pReconstructedParticle = new ReconstructedParticleImpl();
 
