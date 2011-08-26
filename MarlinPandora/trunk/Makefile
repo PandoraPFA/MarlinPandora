@@ -7,7 +7,6 @@ LCIO_DIR = YOUR_PATH_HERE
 MARLIN_DIR = YOUR_PATH_HERE
 MARLINUTIL_DIR = YOUR_PATH_HERE
 PANDORAPFANEW_DIR = YOUR_PATH_HERE
-PANDORAMONITORING_DIR = YOUR_PATH_HERE
 
 DEFINES = -DUSE_GEAR=1
 ifdef MONITORING
@@ -26,7 +25,7 @@ INCLUDES += -I$(MARLINUTIL_DIR)/include/
 INCLUDES += -I$(PANDORAPFANEW_DIR)/Framework/include/
 INCLUDES += -I$(PANDORAPFANEW_DIR)/FineGranularityContent/include/ -I$(PANDORAPFANEW_DIR)/KMeansContent/include/
 ifdef MONITORING
-    INCLUDES += -I$(PANDORAMONITORING_DIR)/include/
+    INCLUDES += -I$(PANDORAPFANEW_DIR)/Monitoring/include/
 endif
 
 CC = g++
@@ -45,6 +44,9 @@ LIBS += -L$(LCIO_DIR)/lib -llcio
 LIBS += -L$(MARLIN_DIR)/lib -lMarlin
 LIBS += -L$(MARLINUTIL_DIR)/lib -lMarlinUtil
 LIBS += -L$(PANDORAPFANEW_DIR)/lib -lPandoraFramework -lPandoraFineGranularityContent -lPandoraKMeansContent
+ifdef MONITORING
+    LIBS += -lPandoraMonitoring
+endif
 ifdef BUILD_32BIT_COMPATIBLE
     LIBS += -m32
 endif
