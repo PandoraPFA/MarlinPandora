@@ -422,8 +422,8 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
 
    registerProcessorParameter("MinFtdTrackHits",
                             "Track quality cut: the minimum number of ftd track hits for ftd only tracks",
-                            m_trackCreatorSettings.m_minTrackHits,
-                            int(4));
+                            m_trackCreatorSettings.m_minFtdTrackHits,
+                            int(0));
 
    registerProcessorParameter("MaxTrackHits",
                             "Track quality cut: the maximum number of track hits",
