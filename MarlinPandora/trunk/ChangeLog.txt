@@ -1,4 +1,17 @@
 ************************************************************************
+TAG V00-06 FOR ILCSOFT USAGE
+************************************************************************
+Fixed problem where minimum number of ftd hits obtained from xml steering file was assigned to wrong variable.
+Updated to account for new monitoring location and added ability to link against PandoraMonitoring library.
+Updated to use new pandora API for pfo extraction.
+Updated to reflect recent changes to pandora APIs, including typedef changes and use of CaloHitLists, rather than OrderedCaloHitLists.
+Removed PathLengthCalculator class, now unused (no longer need to specify path lengths from interaction point).
+Added new PandoraSettings files following addition of new PhotonReconstruction algorithm to Pandora fine granularity content library.
+Added xml files containing photon likelihood PDFs, for both one and nine bins of reconstructed cluster energy.
+Updated PandoraSettings files to use new functionality of soft cluster merging and isolated hit merging algorithms.
+Updated to handle "à la Videau" geometry more elegantly.
+
+************************************************************************
 TAG V00-05 FOR ILCSOFT USAGE
 ************************************************************************
 Added ability to read pandora recluster monitoring output, writing results to collections of lcio GenericObjects and lcio Relations.
