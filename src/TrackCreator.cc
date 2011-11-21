@@ -17,6 +17,8 @@
 #include "gear/CalorimeterParameters.h"
 #include "gear/PadRowLayout2D.h"
 #include "gear/TPCParameters.h"
+#include "gear/FTDParameters.h"
+#include "gear/FTDLayerLayout.h"
 
 #include "PandoraPFANewProcessor.h"
 #include "TrackCreator.h"
@@ -38,15 +40,53 @@ TrackCreator::TrackCreator(const Settings &settings) :
     m_tpcOuterR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[1]),
     m_tpcMaxRow(marlin::Global::GEAR->getTPCParameters().getPadLayout().getNRows()),
     m_tpcZmax(marlin::Global::GEAR->getTPCParameters().getMaxDriftLength()),
-    m_ftdInnerRadii(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDInnerRadius")),
-    m_ftdOuterRadii(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDOuterRadius")),
-    m_ftdZPositions(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDZCoordinate")),
-    m_nFtdLayers(m_ftdZPositions.size()),
+    // m_ftdInnerRadii(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDInnerRadius")),
+    // m_ftdOuterRadii(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDOuterRadius")),
+    // m_ftdZPositions(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDZCoordinate")),
+    // m_nFtdLayers(m_ftdZPositions.size()),
     m_eCalBarrelInnerSymmetry(marlin::Global::GEAR->getEcalBarrelParameters().getSymmetryOrder()),
     m_eCalBarrelInnerPhi0(marlin::Global::GEAR->getEcalBarrelParameters().getPhi0()),
     m_eCalBarrelInnerR(marlin::Global::GEAR->getEcalBarrelParameters().getExtent()[0]),
     m_eCalEndCapInnerZ(marlin::Global::GEAR->getEcalEndcapParameters().getExtent()[2])
 {
+
+
+  //fg: FTD description in GEAR has changed ...
+  try{  // try to read old file first ...
+    
+    m_ftdInnerRadii = marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDInnerRadius")  ;
+    m_ftdOuterRadii = marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDOuterRadius") ;
+    m_ftdZPositions = marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDZCoordinate") ;
+    
+    m_nFtdLayers = m_ftdZPositions.size() ;
+    
+  }catch(gear::UnknownParameterException& e){
+    
+    // now try to read new file ...
+
+    const gear::FTDLayerLayout&  pFTD = marlin::Global::GEAR->getFTDParameters().getFTDLayerLayout()  ;
+    
+    streamlog_out( DEBUG2 ) << " filling FTD parameters from gear::FTDParameters - n layers : " <<  pFTD.getNLayers() << std::endl ;
+    
+    for( unsigned i=0, N = pFTD.getNLayers() ; i<N ; ++i ){
+	
+	// create a disk to represent even number petals front side
+	m_ftdInnerRadii.push_back( pFTD.getSensitiveRinner(i) ) ;
+	m_ftdOuterRadii.push_back( pFTD.getMaxRadius(i) ) ;
+	
+	// take the mean z position of the staggered petals
+	//   => is this the right thing to do ???
+	double zpos =   pFTD.getZposition(i ) ; 
+	m_ftdZPositions.push_back( zpos )  ;
+	
+	streamlog_out( DEBUG2 ) << "         layer " << i << "  - mean z position = " << zpos  << std::endl ;
+    }
+    
+    m_nFtdLayers = m_ftdZPositions.size() ;
+  }
+  
+
+
     // Check tpc parameters
     if ((0.f == m_tpcZmax) || (0.f == m_tpcInnerR) || (m_tpcInnerR == m_tpcOuterR))
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
@@ -65,15 +105,29 @@ TrackCreator::TrackCreator(const Settings &settings) :
 
     m_tanLambdaFtd = m_ftdZPositions[0] / m_ftdOuterRadii[0];
 
-    // Calculate etd and set parameters
-    const DoubleVector &etdZPositions(marlin::Global::GEAR->getGearParameters("ETD").getDoubleVals("ETDLayerZ"));
-    const DoubleVector &setInnerRadii(marlin::Global::GEAR->getGearParameters("SET").getDoubleVals("SETLayerRadius"));
-
-    if (etdZPositions.empty() || setInnerRadii.empty())
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
-    m_minEtdZPosition = *(std::min_element(etdZPositions.begin(), etdZPositions.end()));
-    m_minSetRadius = *(std::min_element(setInnerRadii.begin(), setInnerRadii.end()));
+   // Calculate etd and set parameters
+    //fg: make SET and ETD optional - as they might not be in the model ...
+    try{  
+	
+	const DoubleVector &etdZPositions(marlin::Global::GEAR->getGearParameters("ETD").getDoubleVals("ETDLayerZ"));
+	const DoubleVector &setInnerRadii(marlin::Global::GEAR->getGearParameters("SET").getDoubleVals("SETLayerRadius"));
+	
+	if (etdZPositions.empty() || setInnerRadii.empty())
+	    throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+	
+	m_minEtdZPosition = *(std::min_element(etdZPositions.begin(), etdZPositions.end()));
+	m_minSetRadius = *(std::min_element(setInnerRadii.begin(), setInnerRadii.end()));
+    }
+    catch(gear::UnknownParameterException& e){ 
+	
+	streamlog_out( WARNING ) << " ETDLayerZ or  SETLayerRadius parameters missing from GEAR parameters !! \n"  
+				 << "       -> both will be set to  " <<  std::numeric_limits<float>::quiet_NaN() << std::endl ;
+	
+	//fg: set them to NAN, so that they cannot be used to set   trackParameters.m_reachesCalorimeter = true;
+	m_minEtdZPosition = std::numeric_limits<float>::quiet_NaN()  ;
+	m_minSetRadius    = std::numeric_limits<float>::quiet_NaN()  ;
+    }
+     
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
