@@ -40,94 +40,87 @@ TrackCreator::TrackCreator(const Settings &settings) :
     m_tpcOuterR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[1]),
     m_tpcMaxRow(marlin::Global::GEAR->getTPCParameters().getPadLayout().getNRows()),
     m_tpcZmax(marlin::Global::GEAR->getTPCParameters().getMaxDriftLength()),
-    // m_ftdInnerRadii(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDInnerRadius")),
-    // m_ftdOuterRadii(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDOuterRadius")),
-    // m_ftdZPositions(marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDZCoordinate")),
-    // m_nFtdLayers(m_ftdZPositions.size()),
     m_eCalBarrelInnerSymmetry(marlin::Global::GEAR->getEcalBarrelParameters().getSymmetryOrder()),
     m_eCalBarrelInnerPhi0(marlin::Global::GEAR->getEcalBarrelParameters().getPhi0()),
     m_eCalBarrelInnerR(marlin::Global::GEAR->getEcalBarrelParameters().getExtent()[0]),
     m_eCalEndCapInnerZ(marlin::Global::GEAR->getEcalEndcapParameters().getExtent()[2])
 {
-
-
-  //fg: FTD description in GEAR has changed ...
-  try{  // try to read old file first ...
-    
-    m_ftdInnerRadii = marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDInnerRadius")  ;
-    m_ftdOuterRadii = marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDOuterRadius") ;
-    m_ftdZPositions = marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDZCoordinate") ;
-    
-    m_nFtdLayers = m_ftdZPositions.size() ;
-    
-  }catch(gear::UnknownParameterException& e){
-    
-    // now try to read new file ...
-
-    const gear::FTDLayerLayout&  pFTD = marlin::Global::GEAR->getFTDParameters().getFTDLayerLayout()  ;
-    
-    streamlog_out( DEBUG2 ) << " filling FTD parameters from gear::FTDParameters - n layers : " <<  pFTD.getNLayers() << std::endl ;
-    
-    for( unsigned i=0, N = pFTD.getNLayers() ; i<N ; ++i ){
-	
-	// create a disk to represent even number petals front side
-	m_ftdInnerRadii.push_back( pFTD.getSensitiveRinner(i) ) ;
-	m_ftdOuterRadii.push_back( pFTD.getMaxRadius(i) ) ;
-	
-	// take the mean z position of the staggered petals
-	//   => is this the right thing to do ???
-	double zpos =   pFTD.getZposition(i ) ; 
-	m_ftdZPositions.push_back( zpos )  ;
-	
-	streamlog_out( DEBUG2 ) << "         layer " << i << "  - mean z position = " << zpos  << std::endl ;
+    // fg: FTD description in GEAR has changed ...
+    try
+    {
+        m_ftdInnerRadii = marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDInnerRadius");
+        m_ftdOuterRadii = marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDOuterRadius");
+        m_ftdZPositions = marlin::Global::GEAR->getGearParameters("FTD").getDoubleVals("FTDZCoordinate");
+        m_nFtdLayers = m_ftdZPositions.size();
     }
-    
-    m_nFtdLayers = m_ftdZPositions.size() ;
-  }
-  
+    catch (gear::UnknownParameterException &)
+    {
+        const gear::FTDLayerLayout &ftdLayerLayout(marlin::Global::GEAR->getFTDParameters().getFTDLayerLayout());
+        streamlog_out( DEBUG2 ) << " Filling FTD parameters from gear::FTDParameters - n layers: " << ftdLayerLayout.getNLayers() << std::endl;
 
+        for(unsigned int i = 0, N = ftdLayerLayout.getNLayers(); i < N; ++i)
+        {
+            // Create a disk to represent even number petals front side
+            m_ftdInnerRadii.push_back(ftdLayerLayout.getSensitiveRinner(i));
+            m_ftdOuterRadii.push_back(ftdLayerLayout.getMaxRadius(i));
+
+            // Take the mean z position of the staggered petals
+            const double zpos(ftdLayerLayout.getZposition(i));
+            m_ftdZPositions.push_back(zpos);
+            streamlog_out( DEBUG2 ) << "     layer " << i << " - mean z position = " << zpos << std::endl;
+        }
+
+        m_nFtdLayers = m_ftdZPositions.size() ;
+    }
 
     // Check tpc parameters
-    if ((0.f == m_tpcZmax) || (0.f == m_tpcInnerR) || (m_tpcInnerR == m_tpcOuterR))
+    if ((std::fabs(m_tpcZmax) < std::numeric_limits<float>::epsilon()) || (std::fabs(m_tpcInnerR) < std::numeric_limits<float>::epsilon())
+        || (std::fabs(m_tpcOuterR - m_tpcInnerR) < std::numeric_limits<float>::epsilon()))
+    {
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    }
 
     m_cosTpc = m_tpcZmax / std::sqrt(m_tpcZmax * m_tpcZmax + m_tpcInnerR * m_tpcInnerR);
 
     // Check ftd parameters
     if ((0 == m_nFtdLayers) || (m_nFtdLayers != m_ftdInnerRadii.size()) || (m_nFtdLayers != m_ftdOuterRadii.size()))
+    {
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    }
 
     for (unsigned int iFtdLayer = 0; iFtdLayer < m_nFtdLayers; ++iFtdLayer)
     {
-        if ((0.f == m_ftdOuterRadii[iFtdLayer]) || (0.f == m_ftdInnerRadii[iFtdLayer]))
-            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);;
+        if ((std::fabs(m_ftdOuterRadii[iFtdLayer]) < std::numeric_limits<float>::epsilon()) ||
+            (std::fabs(m_ftdInnerRadii[iFtdLayer]) < std::numeric_limits<float>::epsilon()))
+        {
+            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+        }
     }
 
     m_tanLambdaFtd = m_ftdZPositions[0] / m_ftdOuterRadii[0];
 
-   // Calculate etd and set parameters
-    //fg: make SET and ETD optional - as they might not be in the model ...
-    try{  
-	
-	const DoubleVector &etdZPositions(marlin::Global::GEAR->getGearParameters("ETD").getDoubleVals("ETDLayerZ"));
-	const DoubleVector &setInnerRadii(marlin::Global::GEAR->getGearParameters("SET").getDoubleVals("SETLayerRadius"));
-	
-	if (etdZPositions.empty() || setInnerRadii.empty())
-	    throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-	
-	m_minEtdZPosition = *(std::min_element(etdZPositions.begin(), etdZPositions.end()));
-	m_minSetRadius = *(std::min_element(setInnerRadii.begin(), setInnerRadii.end()));
+    // Calculate etd and set parameters
+    // fg: make SET and ETD optional - as they might not be in the model ...
+    try
+    {
+        const DoubleVector &etdZPositions(marlin::Global::GEAR->getGearParameters("ETD").getDoubleVals("ETDLayerZ"));
+        const DoubleVector &setInnerRadii(marlin::Global::GEAR->getGearParameters("SET").getDoubleVals("SETLayerRadius"));
+
+        if (etdZPositions.empty() || setInnerRadii.empty())
+            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+        m_minEtdZPosition = *(std::min_element(etdZPositions.begin(), etdZPositions.end()));
+        m_minSetRadius = *(std::min_element(setInnerRadii.begin(), setInnerRadii.end()));
     }
-    catch(gear::UnknownParameterException& e){ 
-	
-	streamlog_out( WARNING ) << " ETDLayerZ or  SETLayerRadius parameters missing from GEAR parameters !! \n"  
-				 << "       -> both will be set to  " <<  std::numeric_limits<float>::quiet_NaN() << std::endl ;
-	
-	//fg: set them to NAN, so that they cannot be used to set   trackParameters.m_reachesCalorimeter = true;
-	m_minEtdZPosition = std::numeric_limits<float>::quiet_NaN()  ;
-	m_minSetRadius    = std::numeric_limits<float>::quiet_NaN()  ;
+    catch(gear::UnknownParameterException &)
+    {
+        streamlog_out(WARNING) << " ETDLayerZ or SETLayerRadius parameters missing from GEAR parameters!" << std::endl
+                               << "     -> both will be set to " << std::numeric_limits<float>::quiet_NaN() << std::endl;
+
+        //fg: Set them to NAN, so that they cannot be used to set   trackParameters.m_reachesCalorimeter = true;
+        m_minEtdZPosition = std::numeric_limits<float>::quiet_NaN();
+        m_minSetRadius = std::numeric_limits<float>::quiet_NaN();
     }
-     
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

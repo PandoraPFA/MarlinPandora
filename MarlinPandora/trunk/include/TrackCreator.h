@@ -229,10 +229,10 @@ private:
     const float             m_tpcZmax;                      ///< The tpc maximum z coordinate
     float                   m_cosTpc;                       ///< Cos(theta) value at end of tpc
 
-    DoubleVector      m_ftdInnerRadii;                ///< List of ftd inner radii
-    DoubleVector      m_ftdOuterRadii;                ///< List of ftd outer radii
-    DoubleVector      m_ftdZPositions;                ///< List of ftd z positions
-    unsigned int      m_nFtdLayers;                   ///< Number of ftd layers
+    DoubleVector            m_ftdInnerRadii;                ///< List of ftd inner radii
+    DoubleVector            m_ftdOuterRadii;                ///< List of ftd outer radii
+    DoubleVector            m_ftdZPositions;                ///< List of ftd z positions
+    unsigned int            m_nFtdLayers;                   ///< Number of ftd layers
     float                   m_tanLambdaFtd;                 ///< Tan lambda for first ftd layer
 
     const int               m_eCalBarrelInnerSymmetry;      ///< ECal barrel inner symmetry order
