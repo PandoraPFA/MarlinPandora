@@ -1,3 +1,5 @@
+Updated TrackCreator class to work with either ILD00 or ILD01 geometry.
+
 ************************************************************************
 TAG V00-06 FOR ILCSOFT USAGE
 ************************************************************************
