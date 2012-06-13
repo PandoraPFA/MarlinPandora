@@ -421,8 +421,13 @@ bool TrackCreator::IsConflictingRelationship(const EVENT::TrackVec &trackVec) co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode TrackCreator::CreateTracks(const EVENT::LCEvent *const pLCEvent) const
+pandora::StatusCode TrackCreator::CreateTracks(EVENT::LCEvent *pLCEvent) const
 {
+    LCCollectionVec *pTracksNotPassedToPFA = newTrkCol("TracksNotPassedToPFA", pLCEvent, true);
+    LCCollectionVec *pTracksCanFormPfo = newTrkCol("TracksCanFormPfo", pLCEvent, true);
+    LCCollectionVec *pTracksCanFormClusterlessPfo = newTrkCol("TracksCanFormClusterlessPfo", pLCEvent, true);
+    LCCollectionVec *pTracksPassBothCanFormPfoFlags = newTrkCol("TracksPassBothCanFormPfoFlags", pLCEvent, true);
+
     for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), iterEnd = m_settings.m_trackCollections.end();
         iter != iterEnd; ++iter)
     {
@@ -461,7 +466,10 @@ pandora::StatusCode TrackCreator::CreateTracks(const EVENT::LCEvent *const pLCEv
                     const int nTrackHits(static_cast<int>(pTrack->getTrackerHits().size()));
 
                     if ((nTrackHits < minTrackHits) || (nTrackHits > m_settings.m_maxTrackHits))
+                    {
+                        pTracksNotPassedToPFA->addElement(pTrack);
                         continue;
+                    }
 
                     // Proceed to create the pandora track
                     PandoraApi::Track::Parameters trackParameters;
@@ -489,6 +497,15 @@ pandora::StatusCode TrackCreator::CreateTracks(const EVENT::LCEvent *const pLCEv
                     this->FitTrackHelices(pTrack, trackParameters);
                     this->TrackReachesECAL(pTrack, trackParameters);
                     this->DefineTrackPfoUsage(pTrack, trackParameters);
+
+                    if (trackParameters.m_canFormPfo.Get())
+                        pTracksCanFormPfo->addElement(pTrack);
+
+                    if (trackParameters.m_canFormClusterlessPfo.Get())
+                        pTracksCanFormClusterlessPfo->addElement(pTrack);
+
+                    if (trackParameters.m_canFormPfo.Get() && trackParameters.m_canFormClusterlessPfo.Get())
+                        pTracksPassBothCanFormPfoFlags->addElement(pTrack);
 
                     PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(*m_pPandora, trackParameters));
                     m_trackVector.push_back(pTrack);
