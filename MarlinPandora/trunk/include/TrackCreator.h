@@ -9,6 +9,11 @@
 #ifndef TRACK_CREATOR_H
 #define TRACK_CREATOR_H 1
 
+#include "lcio.h"
+
+#include "IMPL/LCCollectionVec.h"
+#include "IMPL/LCFlagImpl.h"
+
 #include "EVENT/LCEvent.h"
 #include "EVENT/Track.h"
 
@@ -18,6 +23,21 @@
 typedef std::vector<Track *> TrackVector;
 typedef std::set<const Track *> TrackList;
 typedef std::map<Track *, int> TrackToPidMap;
+
+inline LCCollectionVec *newTrkCol(const std::string &name, LCEvent *evt , bool isSubset)
+{
+  LCCollectionVec* col = new LCCollectionVec( LCIO::TRACK ) ;
+
+  LCFlagImpl hitFlag(0) ;
+  hitFlag.setBit( LCIO::TRBIT_HITS ) ;
+  col->setFlag( hitFlag.getFlag()  ) ;
+
+  evt->addCollection( col , name ) ;
+
+  col->setSubset( isSubset ) ;
+
+  return col ;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -103,7 +123,7 @@ public:
      * 
      *  @param  pLCEvent the lcio event
      */
-    pandora::StatusCode CreateTracks(const EVENT::LCEvent *const pLCEvent) const;
+    pandora::StatusCode CreateTracks(EVENT::LCEvent *pLCEvent) const;
 
     /**
      *  @brief  Get the track vector
