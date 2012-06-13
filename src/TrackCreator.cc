@@ -427,6 +427,7 @@ pandora::StatusCode TrackCreator::CreateTracks(EVENT::LCEvent *pLCEvent) const
     LCCollectionVec *pTracksCanFormPfo = newTrkCol("TracksCanFormPfo", pLCEvent, true);
     LCCollectionVec *pTracksCanFormClusterlessPfo = newTrkCol("TracksCanFormClusterlessPfo", pLCEvent, true);
     LCCollectionVec *pTracksPassBothCanFormPfoFlags = newTrkCol("TracksPassBothCanFormPfoFlags", pLCEvent, true);
+    LCCollectionVec *pTracksFailBothCanFormPfoFlags = newTrkCol("TracksFailBothCanFormPfoFlags", pLCEvent, true);
 
     for (StringVector::const_iterator iter = m_settings.m_trackCollections.begin(), iterEnd = m_settings.m_trackCollections.end();
         iter != iterEnd; ++iter)
@@ -506,6 +507,9 @@ pandora::StatusCode TrackCreator::CreateTracks(EVENT::LCEvent *pLCEvent) const
 
                     if (trackParameters.m_canFormPfo.Get() && trackParameters.m_canFormClusterlessPfo.Get())
                         pTracksPassBothCanFormPfoFlags->addElement(pTrack);
+
+                    if (!trackParameters.m_canFormPfo.Get() && !trackParameters.m_canFormClusterlessPfo.Get())
+                        pTracksFailBothCanFormPfoFlags->addElement(pTrack);
 
                     PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::Track::Create(*m_pPandora, trackParameters));
                     m_trackVector.push_back(pTrack);
