@@ -12,6 +12,7 @@
 #include "EVENT/LCCollection.h"
 #include "EVENT/ReconstructedParticle.h"
 #include "EVENT/Vertex.h"
+#include "UTIL/ILDConf.h"
 
 #include "gear/BField.h"
 #include "gear/CalorimeterParameters.h"
@@ -424,6 +425,7 @@ bool TrackCreator::IsConflictingRelationship(const EVENT::TrackVec &trackVec) co
 pandora::StatusCode TrackCreator::CreateTracks(EVENT::LCEvent *pLCEvent) const
 {
     LCCollectionVec *pTracksNotPassedToPFA = newTrkCol("TracksNotPassedToPFA", pLCEvent, true);
+    LCCollectionVec *pTracksReachEcal = newTrkCol("TracksReachEcal", pLCEvent, true);
     LCCollectionVec *pTracksCanFormPfo = newTrkCol("TracksCanFormPfo", pLCEvent, true);
     LCCollectionVec *pTracksCanFormClusterlessPfo = newTrkCol("TracksCanFormClusterlessPfo", pLCEvent, true);
     LCCollectionVec *pTracksPassBothCanFormPfoFlags = newTrkCol("TracksPassBothCanFormPfoFlags", pLCEvent, true);
@@ -501,6 +503,9 @@ pandora::StatusCode TrackCreator::CreateTracks(EVENT::LCEvent *pLCEvent) const
 
                     if (trackParameters.m_canFormPfo.Get())
                         pTracksCanFormPfo->addElement(pTrack);
+
+                    if (trackParameters.m_reachesCalorimeter.Get())
+                        pTracksReachEcal->addElement(pTrack);
 
                     if (trackParameters.m_canFormClusterlessPfo.Get())
                         pTracksCanFormClusterlessPfo->addElement(pTrack);
@@ -867,8 +872,8 @@ bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const Pan
             nExpectedTpcHits = 0;
 
         const EVENT::IntVec &hitsBySubdetector(pTrack->getSubdetectorHitNumbers());
-        const int nTpcHits = hitsBySubdetector[9];
-        const int nFtdHits = hitsBySubdetector[7];
+        const int nTpcHits = hitsBySubdetector[lcio::ILDDetID::TPC];
+        const int nFtdHits = hitsBySubdetector[lcio::ILDDetID::FTD];
         const int minTpcHits = static_cast<int>(nExpectedTpcHits * m_settings.m_minTpcHitFractionOfExpected);
 
         if ((nTpcHits < minTpcHits) && (nFtdHits < m_settings.m_minFtdHitsForTpcHitFraction))
