@@ -69,6 +69,8 @@ public:
         int             m_minFtdTrackHits;                      ///< Track quality cut: the minimum number of FTD track hits for FTD only tracks
         int             m_maxTrackHits;                         ///< Track quality cut: the maximum number of track hits
 
+        int             m_useOldTrackStateCalculation;          ///< Whether to calculate track states manually, rather than copy stored fitter values
+
         float           m_d0TrackCut;                           ///< Track d0 cut used to determine whether track can be used to form pfo
         float           m_z0TrackCut;                           ///< Track z0 cut used to determine whether track can be used to form pfo
 
@@ -194,12 +196,20 @@ private:
     bool IsDaughter(const EVENT::Track *const pTrack) const;
 
     /**
-     *  @brief  Perform helix fits to calculate track parameters: momentum at dca, start and end track states
+     *  @brief  Copy track states stored in lcio tracks to pandora track parameters
      * 
      *  @param  pTrack the lcio track
      *  @param  trackParameters the track parameters
      */
-    void FitTrackHelices(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
+    void GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
+
+    /**
+     *  @brief  Obtain track states at start and end of track and the momentum at the dca
+     * 
+     *  @param  pTrack the lcio track
+     *  @param  trackParameters the track parameters
+     */
+    void GetTrackStatesOld(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
 
     /**
      *  @brief  Project helix to the surface of the ecal
@@ -208,7 +218,7 @@ private:
      *  @param  signPz sign w.r.t. increasing z direction
      *  @param  trackParameters the track parameters
      */
-    void GetECalProjection(const pandora::Helix *const pHelix, const int signPz, PandoraApi::Track::Parameters &trackParameters) const;
+    void GetECalProjectionOld(const pandora::Helix *const pHelix, const int signPz, PandoraApi::Track::Parameters &trackParameters) const;
 
     /**
      *  @brief  Decide whether track reaches the ecal surface

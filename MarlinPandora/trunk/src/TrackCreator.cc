@@ -497,7 +497,7 @@ pandora::StatusCode TrackCreator::CreateTracks(EVENT::LCEvent *pLCEvent) const
                     if (0.f != signedCurvature)
                         trackParameters.m_charge = static_cast<int>(signedCurvature / std::fabs(signedCurvature));
 
-                    this->FitTrackHelices(pTrack, trackParameters);
+                    this->GetTrackStates(pTrack, trackParameters);
                     this->TrackReachesECAL(pTrack, trackParameters);
                     this->DefineTrackPfoUsage(pTrack, trackParameters);
 
@@ -540,7 +540,38 @@ pandora::StatusCode TrackCreator::CreateTracks(EVENT::LCEvent *pLCEvent) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackCreator::FitTrackHelices(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
+void TrackCreator::GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
+{
+    if (m_settings.m_useOldTrackStateCalculation > 0)
+        return this->GetTrackStatesOld(pTrack, trackParameters);
+
+    const TrackState *pTrackState = pTrack->getTrackState(TrackState::AtIP);
+    const pandora::Helix *pHelix = new pandora::Helix(pTrackState->getPhi(), pTrackState->getD0(), pTrackState->getZ0(), pTrackState->getOmega(), pTrackState->getTanLambda(), m_bField);
+    trackParameters.m_momentumAtDca = pHelix->GetMomentum();
+    delete pHelix;
+
+    pTrackState = pTrack->getTrackState(TrackState::AtFirstHit);
+    pHelix = new pandora::Helix(pTrackState->getPhi(), pTrackState->getD0(), pTrackState->getZ0(), pTrackState->getOmega(), pTrackState->getTanLambda(), m_bField);
+    trackParameters.m_trackStateAtStart = pandora::TrackState(pHelix->GetReferencePoint(), pHelix->GetExtrapolatedMomentum(pHelix->GetReferencePoint()));
+    delete pHelix;
+
+    pTrackState = pTrack->getTrackState(TrackState::AtLastHit);
+    pHelix = new pandora::Helix(pTrackState->getPhi(), pTrackState->getD0(), pTrackState->getZ0(), pTrackState->getOmega(), pTrackState->getTanLambda(), m_bField);
+    trackParameters.m_trackStateAtEnd = pandora::TrackState(pHelix->GetReferencePoint(), pHelix->GetExtrapolatedMomentum(pHelix->GetReferencePoint()));
+    delete pHelix;
+
+    pTrackState = pTrack->getTrackState(TrackState::AtCalorimeter);
+    pHelix = new pandora::Helix(pTrackState->getPhi(), pTrackState->getD0(), pTrackState->getZ0(), pTrackState->getOmega(), pTrackState->getTanLambda(), m_bField);
+    trackParameters.m_trackStateAtCalorimeter = pandora::TrackState(pHelix->GetReferencePoint(), pHelix->GetExtrapolatedMomentum(pHelix->GetReferencePoint()));
+
+    trackParameters.m_isProjectedToEndCap = (std::fabs(pHelix->GetReferencePoint().GetZ()) > m_eCalEndCapInnerZ);
+    trackParameters.m_timeAtCalorimeter = 0.f;// TODO!!! minGenericTime * particleEnergy / 300.f;
+    delete pHelix;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TrackCreator::GetTrackStatesOld(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
     pandora::Helix *pHelixFit = new pandora::Helix(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), m_bField);
     trackParameters.m_momentumAtDca = pHelixFit->GetMomentum();
@@ -573,14 +604,14 @@ void TrackCreator::FitTrackHelices(const EVENT::Track *const pTrack, PandoraApi:
     endMomentum = pHelixFit->GetExtrapolatedMomentum(endPosition);
     trackParameters.m_trackStateAtEnd = pandora::TrackState(endPosition, endMomentum);
 
-    this->GetECalProjection(pHelixFit, signPz, trackParameters);
+    this->GetECalProjectionOld(pHelixFit, signPz, trackParameters);
 
     delete pHelixFit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackCreator::GetECalProjection(const pandora::Helix *const pHelix, const int signPz, PandoraApi::Track::Parameters &trackParameters) const
+void TrackCreator::GetECalProjectionOld(const pandora::Helix *const pHelix, const int signPz, PandoraApi::Track::Parameters &trackParameters) const
 {
     const pandora::CartesianVector &referencePoint(pHelix->GetReferencePoint());
 
