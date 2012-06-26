@@ -433,7 +433,7 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
    registerProcessorParameter("UseOldTrackStateCalculation",
                             "Whether to calculate track states manually, rather than copy stored fitter values",
                             m_trackCreatorSettings.m_useOldTrackStateCalculation,
-                            int(1));
+                            int(0));
 
     // Track PFO usage parameters
     registerProcessorParameter("D0TrackCut",
