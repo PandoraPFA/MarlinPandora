@@ -546,27 +546,32 @@ void TrackCreator::GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::
         return this->GetTrackStatesOld(pTrack, trackParameters);
 
     const TrackState *pTrackState = pTrack->getTrackState(TrackState::AtIP);
-    const pandora::Helix *pHelix = new pandora::Helix(pTrackState->getPhi(), pTrackState->getD0(), pTrackState->getZ0(), pTrackState->getOmega(), pTrackState->getTanLambda(), m_bField);
-    trackParameters.m_momentumAtDca = pHelix->GetMomentum();
-    delete pHelix;
+    const double pt(m_bField * 3.e-4 / std::fabs(pTrackState->getOmega()));
+    trackParameters.m_momentumAtDca = pandora::CartesianVector(std::cos(pTrackState->getPhi()), std::sin(pTrackState->getPhi()), pTrackState->getTanLambda()) * pt;
 
-    pTrackState = pTrack->getTrackState(TrackState::AtFirstHit);
-    pHelix = new pandora::Helix(pTrackState->getPhi(), pTrackState->getD0(), pTrackState->getZ0(), pTrackState->getOmega(), pTrackState->getTanLambda(), m_bField);
-    trackParameters.m_trackStateAtStart = pandora::TrackState(pHelix->GetReferencePoint(), pHelix->GetExtrapolatedMomentum(pHelix->GetReferencePoint()));
-    delete pHelix;
+    this->CopyTrackState(pTrack->getTrackState(TrackState::AtFirstHit), trackParameters.m_trackStateAtStart);
+    this->CopyTrackState(pTrack->getTrackState(TrackState::AtLastHit), trackParameters.m_trackStateAtEnd);
+    this->CopyTrackState(pTrack->getTrackState(TrackState::AtCalorimeter), trackParameters.m_trackStateAtCalorimeter);
 
-    pTrackState = pTrack->getTrackState(TrackState::AtLastHit);
-    pHelix = new pandora::Helix(pTrackState->getPhi(), pTrackState->getD0(), pTrackState->getZ0(), pTrackState->getOmega(), pTrackState->getTanLambda(), m_bField);
-    trackParameters.m_trackStateAtEnd = pandora::TrackState(pHelix->GetReferencePoint(), pHelix->GetExtrapolatedMomentum(pHelix->GetReferencePoint()));
-    delete pHelix;
+    trackParameters.m_isProjectedToEndCap = (std::fabs(trackParameters.m_trackStateAtCalorimeter.Get().GetPosition().GetZ()) > m_eCalEndCapInnerZ);
+    trackParameters.m_timeAtCalorimeter = 0.f; // TODO minGenericTime * particleEnergy / 300.f;
+}
 
-    pTrackState = pTrack->getTrackState(TrackState::AtCalorimeter);
-    pHelix = new pandora::Helix(pTrackState->getPhi(), pTrackState->getD0(), pTrackState->getZ0(), pTrackState->getOmega(), pTrackState->getTanLambda(), m_bField);
-    trackParameters.m_trackStateAtCalorimeter = pandora::TrackState(pHelix->GetReferencePoint(), pHelix->GetExtrapolatedMomentum(pHelix->GetReferencePoint()));
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-    trackParameters.m_isProjectedToEndCap = (std::fabs(pHelix->GetReferencePoint().GetZ()) > m_eCalEndCapInnerZ);
-    trackParameters.m_timeAtCalorimeter = 0.f;// TODO!!! minGenericTime * particleEnergy / 300.f;
-    delete pHelix;
+void TrackCreator::CopyTrackState(const TrackState *const pTrackState, pandora::InputTrackState &inputTrackState) const
+{
+    const double pt(m_bField * 3.e-4 / std::fabs(pTrackState->getOmega()));
+
+    const double px(pt * std::cos(pTrackState->getPhi()));
+    const double py(pt * std::sin(pTrackState->getPhi()));
+    const double pz(pt * pTrackState->getTanLambda());
+
+    const double xs(pTrackState->getReferencePoint()[0] - pTrackState->getD0() * std::sin(pTrackState->getPhi()));
+    const double ys(pTrackState->getReferencePoint()[1] + pTrackState->getD0() * std::cos(pTrackState->getPhi()));
+    const double zs(pTrackState->getReferencePoint()[2] + pTrackState->getZ0());
+
+    inputTrackState = pandora::TrackState(xs, ys, zs, px, py, pz);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

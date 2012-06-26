@@ -204,6 +204,14 @@ private:
     void GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
 
     /**
+     *  @brief  Copy track state from lcio track state instance to pandora input track state
+     * 
+     *  @param  pTrackState the lcio track state instance
+     *  @param  inputTrackState the pandora input track state
+     */
+    void CopyTrackState(const TrackState *const pTrackState, pandora::InputTrackState &inputTrackState) const;
+
+    /**
      *  @brief  Obtain track states at start and end of track and the momentum at the dca
      * 
      *  @param  pTrack the lcio track
