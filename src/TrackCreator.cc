@@ -553,7 +553,7 @@ void TrackCreator::GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::
     this->CopyTrackState(pTrack->getTrackState(TrackState::AtLastHit), trackParameters.m_trackStateAtEnd);
     this->CopyTrackState(pTrack->getTrackState(TrackState::AtCalorimeter), trackParameters.m_trackStateAtCalorimeter);
 
-    trackParameters.m_isProjectedToEndCap = (std::fabs(trackParameters.m_trackStateAtCalorimeter.Get().GetPosition().GetZ()) > m_eCalEndCapInnerZ);
+    trackParameters.m_isProjectedToEndCap = ((std::fabs(trackParameters.m_trackStateAtCalorimeter.Get().GetPosition().GetZ()) < m_eCalEndCapInnerZ) ? false : true);
     trackParameters.m_timeAtCalorimeter = 0.f; // TODO minGenericTime * particleEnergy / 300.f;
 }
 
@@ -567,9 +567,9 @@ void TrackCreator::CopyTrackState(const TrackState *const pTrackState, pandora::
     const double py(pt * std::sin(pTrackState->getPhi()));
     const double pz(pt * pTrackState->getTanLambda());
 
-    const double xs(pTrackState->getReferencePoint()[0] - pTrackState->getD0() * std::sin(pTrackState->getPhi()));
-    const double ys(pTrackState->getReferencePoint()[1] + pTrackState->getD0() * std::cos(pTrackState->getPhi()));
-    const double zs(pTrackState->getReferencePoint()[2] + pTrackState->getZ0());
+    const double xs(pTrackState->getReferencePoint()[0]);
+    const double ys(pTrackState->getReferencePoint()[1]);
+    const double zs(pTrackState->getReferencePoint()[2]);
 
     inputTrackState = pandora::TrackState(xs, ys, zs, px, py, pz);
 }
