@@ -546,7 +546,7 @@ void TrackCreator::GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::
         return this->GetTrackStatesOld(pTrack, trackParameters);
 
     const TrackState *pTrackState = pTrack->getTrackState(TrackState::AtIP);
-    const double pt(m_bField * 3.e-4 / std::fabs(pTrackState->getOmega()));
+    const double pt(m_bField * 2.99792e-4 / std::fabs(pTrackState->getOmega()));
     trackParameters.m_momentumAtDca = pandora::CartesianVector(std::cos(pTrackState->getPhi()), std::sin(pTrackState->getPhi()), pTrackState->getTanLambda()) * pt;
 
     this->CopyTrackState(pTrack->getTrackState(TrackState::AtFirstHit), trackParameters.m_trackStateAtStart);
@@ -561,7 +561,7 @@ void TrackCreator::GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::
 
 void TrackCreator::CopyTrackState(const TrackState *const pTrackState, pandora::InputTrackState &inputTrackState) const
 {
-    const double pt(m_bField * 3.e-4 / std::fabs(pTrackState->getOmega()));
+    const double pt(m_bField * 2.99792e-4 / std::fabs(pTrackState->getOmega()));
 
     const double px(pt * std::cos(pTrackState->getPhi()));
     const double py(pt * std::sin(pTrackState->getPhi()));
@@ -839,6 +839,11 @@ void TrackCreator::DefineTrackPfoUsage(const EVENT::Track *const pTrack, Pandora
                     canFormClusterlessPfo = true;
                 }
             }
+        }
+        else if (this->IsDaughter(pTrack) || this->IsV0(pTrack))
+        {
+            streamlog_out(WARNING) << "Recovering daughter or v0 track " << trackParameters.m_momentumAtDca.Get().GetMagnitude() << std::endl;
+            canFormPfo = true;
         }
     }
 
