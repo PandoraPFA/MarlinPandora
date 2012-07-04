@@ -42,4 +42,4 @@ The PandoraLikelihoodData xml files are used by the standalone photon reconstruc
 
 ---------------------------
 
-The accompanying Marlin steering files are configured for used with Ilcsoft v01-14, with the detector model ILD_o1_v05 and the physics list QGSP_BERT.
+The accompanying Marlin steering files are configured for use with Ilcsoft v01-14, with the detector model ILD_o1_v05 and the physics list QGSP_BERT.
