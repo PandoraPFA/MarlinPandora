@@ -1,3 +1,7 @@
+Recover daughter or sibling tracks if they are flagged as unable to form a pfo.
+Copy track states from input lcio tracks.
+Fix subdetector hit number encoding.
+Write out track subset collections to investigate different track usage in pfa.
 Updated TrackCreator class to work with either ILD00 or ILD01 geometry.
 
 ************************************************************************
