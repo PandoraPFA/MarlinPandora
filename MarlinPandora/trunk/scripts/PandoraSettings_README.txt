@@ -38,7 +38,10 @@ A number of sample PandoraSettings.xml files are present in your MarlinPandora/s
 
 *PandoraSettingsDefault.xml - This includes both the muon and photon reconstruction algorithms. This offers the best performance and is recommended for current use with ILD00, ILD_o1_V05 and CLIC_ILD_CDR.
 
-The PandoraLikelihoodData xml files are used by the standalone photon reconstruction algorithms and links to these files are specified in PandoraSettingsPhoton.xml and PandoraSettingsDefault.xml The likelihood data has currently only been validated for ILD00, ILD_o1_V05 and CLIC_ILD_CDR. 
+The PandoraLikelihoodData xml files are used by the standalone photon reconstruction algorithms and links to these files are specified in PandoraSettingsPhoton.xml and PandoraSettingsDefault.xml. The likelihood data has currently only been validated for ILD00, ILD_o1_V05 and CLIC_ILD_CDR. The two xml files contain likelihood PDFs for photon identification (shower profile longitudinal and transverse profile quantities). The difference between the two files is the number of energy-bins for which separate PDFs are created. For PandoraLikelihoodData1EBin, there is only one PDF for signal and background for each likelihood variable. For PandoraLikelihoodData9EBin, there are separate PDFs for each of the following energy ranges (in GeV):
+0.-0.5, 0.5-1., 1.-1.5, 1.5-2.5, 2.5-5., 5.-10., 10.-20., 20.-50., 50.+
+
+For best performance, use PandoraLikelihoodData9EBin (although the performance difference is rather small).
 
 ---------------------------
 
