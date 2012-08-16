@@ -550,8 +550,12 @@ void TrackCreator::GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::
     trackParameters.m_momentumAtDca = pandora::CartesianVector(std::cos(pTrackState->getPhi()), std::sin(pTrackState->getPhi()), pTrackState->getTanLambda()) * pt;
 
     this->CopyTrackState(pTrack->getTrackState(TrackState::AtFirstHit), trackParameters.m_trackStateAtStart);
-    this->CopyTrackState(pTrack->getTrackState(TrackState::AtLastHit), trackParameters.m_trackStateAtEnd);
-    this->CopyTrackState(pTrack->getTrackState(TrackState::AtCalorimeter), trackParameters.m_trackStateAtCalorimeter);
+
+    //fg: curling TPC tracks have pointers to track segments stored -> need to get track states from last segment !
+    const EVENT::Track* endTrack = ( pTrack->getTracks().empty() ?  pTrack  :  pTrack->getTracks().back()  ) ;
+      
+    this->CopyTrackState( endTrack->getTrackState(TrackState::AtLastHit), trackParameters.m_trackStateAtEnd);
+    this->CopyTrackState( endTrack->getTrackState(TrackState::AtCalorimeter), trackParameters.m_trackStateAtCalorimeter);
 
     trackParameters.m_isProjectedToEndCap = ((std::fabs(trackParameters.m_trackStateAtCalorimeter.Get().GetPosition().GetZ()) < m_eCalEndCapInnerZ) ? false : true);
     trackParameters.m_timeAtCalorimeter = 0.f; // TODO minGenericTime * particleEnergy / 300.f;
