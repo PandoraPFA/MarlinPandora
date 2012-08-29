@@ -23,7 +23,7 @@ INCLUDES += -I$(LCIO_DIR)/include/
 INCLUDES += -I$(MARLIN_DIR)/include/
 INCLUDES += -I$(MARLINUTIL_DIR)/include/
 INCLUDES += -I$(PANDORAPFANEW_DIR)/Framework/include/
-INCLUDES += -I$(PANDORAPFANEW_DIR)/FineGranularityContent/include/ -I$(PANDORAPFANEW_DIR)/KMeansContent/include/
+INCLUDES += -I$(PANDORAPFANEW_DIR)/FineGranularityContent/include/
 ifdef MONITORING
     INCLUDES += -I$(PANDORAPFANEW_DIR)/Monitoring/include/
 endif
@@ -43,7 +43,7 @@ LIBS = -L$(GEAR_DIR)/lib -lgear
 LIBS += -L$(LCIO_DIR)/lib -llcio
 LIBS += -L$(MARLIN_DIR)/lib -lMarlin
 LIBS += -L$(MARLINUTIL_DIR)/lib -lMarlinUtil
-LIBS += -L$(PANDORAPFANEW_DIR)/lib -lPandoraFramework -lPandoraFineGranularityContent -lPandoraKMeansContent
+LIBS += -L$(PANDORAPFANEW_DIR)/lib -lPandoraFramework -lPandoraFineGranularityContent
 ifdef MONITORING
     LIBS += -lPandoraMonitoring
 endif

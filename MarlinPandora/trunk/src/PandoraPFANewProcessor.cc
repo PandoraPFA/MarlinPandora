@@ -14,7 +14,6 @@
 #include "Api/PandoraApi.h"
 
 #include "FineGranularityContent.h"
-#include "KMeansContent.h"
 
 #include "ExternalClusteringAlgorithm.h"
 #include "PandoraPFANewProcessor.h"
@@ -174,7 +173,6 @@ pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterAlgorithms(*m_pPandora));
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterHelperFunctions(*m_pPandora));
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, KMeansContent::RegisterAlgorithms(*m_pPandora));
 
     // Register local content
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldCalculator(*m_pPandora,
