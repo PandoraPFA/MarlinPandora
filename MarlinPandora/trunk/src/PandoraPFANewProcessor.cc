@@ -84,7 +84,7 @@ void PandoraPFANewProcessor::init()
 void PandoraPFANewProcessor::processRunHeader(LCRunHeader *pLCRunHeader)
 {
     m_detectorName = pLCRunHeader->getDetectorName();
-    streamlog_out(MESSAGE) << "Detector Name " << m_detectorName << ", Run " << ++m_nRun <<  std::endl;
+    streamlog_out(DEBUG5) << "Detector Name " << m_detectorName << ", Run " << ++m_nRun <<  std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
