@@ -308,13 +308,13 @@ pandora::StatusCode TrackCreator::ExtractProngsAndSplits(const EVENT::LCEvent *c
                 }
                 catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(DEBUG5) << "Failed to extract prong/split vertex: " << exception.what() << std::endl;
+                    streamlog_out(WARNING) << "Failed to extract prong/split vertex: " << exception.what() << std::endl;
                 }
             }
         }
         catch (EVENT::Exception &exception)
         {
-            streamlog_out(MESSAGE) << "Failed to extract prong/split vertex collection: " << *iter << ", " << exception.what() << std::endl;
+            streamlog_out(DEBUG5) << "Failed to extract prong/split vertex collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
