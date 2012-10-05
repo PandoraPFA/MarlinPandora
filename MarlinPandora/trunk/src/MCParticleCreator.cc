@@ -91,7 +91,7 @@ pandora::StatusCode MCParticleCreator::CreateMCParticles(const EVENT::LCEvent *c
         }
         catch (EVENT::Exception &exception)
         {
-            streamlog_out(WARNING) << "Failed to extract MCParticles collection: " << *iter << ", " << exception.what() << std::endl;
+            streamlog_out(DEBUG5) << "Failed to extract MCParticles collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
@@ -166,7 +166,7 @@ pandora::StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(cons
         }
         catch (EVENT::Exception &exception)
         {
-            streamlog_out(WARNING) << "Failed to extract track to mc particle relationships collection: " << *iter << ", " << exception.what() << std::endl;
+            streamlog_out(DEBUG5) << "Failed to extract track to mc particle relationships collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 
@@ -230,7 +230,7 @@ pandora::StatusCode MCParticleCreator::CreateCaloHitToMCParticleRelationships(co
         }
         catch (EVENT::Exception &exception)
         {
-            streamlog_out(WARNING) << "Failed to extract calo hit to mc particle relationships collection: " << *iter << ", " << exception.what() << std::endl;
+            streamlog_out(DEBUG5) << "Failed to extract calo hit to mc particle relationships collection: " << *iter << ", " << exception.what() << std::endl;
         }
     }
 

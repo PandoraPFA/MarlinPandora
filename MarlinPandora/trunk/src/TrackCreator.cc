@@ -236,7 +236,7 @@ pandora::StatusCode TrackCreator::ExtractKinks(const EVENT::LCEvent *const pLCEv
                 }
                 catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract kink vertex: " << exception.what() << std::endl;
+                    streamlog_out(DEBUG5) << "Failed to extract kink vertex: " << exception.what() << std::endl;
                 }
             }
         }
@@ -308,7 +308,7 @@ pandora::StatusCode TrackCreator::ExtractProngsAndSplits(const EVENT::LCEvent *c
                 }
                 catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract prong/split vertex: " << exception.what() << std::endl;
+                    streamlog_out(DEBUG5) << "Failed to extract prong/split vertex: " << exception.what() << std::endl;
                 }
             }
         }
@@ -392,7 +392,7 @@ pandora::StatusCode TrackCreator::ExtractV0s(const EVENT::LCEvent *const pLCEven
                 }
                 catch (EVENT::Exception &exception)
                 {
-                    streamlog_out(WARNING) << "Failed to extract v0 vertex: " << exception.what() << std::endl;
+                    streamlog_out(DEBUG5) << "Failed to extract v0 vertex: " << exception.what() << std::endl;
                 }
             }
         }
