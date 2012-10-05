@@ -143,7 +143,7 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
 
 void PandoraPFANewProcessor::check(LCEvent */*pLCEvent*/)
 {
-    streamlog_out(MESSAGE) << "PandoraPFANewProcessor - Check" << std::endl;
+    streamlog_out(DEBUG) << "PandoraPFANewProcessor - Check" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
