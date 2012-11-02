@@ -30,7 +30,6 @@ endif
 
 CC = g++
 CFLAGS = -c -Wall -g -w -fPIC -O2
-CFLAGS += $(INCLUDES)
 ifdef BUILD_32BIT_COMPATIBLE
     CFLAGS += -m32
 endif
@@ -38,6 +37,7 @@ endif
 SOURCES = $(wildcard $(PROJECT_SOURCE_DIR)*.cc)
 
 OBJECTS = $(SOURCES:.cc=.o)
+DEPENDS = $(OBJECTS:.o=.d)
 
 LIBS = -L$(GEAR_DIR)/lib -lgear
 LIBS += -L$(LCIO_DIR)/lib -llcio
@@ -61,9 +61,12 @@ all: $(SOURCES) $(OBJECTS)
 $(LIBRARY): $(OBJECTS)
 	$(CC) $(LDFLAGS) -fPIC $(OBJECTS) -o $@
 
+-include $(DEPENDS)
+
 .cc.o:
-	$(CC) $(CFLAGS) $(DEFINES) $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -MP -MMD -MT $*.o -MT $*.d -MF $*.d -o $*.o $*.cc
 
 clean:
 	rm -f $(OBJECTS)
+	rm -f $(DEPENDS)
 	rm -f $(LIBRARY)
