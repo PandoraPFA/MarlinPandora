@@ -1,7 +1,7 @@
 ########################################################
 # cmake file for building MarlinPandora
 # @author Jan Engels, DESY
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.2 FATAL_ERROR)
 ########################################################
 
 
@@ -10,30 +10,22 @@ PROJECT( MarlinPandora )
 
 
 # project version
-SET( ${PROJECT_NAME}_VERSION_MAJOR 0 )
-SET( ${PROJECT_NAME}_VERSION_MINOR 9 )
-SET( ${PROJECT_NAME}_VERSION_PATCH 2 )
+SET( MarlinPandora_VERSION_MAJOR 0 )
+SET( MarlinPandora_VERSION_MINOR 11 )
+SET( MarlinPandora_VERSION_PATCH 0 )
 
 
 
 ### DEPENDENCIES ############################################################
 
-FIND_PACKAGE( ILCUTIL COMPONENTS ILCSOFT_CMAKE_MODULES REQUIRED )
-
 # load default settings from ILCSOFT_CMAKE_MODULES
 INCLUDE( ilcsoft_default_settings )
 
-
 FIND_PACKAGE( Marlin 1.0 REQUIRED )
 FIND_PACKAGE( MarlinUtil REQUIRED )
-FIND_PACKAGE( PandoraPFANew 0.6 REQUIRED )
-IF( PANDORA_MONITORING )
-    FIND_PACKAGE( PandoraPFANew COMPONENTS PandoraMonitoring )
-    ADD_DEFINITIONS( -DMONITORING )
-    LINK_LIBRARIES( ${PandoraPFANew_COMPONENT_LIBRARIES} )
-ENDIF()
-
-FOREACH( pkg Marlin MarlinUtil PandoraPFANew )
+FIND_PACKAGE( PandoraSDK 0.11 REQUIRED )
+FIND_PACKAGE( PandoraFineGranularityContent 0.11 REQUIRED )
+FOREACH( pkg Marlin MarlinUtil PandoraSDK PandoraFineGranularityContent )
     IF( ${pkg}_FOUND )
         INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
         LINK_LIBRARIES( ${${pkg}_LIBRARIES} )
@@ -54,7 +46,6 @@ ELSE()
 ENDIF()
 
 
-
 ### LIBRARY AND TOOLS #######################################################
 
 #include directories
@@ -64,10 +55,22 @@ INSTALL_DIRECTORY( ./include DESTINATION . FILES_MATCHING PATTERN "*.h" )
 ADD_DEFINITIONS( "-Wall -ansi -pedantic" )
 ADD_DEFINITIONS( "-Wno-long-long" )
 
-AUX_SOURCE_DIRECTORY( ./src library_sources )
-ADD_SHARED_LIBRARY( ${PROJECT_NAME} ${library_sources} )
-INSTALL_SHARED_LIBRARY( ${PROJECT_NAME} DESTINATION lib )
+AUX_SOURCE_DIRECTORY( ./src/ MarlinPandora_SRCS )
 
+# require proper C++
+ADD_DEFINITIONS( "-Wall -ansi -pedantic" )
+
+# need long long for int64 for now
+ADD_DEFINITIONS( "-Wno-long-long -Wno-sign-compare -fno-strict-aliasing" )
+
+# add library
+ADD_SHARED_LIBRARY( PandoraFineGranularityContent ${MarlinPandora_SRCS} )
+
+# install library
+INSTALL_SHARED_LIBRARY( PandoraFineGranularityContent DESTINATION lib )
+
+# install header files
+INSTALL_DIRECTORY( ./include DESTINATION . )
 
 # display some variables and write them to cache
 DISPLAY_STD_VARIABLES()
