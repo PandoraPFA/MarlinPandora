@@ -19,6 +19,8 @@ SET( MarlinPandora_VERSION_PATCH 0 )
 ### DEPENDENCIES ############################################################
 
 # load default settings from ILCSOFT_CMAKE_MODULES
+FIND_PACKAGE( ILCUTIL COMPONENTS ILCSOFT_CMAKE_MODULES REQUIRED )
+
 INCLUDE( ilcsoft_default_settings )
 
 FIND_PACKAGE( Marlin 1.0 REQUIRED )
