@@ -33,6 +33,15 @@ FOREACH( pkg Marlin MarlinUtil PandoraSDK FineGranularityContent )
     ENDIF()
 ENDFOREACH()
 
+IF( PANDORA_MONITORING )
+    FIND_PACKAGE( Monitoring 0.11 REQUIRED )
+    IF( Monitoring_FOUND )
+        INCLUDE_DIRECTORIES( ${Monitoring_INCLUDE_DIRS} )
+        LINK_LIBRARIES( ${Monitoring_LIBRARIES} )
+        ADD_DEFINITIONS ( ${Monitoring_DEFINITIONS} )
+        ADD_DEFINITIONS( "-DMONITORING" )
+    ENDIF()
+ENDIF()
 
 
 ### DOCUMENTATION ############################################################
