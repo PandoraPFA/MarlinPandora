@@ -24,8 +24,8 @@ INCLUDE( ilcsoft_default_settings )
 FIND_PACKAGE( Marlin 1.0 REQUIRED )
 FIND_PACKAGE( MarlinUtil REQUIRED )
 FIND_PACKAGE( PandoraSDK 0.11 REQUIRED )
-FIND_PACKAGE( PandoraFineGranularityContent 0.11 REQUIRED )
-FOREACH( pkg Marlin MarlinUtil PandoraSDK PandoraFineGranularityContent )
+FIND_PACKAGE( FineGranularityContent 0.11 REQUIRED )
+FOREACH( pkg Marlin MarlinUtil PandoraSDK FineGranularityContent )
     IF( ${pkg}_FOUND )
         INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
         LINK_LIBRARIES( ${${pkg}_LIBRARIES} )
@@ -64,10 +64,10 @@ ADD_DEFINITIONS( "-Wall -ansi -pedantic" )
 ADD_DEFINITIONS( "-Wno-long-long -Wno-sign-compare -fno-strict-aliasing" )
 
 # add library
-ADD_SHARED_LIBRARY( PandoraFineGranularityContent ${MarlinPandora_SRCS} )
+ADD_SHARED_LIBRARY( MarlinPandora ${MarlinPandora_SRCS} )
 
 # install library
-INSTALL_SHARED_LIBRARY( PandoraFineGranularityContent DESTINATION lib )
+INSTALL_SHARED_LIBRARY( MarlinPandora DESTINATION lib )
 
 # install header files
 INSTALL_DIRECTORY( ./include DESTINATION . )
