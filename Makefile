@@ -25,7 +25,7 @@ INCLUDES += -I$(MARLINUTIL_DIR)/include/
 INCLUDES += -I$(PANDORAPFANEW_DIR)/PandoraSDK/include/
 INCLUDES += -I$(PANDORAPFANEW_DIR)/FineGranularityContent/include/
 ifdef MONITORING
-    INCLUDES += -I$(PANDORAPFANEW_DIR)/Monitoring/include/
+    INCLUDES += -I$(PANDORAPFANEW_DIR)/PandoraMonitoring/include/
 endif
 
 CC = g++
