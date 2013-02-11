@@ -597,6 +597,84 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "Number of events to skip at start of reconstruction job",
                             m_settings.m_nEventsToSkip,
                             int(0));
+
+    // For Strip Splitting method and also for hybrid ECAL
+    registerProcessorParameter("StripSplittingOn",
+                            "To use strip splitting algorithm, this should be true",
+                            m_caloHitCreatorSettings.m_stripSplittingOn,
+                            bool(false));
+
+    // For Strip Splitting method and also for hybrid ECAL
+    registerProcessorParameter("UseEcalScLayers",
+                            "To use scintillator layers ~ hybrid ECAL, this should be true",
+                            m_caloHitCreatorSettings.m_useEcalScLayers,
+                            bool(false));
+
+    // Parameters for hybrid ECAL
+    // Energy to MIP for Si-layers and Sc-layers, respectively.
+    //Si
+    registerProcessorParameter("ECalSiToMipCalibration",
+                            "The calibration from deposited Si-layer energy to mip",
+                            m_caloHitCreatorSettings.m_eCalSiToMip,
+                            float(1.));
+
+    //Sc
+    registerProcessorParameter("ECalScToMipCalibration",
+                            "The calibration from deposited Sc-layer energy to mip",
+                            m_caloHitCreatorSettings.m_eCalScToMip,
+                            float(1.));
+
+    // MipThreshold for Si-layers and Sc-layers, respectively.
+    // Si
+    registerProcessorParameter("ECalSiMipThreshold",
+                            "Threshold for creating calo hits in the Si-layers of ECAL, units mip",
+                            m_caloHitCreatorSettings.m_eCalSiMipThreshold,
+                            float(0.));
+
+    //Sc
+    registerProcessorParameter("ECalScMipThreshold",
+                            "Threshold for creating calo hits in the Sc-layers of ECAL, units mip",
+                            m_caloHitCreatorSettings.m_eCalScMipThreshold,
+                            float(0.));
+
+    // EcalToEM for Si-layers and Sc-layers, respectively.
+    //Si
+    registerProcessorParameter("ECalSiToEMGeVCalibration",
+                            "The calibration from deposited Si-layer energy to EM energy",
+                            m_caloHitCreatorSettings.m_eCalSiToEMGeV,
+                            float(1.));
+
+    //Sc
+    registerProcessorParameter("ECalScToEMGeVCalibration",
+                            "The calibration from deposited Sc-layer energy to EM energy",
+                            m_caloHitCreatorSettings.m_eCalScToEMGeV,
+                            float(1.));
+
+    // EcalToHad for Si-layers and Sc-layers of the endcaps, respectively.
+    //Si
+    registerProcessorParameter("ECalSiToHadGeVCalibrationEndCap",
+                            "The calibration from deposited Si-layer energy on the enecaps to hadronic energy",
+                            m_caloHitCreatorSettings.m_eCalSiToHadGeVEndCap,
+                            float(1.));
+
+    //Sc
+    registerProcessorParameter("ECalScToHadGeVCalibrationEndCap",
+                            "The calibration from deposited Sc-layer energy on the endcaps to hadronic energy",
+                            m_caloHitCreatorSettings.m_eCalScToHadGeVEndCap,
+                            float(1.));
+
+    // EcalToHad for Si-layers and Sc-layers of the barrel, respectively.
+    //Si
+    registerProcessorParameter("ECalSiToHadGeVCalibrationBarrel",
+                            "The calibration from deposited Si-layer energy on the barrel to hadronic energy",
+                            m_caloHitCreatorSettings.m_eCalSiToHadGeVBarrel,
+                            float(1.));
+
+    //Sc
+    registerProcessorParameter("ECalScToHadGeVCalibrationBarrel",
+                            "The calibration from deposited Sc-layer energy to the barrel hadronic energy",
+                            m_caloHitCreatorSettings.m_eCalScToHadGeVBarrel,
+                            float(1.));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

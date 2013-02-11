@@ -107,7 +107,7 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
-            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+            std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -117,6 +117,37 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
 
                     if (NULL == pCaloHit)
                         throw EVENT::Exception("Collection type mismatch");
+
+                    float eCalToMip(m_settings.m_eCalToMip), eCalMipThreshold(m_settings.m_eCalMipThreshold), eCalToEMGeV(m_settings.m_eCalToEMGeV),
+                        eCalToHadGeVBarrel(m_settings.m_eCalToHadGeVBarrel), eCalToHadGeVEndCap(m_settings.m_eCalToHadGeVEndCap);
+
+                    // Hybrid ECAL including pure ScECAL.
+                    if (m_settings.m_useEcalScLayers)
+                    {
+                        std::string collectionName(*iter);
+                        std::transform(collectionName.begin(), collectionName.end(), collectionName.begin(), ::tolower);
+                        layerCoding = "K-1";
+
+                        if (collectionName.find("ecal", 0) == std::string::npos)
+                            streamlog_out(MESSAGE) << "WARNING: mismatching hybrid Ecal collection name. " << collectionName << std::endl;
+
+                        if (collectionName.find("si", 0) != std::string::npos)
+                        {
+                             eCalToMip = m_settings.m_eCalSiToMip;
+                             eCalMipThreshold = m_settings.m_eCalSiMipThreshold;
+                             eCalToEMGeV = m_settings.m_eCalSiToEMGeV;
+                             eCalToHadGeVBarrel = m_settings.m_eCalSiToHadGeVBarrel;
+                             eCalToHadGeVEndCap = m_settings.m_eCalSiToHadGeVEndCap;
+                        }
+                        else if (collectionName.find("sc", 0) != std::string::npos)
+                        {
+                             eCalToMip = m_settings.m_eCalScToMip;
+                             eCalMipThreshold = m_settings.m_eCalScMipThreshold;
+                             eCalToEMGeV = m_settings.m_eCalScToEMGeV;
+                             eCalToHadGeVBarrel = m_settings.m_eCalScToHadGeVBarrel;
+                             eCalToHadGeVEndCap = m_settings.m_eCalScToHadGeVEndCap;
+                        }
+                    }
 
                     PandoraApi::CaloHit::Parameters caloHitParameters;
                     caloHitParameters.m_hitType = pandora::ECAL;
@@ -131,23 +162,33 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
                     {
                         this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_eCalBarrelInnerSymmetry, m_eCalBarrelInnerPhi0,
                             cellIdDecoder(pCaloHit)["S-1"], caloHitParameters, absorberCorrection);
-                        caloHitParameters.m_hadronicEnergy = m_settings.m_eCalToHadGeVBarrel * pCaloHit->getEnergy();
+
+                        caloHitParameters.m_hadronicEnergy = eCalToHadGeVBarrel * pCaloHit->getEnergy();
                     }
                     else
                     {
                         this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
-                        caloHitParameters.m_hadronicEnergy = m_settings.m_eCalToHadGeVEndCap * pCaloHit->getEnergy();
+                        caloHitParameters.m_hadronicEnergy = eCalToHadGeVEndCap * pCaloHit->getEnergy();
                     }
 
-                    caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_eCalToMip * absorberCorrection;
+                    caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * eCalToMip * absorberCorrection;
 
-                    if (caloHitParameters.m_mipEquivalentEnergy.Get() < m_settings.m_eCalMipThreshold)
+                    if (caloHitParameters.m_mipEquivalentEnergy.Get() < eCalMipThreshold)
                         continue;
 
-                    caloHitParameters.m_electromagneticEnergy = m_settings.m_eCalToEMGeV * pCaloHit->getEnergy();
+                    caloHitParameters.m_electromagneticEnergy = eCalToEMGeV * pCaloHit->getEnergy();
+
+                    // ATTN If using strip splitting, must correct cell sizes for use in PFA to minimum of strip width and strip length
+                    if (m_settings.m_stripSplittingOn)
+                    {
+                        const float splitCellSize(std::min(caloHitParameters.m_cellSizeU.Get(), caloHitParameters.m_cellSizeV.Get()));
+                        caloHitParameters.m_cellSizeU = splitCellSize;
+                        caloHitParameters.m_cellSizeV = splitCellSize;
+                    }
 
                     PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pPandora, caloHitParameters));
                     m_calorimeterHitVector.push_back(pCaloHit);
+
                 }
                 catch (pandora::StatusCodeException &statusCodeException)
                 {
