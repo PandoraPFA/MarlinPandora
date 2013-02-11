@@ -60,6 +60,20 @@ public:
 
         int             m_hCalEndCapInnerSymmetryOrder;         ///< HCal end cap inner symmetry order (missing from ILD00 gear file)
         float           m_hCalEndCapInnerPhiCoordinate;         ///< HCal end cap inner phi coordinate (missing from ILD00 gear file)
+
+        // For Strip Splitting method and hybrid ECAL.
+        bool            m_stripSplittingOn;                     ///< To use SSA, this should be true (default is false)
+        bool            m_useEcalScLayers;                      ///< To use scintillator layers ~ hybrid ECAL, this should be true (default is false)
+        float           m_eCalSiToMip;                          ///< The calibration from deposited Si-layer energy to mip
+        float           m_eCalScToMip;                          ///< The calibration from deposited Sc-layer energy to mip
+        float           m_eCalSiMipThreshold;                   ///< Threshold for creating calo hits in the Si-layers of ECAL, units mip
+        float           m_eCalScMipThreshold;                   ///< Threshold for creating calo hits in the Sc-layers of ECAL, units mip
+        float           m_eCalSiToEMGeV;                        ///< The calibration from deposited Si-layer energy to EM energy
+        float           m_eCalScToEMGeV;                        ///< The calibration from deposited Sc-layer energy to EM energy
+        float           m_eCalSiToHadGeVBarrel;                 ///< The calibration from deposited Si-layer energy on the enecaps to hadronic energy
+        float           m_eCalScToHadGeVBarrel;                 ///< The calibration from deposited Sc-layer energy on the endcaps to hadronic energy
+        float           m_eCalSiToHadGeVEndCap;                 ///< The calibration from deposited Si-layer energy on the enecaps to hadronic energy
+        float           m_eCalScToHadGeVEndCap;                 ///< The calibration from deposited Sc-layer energy on the endcaps to hadronic energy
     };
 
     /**
