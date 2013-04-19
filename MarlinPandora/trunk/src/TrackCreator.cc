@@ -546,16 +546,20 @@ void TrackCreator::GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::
         return this->GetTrackStatesOld(pTrack, trackParameters);
 
     const TrackState *pTrackState = pTrack->getTrackState(TrackState::AtIP);
+
+    if (!pTrackState)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
     const double pt(m_bField * 2.99792e-4 / std::fabs(pTrackState->getOmega()));
     trackParameters.m_momentumAtDca = pandora::CartesianVector(std::cos(pTrackState->getPhi()), std::sin(pTrackState->getPhi()), pTrackState->getTanLambda()) * pt;
 
     this->CopyTrackState(pTrack->getTrackState(TrackState::AtFirstHit), trackParameters.m_trackStateAtStart);
 
-    //fg: curling TPC tracks have pointers to track segments stored -> need to get track states from last segment !
-    const EVENT::Track* endTrack = ( pTrack->getTracks().empty() ?  pTrack  :  pTrack->getTracks().back()  ) ;
-      
-    this->CopyTrackState( endTrack->getTrackState(TrackState::AtLastHit), trackParameters.m_trackStateAtEnd);
-    this->CopyTrackState( endTrack->getTrackState(TrackState::AtCalorimeter), trackParameters.m_trackStateAtCalorimeter);
+    //fg: curling TPC tracks have pointers to track segments stored -> need to get track states from last segment!
+    const EVENT::Track *pEndTrack = (pTrack->getTracks().empty() ?  pTrack  :  pTrack->getTracks().back());
+
+    this->CopyTrackState(pEndTrack->getTrackState(TrackState::AtLastHit), trackParameters.m_trackStateAtEnd);
+    this->CopyTrackState(pEndTrack->getTrackState(TrackState::AtCalorimeter), trackParameters.m_trackStateAtCalorimeter);
 
     trackParameters.m_isProjectedToEndCap = ((std::fabs(trackParameters.m_trackStateAtCalorimeter.Get().GetPosition().GetZ()) < m_eCalEndCapInnerZ) ? false : true);
     trackParameters.m_timeAtCalorimeter = 0.f; // TODO minGenericTime * particleEnergy / 300.f;
@@ -565,6 +569,9 @@ void TrackCreator::GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::
 
 void TrackCreator::CopyTrackState(const TrackState *const pTrackState, pandora::InputTrackState &inputTrackState) const
 {
+    if (!pTrackState)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
     const double pt(m_bField * 2.99792e-4 / std::fabs(pTrackState->getOmega()));
 
     const double px(pt * std::cos(pTrackState->getPhi()));
