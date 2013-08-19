@@ -1,4 +1,10 @@
 ************************************************************************
+TAG V00-11 FOR ILCSOFT USAGE
+************************************************************************
+Protect against missing/unavailable TrackStates.
+Add modifications to allow use of hybrid ScW/SiW and full ScW ECAL models.
+
+************************************************************************
 TAG V00-10 FOLLOWING REPOSITORY RESTRUCTURING
 ************************************************************************
 CMake and Makefile changes following updated treatment of the libraries that constitute the PandoraPFANew package.
