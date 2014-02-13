@@ -28,6 +28,10 @@
 #include <limits>
 
 CalorimeterHitVector CaloHitCreator::m_calorimeterHitVector;
+CaloHitCreator::FloatVector CaloHitCreator::Settings::m_inputEnergyCorrectionPoints;
+CaloHitCreator::FloatVector CaloHitCreator::Settings::m_outputEnergyCorrectionPoints;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 CaloHitCreator::CaloHitCreator(const Settings &settings) :
     m_settings(settings),
@@ -85,6 +89,60 @@ pandora::StatusCode CaloHitCreator::CreateCaloHits(const EVENT::LCEvent *const p
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateLHCalCaloHits(pLCEvent));
 
     return pandora::STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CaloHitCreator::NonLinearityCorrection(const pandora::Cluster *const pCluster, float &correctedHadronicEnergy)
+{
+    static FloatVector corrections;
+    static const FloatVector &inputEnergyPoints(CaloHitCreator::Settings::m_inputEnergyCorrectionPoints);
+    static const FloatVector &outputEnergyPoints(CaloHitCreator::Settings::m_outputEnergyCorrectionPoints);
+    static unsigned int nEnergyBins(0);
+
+    if (corrections.empty())
+    {
+        if (inputEnergyPoints.size() != outputEnergyPoints.size())
+            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+        nEnergyBins = inputEnergyPoints.size();
+
+        for (unsigned int i = 0; i < nEnergyBins; ++i)
+        {
+            const float inputEnergy(inputEnergyPoints.at(i));
+            const float outputEnergy(outputEnergyPoints.at(i));
+
+            if (std::fabs(inputEnergy) < std::numeric_limits<float>::epsilon())
+                throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+            corrections.push_back(outputEnergy / inputEnergy);
+        }
+    }
+
+    unsigned int index(nEnergyBins);
+    for (unsigned int i = 0; i < nEnergyBins; ++i)
+    {
+        if (correctedHadronicEnergy < inputEnergyPoints.at(i))
+        {
+            index = i;
+            break;
+        }
+    }
+
+    float correction(1.f);
+
+    if ((0 == index) || (nEnergyBins == index))
+    {
+        correction = corrections.at(std::min(index, nEnergyBins - 1));
+    }
+    else
+    {
+        const float lowCorrection(corrections.at(index - 1)), highCorrection(corrections.at(index));
+        const float lowEnergy(inputEnergyPoints.at(index - 1)), highEnergy(inputEnergyPoints.at(index));
+        correction = lowCorrection + (correctedHadronicEnergy - lowEnergy) * (highCorrection - lowCorrection) / (highEnergy - lowEnergy);
+    }
+
+    correctedHadronicEnergy *= correction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -181,6 +181,9 @@ pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ExternalClustering",
         new ExternalClusteringAlgorithm::Factory));
 
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionFunction(*m_pPandora,
+            "NonLinearity", pandora::HADRONIC, &CaloHitCreator::NonLinearityCorrection));
+
     // Example registrations
     //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionFunction(*m_pPandora,
     //    "MyHadronicEnergyCorrection", pandora::HADRONIC, &PandoraPFANewProcessor::MyHadronicEnergyCorrection));
@@ -675,6 +678,17 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "The calibration from deposited Sc-layer energy to the barrel hadronic energy",
                             m_caloHitCreatorSettings.m_eCalScToHadGeVBarrel,
                             float(1.));
+
+    // Hadronic energy non-linearity correction
+    registerProcessorParameter("InputEnergyCorrectionPoints",
+                            "The input energy points for hadronic energy correction",
+                            CaloHitCreator::Settings::m_inputEnergyCorrectionPoints,
+                            std::vector<float>());
+
+    registerProcessorParameter("OutputEnergyCorrectionPoints",
+                            "The output energy points for hadronic energy correction",
+                            CaloHitCreator::Settings::m_outputEnergyCorrectionPoints,
+                            std::vector<float>());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
