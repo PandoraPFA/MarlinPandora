@@ -12,12 +12,6 @@
     <ElectronFastFunction> FineGranularityElectronId </ElectronFastFunction>
     <MuonFastFunction> FineGranularityMuonId </MuonFastFunction>
 
-    <!-- CaloHit helper settings -->
-    <CaloHitHelper>
-        <ShouldCalculateDensityWeight>false</ShouldCalculateDensityWeight>
-        <ShouldCalculateSurroundingEnergy>false</ShouldCalculateSurroundingEnergy>
-    </CaloHitHelper>
-
     <!-- PANDORA ALGORITHM SETTINGS -->
 
     <!-- Select tracks and hits to use for clustering -->
