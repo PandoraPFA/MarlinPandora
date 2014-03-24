@@ -22,7 +22,7 @@ StatusCode ExternalClusteringAlgorithm::Run()
     try
     {
         const CaloHitList *pCaloHitList = NULL;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentCaloHitList(*this, pCaloHitList));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
         if (pCaloHitList->empty())
             return STATUS_CODE_SUCCESS;
@@ -76,7 +76,7 @@ StatusCode ExternalClusteringAlgorithm::Run()
                 }
                 else
                 {
-                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddCaloHitToCluster(*this, pPandoraCluster, pPandoraCaloHit));
+                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pPandoraCluster, pPandoraCaloHit));
                 }
             }
         }
