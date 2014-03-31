@@ -47,24 +47,24 @@
   <parameter name="V0VertexCollections" type="StringVec">V0Vertices</parameter>
   <parameter name="ClusterCollectionName" type="String">PandoraClusters</parameter>
   <parameter name="PFOCollectionName" type="String">PandoraPFOs</parameter>
-  <!-- Calibration constants -->
-  <parameter name="ECalToMipCalibration" type="float">160.0</parameter>
-  <parameter name="HCalToMipCalibration" type="float">34.8</parameter>
-  <parameter name="ECalMipThreshold" type="float">0.5</parameter>
-  <parameter name="HCalMipThreshold" type="float">0.3</parameter>
-  <parameter name="ECalToEMGeVCalibration" type="float">1.007</parameter>
-  <parameter name="HCalToEMGeVCalibration" type="float">1.007</parameter>
-  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.12</parameter>
-  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.12</parameter>
-  <parameter name="HCalToHadGeVCalibration" type="float">1.07</parameter>
-  <parameter name="MuonToMipCalibration" type="float">10.0</parameter>
-  <parameter name="DigitalMuonHits" type="int">0</parameter>
+  <!-- Calibration constants -->                                                                                                                         
+  <parameter name="ECalToMipCalibration" type="float">156.8</parameter>
+  <parameter name="HCalToMipCalibration" type="float">37.0</parameter>                                                                                   
+  <parameter name="ECalMipThreshold" type="float">0.5</parameter>                                                                                        
+  <parameter name="HCalMipThreshold" type="float">0.3</parameter>                                                                                        
+  <parameter name="ECalToEMGeVCalibration" type="float">1.007</parameter>                                                                                
+  <parameter name="HCalToEMGeVCalibration" type="float">1.007</parameter>                                                                                
+  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.075</parameter>                                                                         
+  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.075</parameter>                                                                         
+  <parameter name="HCalToHadGeVCalibration" type="float">0.826</parameter>                                                                               
+  <parameter name="MuonToMipCalibration" type="float">10.0</parameter>                                                                                   
+  <parameter name="DigitalMuonHits" type="int">0</parameter>                                                                                             
+  <parameter name="MaxHCalHitHadronicEnergy" type="float">10000.</parameter>   
   <parameter name="AbsorberRadiationLength" type="float">0.2857</parameter>
-  <parameter name="MaxHCalHitHadronicEnergy" type="float">1.</parameter> 
   <!--Whether to calculate track states manually, rather than copy stored fitter values-->
   <parameter name="UseOldTrackStateCalculation" type="int">0 </parameter>
   <!--<parameter name="NEventsToSkip" type="int">0</parameter>-->
-  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE DEBUG </parameter>
+  <!--parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE DEBUG </parameter-->
 </processor>
 
 </marlin>

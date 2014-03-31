@@ -35,6 +35,18 @@
         </algorithm>
     </algorithm>
 
+    <!-- Standalone photon clustering -->
+    <algorithm type = "ClusteringParent">
+        <algorithm type = "PerfectClustering" description = "ClusterFormation">
+            <ParticleIdList>22</ParticleIdList>
+        </algorithm>
+        <algorithm type = "TopologicalAssociationParent" description = "ClusterAssociation">
+            <associationAlgorithms>
+            </associationAlgorithms>
+        </algorithm>
+        <ClusterListName>PhotonClusters</ClusterListName>
+    </algorithm>
+
     <!-- Clustering parent algorithm runs a daughter clustering algorithm -->
     <algorithm type = "ClusteringParent">
         <algorithm type = "ConeClustering" description = "ClusterFormation"/>
@@ -59,8 +71,11 @@
                 </algorithm>
                 <algorithm type = "SoftClusterMerging">
                     <algorithm type = "TrackClusterAssociation"/>
+                    <AdditionalClusterListNames>PhotonClusters</AdditionalClusterListNames>
                 </algorithm>
-                <algorithm type = "IsolatedHitMerging"/>
+                <algorithm type = "IsolatedHitMerging">
+                    <AdditionalClusterListNames>PhotonClusters</AdditionalClusterListNames>
+                </algorithm>
             </associationAlgorithms>
         </algorithm>
         <ClusterListName> PrimaryClusterList </ClusterListName>
@@ -378,6 +393,10 @@
             <algorithm type = "NeutralFragmentRemoval"/>
             <algorithm type = "PhotonFragmentRemoval"/>
         </fragmentRemovalAlgorithms>
+    </algorithm>
+
+    <algorithm type = "ClusterPreparation">
+        <CandidateListNames>PrimaryClusterList PhotonClusters</CandidateListNames>
     </algorithm>
 
     <!-- Create particle flow objects -->
