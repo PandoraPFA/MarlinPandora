@@ -1,4 +1,10 @@
 ************************************************************************
+TAG V00-13 FOR ILCSOFT USAGE
+************************************************************************
+Update to reflect changes to PandoraSDK.
+Config overhaul; add some new PandoraSettings files and update readme.
+
+************************************************************************
 TAG V00-12 FOR ILCSOFT USAGE
 ************************************************************************
 Add hadronic energy non-linearity correction function.
