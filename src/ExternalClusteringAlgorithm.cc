@@ -69,7 +69,9 @@ StatusCode ExternalClusteringAlgorithm::Run()
 
                 if (NULL == pPandoraCluster)
                 {
-                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, pPandoraCaloHit, pPandoraCluster));
+                    PandoraContentApi::Cluster::Parameters parameters;
+                    parameters.m_caloHitList.insert(pPandoraCaloHit);
+                    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pPandoraCluster));
 
                     if (m_flagClustersAsPhotons)
                         pPandoraCluster->SetIsFixedPhotonFlag(true);
