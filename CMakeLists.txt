@@ -11,7 +11,7 @@ PROJECT( MarlinPandora )
 
 # project version
 SET( MarlinPandora_VERSION_MAJOR 0 )
-SET( MarlinPandora_VERSION_MINOR 13 )
+SET( MarlinPandora_VERSION_MINOR 14 )
 SET( MarlinPandora_VERSION_PATCH 0 )
 
 
@@ -25,8 +25,8 @@ INCLUDE( ilcsoft_default_settings )
 
 FIND_PACKAGE( Marlin 1.0 REQUIRED )
 FIND_PACKAGE( MarlinUtil REQUIRED )
-FIND_PACKAGE( PandoraSDK 0.15 REQUIRED )
-FIND_PACKAGE( FineGranularityContent 0.15 REQUIRED )
+FIND_PACKAGE( PandoraSDK 0.16 REQUIRED )
+FIND_PACKAGE( FineGranularityContent 0.16 REQUIRED )
 FOREACH( pkg Marlin MarlinUtil PandoraSDK FineGranularityContent )
     IF( ${pkg}_FOUND )
         INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
@@ -36,7 +36,7 @@ FOREACH( pkg Marlin MarlinUtil PandoraSDK FineGranularityContent )
 ENDFOREACH()
 
 IF( PANDORA_MONITORING )
-    FIND_PACKAGE( PandoraMonitoring 0.15 REQUIRED )
+    FIND_PACKAGE( PandoraMonitoring 0.16 REQUIRED )
     IF( PandoraMonitoring_FOUND )
         INCLUDE_DIRECTORIES( ${PandoraMonitoring_INCLUDE_DIRS} )
         LINK_LIBRARIES( ${PandoraMonitoring_LIBRARIES} )
