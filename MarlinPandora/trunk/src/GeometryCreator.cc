@@ -201,6 +201,11 @@ pandora::StatusCode GeometryCreator::SetILDSpecificGeometry(PandoraApi::Geometry
     geometryParameters.m_hCalEndCapParameters.m_outerSymmetryOrder = m_settings.m_hCalEndCapOuterSymmetryOrder;
     geometryParameters.m_hCalEndCapParameters.m_outerPhiCoordinate = m_settings.m_hCalEndCapOuterPhiCoordinate;
 
+    geometryParameters.m_additionalSubDetectors["HCalRing"].m_innerSymmetryOrder = m_settings.m_hCalRingInnerSymmetryOrder;
+    geometryParameters.m_additionalSubDetectors["HCalRing"].m_innerPhiCoordinate = m_settings.m_hCalRingInnerPhiCoordinate;
+    geometryParameters.m_additionalSubDetectors["HCalRing"].m_outerSymmetryOrder = m_settings.m_hCalRingOuterSymmetryOrder;
+    geometryParameters.m_additionalSubDetectors["HCalRing"].m_outerPhiCoordinate = m_settings.m_hCalRingOuterPhiCoordinate;
+    
     // Gaps in detector active material
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelBoxGaps());
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalEndCapBoxGaps());

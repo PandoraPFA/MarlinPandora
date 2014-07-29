@@ -595,6 +595,26 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_geometryCreatorSettings.m_hCalEndCapOuterPhiCoordinate,
                             float(0.));
 
+    registerProcessorParameter("HCalRingInnerSymmetryOrder",
+                            "HCal ring inner symmetry order (missing from ILD gear files)",
+                            m_geometryCreatorSettings.m_hCalRingInnerSymmetryOrder,
+                            int(8));
+
+    registerProcessorParameter("HCalRingInnerPhiCoordinate",
+                            "HCal ring inner phi coordinate (missing from ILD gear files)",
+                            m_geometryCreatorSettings.m_hCalRingInnerPhiCoordinate,
+                            float(0.));
+
+    registerProcessorParameter("HCalRingOuterSymmetryOrder",
+                            "HCal ring outer symmetry order (missing from ILD gear files)",
+                            m_geometryCreatorSettings.m_hCalRingOuterSymmetryOrder,
+                            int(16));
+
+    registerProcessorParameter("HCalRingOuterPhiCoordinate",
+                            "HCal ring outer phi coordinate (missing from ILD gear files)",
+                            m_geometryCreatorSettings.m_hCalRingOuterPhiCoordinate,
+                            float(0.));
+
     // Number of events to skip
     registerProcessorParameter("NEventsToSkip",
                             "Number of events to skip at start of reconstruction job",
