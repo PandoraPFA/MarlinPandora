@@ -37,6 +37,11 @@ public:
         float           m_hCalEndCapInnerPhiCoordinate;         ///< HCal end cap inner phi coordinate (missing from ILD gear files)
         int             m_hCalEndCapOuterSymmetryOrder;         ///< HCal end cap outer symmetry order (missing from ILD gear files)
         float           m_hCalEndCapOuterPhiCoordinate;         ///< HCal end cap outer phi coordinate (missing from ILD gear files)
+        
+        int             m_hCalRingInnerSymmetryOrder;           ///< HCal ring inner symmetry order (missing from ILD gear files)
+        float           m_hCalRingInnerPhiCoordinate;           ///< HCal ring inner phi coordinate (missing from ILD gear files)
+        int             m_hCalRingOuterSymmetryOrder;           ///< HCal ring outer symmetry order (missing from ILD gear files)
+        float           m_hCalRingOuterPhiCoordinate;           ///< HCal ring outer phi coordinate (missing from ILD gear files)
     };
 
     /**
