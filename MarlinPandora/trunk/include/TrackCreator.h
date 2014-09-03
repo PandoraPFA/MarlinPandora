@@ -26,17 +26,15 @@ typedef std::map<Track *, int> TrackToPidMap;
 
 inline LCCollectionVec *newTrkCol(const std::string &name, LCEvent *evt , bool isSubset)
 {
-  LCCollectionVec* col = new LCCollectionVec( LCIO::TRACK ) ;
+    LCCollectionVec* col = new LCCollectionVec( LCIO::TRACK ) ;
 
-  LCFlagImpl hitFlag(0) ;
-  hitFlag.setBit( LCIO::TRBIT_HITS ) ;
-  col->setFlag( hitFlag.getFlag()  ) ;
+    LCFlagImpl hitFlag(0) ;
+    hitFlag.setBit( LCIO::TRBIT_HITS ) ;
+    col->setFlag( hitFlag.getFlag()  ) ;
+    evt->addCollection( col , name ) ;
+    col->setSubset( isSubset ) ;
 
-  evt->addCollection( col , name ) ;
-
-  col->setSubset( isSubset ) ;
-
-  return col ;
+    return col ;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -105,8 +103,9 @@ public:
      *  @brief  Constructor
      * 
      *  @param  settings the creator settings
+     *  @param  pPandora address of the relevant pandora instance
      */
-     TrackCreator(const Settings &settings);
+     TrackCreator(const Settings &settings, const pandora::Pandora *const pPandora);
 
     /**
      *  @brief  Destructor
@@ -125,14 +124,14 @@ public:
      * 
      *  @param  pLCEvent the lcio event
      */
-    pandora::StatusCode CreateTracks(EVENT::LCEvent *pLCEvent) const;
+    pandora::StatusCode CreateTracks(EVENT::LCEvent *pLCEvent);
 
     /**
      *  @brief  Get the track vector
      * 
      *  @return The track vector
      */
-    static const TrackVector &GetTrackVector();
+    const TrackVector &GetTrackVector() const;
 
     /**
      *  @brief  Reset the track creator
@@ -281,7 +280,7 @@ private:
     float                   m_minEtdZPosition;              ///< Min etd z position
     float                   m_minSetRadius;                 ///< Min set radius
 
-    static TrackVector      m_trackVector;                  ///< The track vector
+    TrackVector             m_trackVector;                  ///< The track vector
     TrackList               m_v0TrackList;                  ///< The list of v0 tracks
     TrackList               m_parentTrackList;              ///< The list of parent tracks
     TrackList               m_daughterTrackList;            ///< The list of daughter tracks
@@ -290,7 +289,7 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const TrackVector &TrackCreator::GetTrackVector()
+inline const TrackVector &TrackCreator::GetTrackVector() const
 {
     return m_trackVector;
 }

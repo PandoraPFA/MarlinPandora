@@ -13,6 +13,9 @@
 
 #include "Api/PandoraApi.h"
 
+#include "CaloHitCreator.h"
+#include "TrackCreator.h"
+
 /**
  *  @brief  MCParticleCreator class
  */
@@ -36,8 +39,9 @@ public:
      *  @brief  Constructor
      * 
      *  @param  settings the creator settings
+     *  @param  pPandora address of the relevant pandora instance
      */
-     MCParticleCreator(const Settings &settings);
+     MCParticleCreator(const Settings &settings, const pandora::Pandora *const pPandora);
 
     /**
      *  @brief  Destructor
@@ -55,15 +59,17 @@ public:
      *  @brief  Create Track to mc particle relationships
      *
      *  @param  pLCEvent the lcio event
+     *  @param  trackVector the vector containing all tracks successfully passed to pandora
      */
-    pandora::StatusCode CreateTrackToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const;
+    pandora::StatusCode CreateTrackToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent, const TrackVector &trackVector) const;
 
     /**
      *  @brief  Create calo hit to mc particle relationships
      *
      *  @param  pLCEvent the lcio event
+     *  @param  calorimeterHitVector the vector containing all calorimeter hits successfully passed to pandora
      */
-    pandora::StatusCode CreateCaloHitToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const;
+    pandora::StatusCode CreateCaloHitToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent, const CalorimeterHitVector &calorimeterHitVector) const;
 
 private:
     const Settings          m_settings;                         ///< The mc particle creator settings

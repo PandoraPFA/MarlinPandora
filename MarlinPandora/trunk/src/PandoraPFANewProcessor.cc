@@ -23,13 +23,10 @@
 
 PandoraPFANewProcessor pandoraPFANewProcessor;
 
-pandora::Pandora *PandoraPFANewProcessor::m_pPandora = NULL;
-EVENT::LCEvent *PandoraPFANewProcessor::m_pLcioEvent = NULL;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 PandoraPFANewProcessor::PandoraPFANewProcessor() :
     Processor("PandoraPFANewProcessor"),
+    m_pPandora(NULL),
+    m_pLcioEvent(NULL),
     m_pGeometryCreator(NULL),
     m_pCaloHitCreator(NULL),
     m_pTrackCreator(NULL),
@@ -52,11 +49,11 @@ void PandoraPFANewProcessor::init()
         this->FinaliseSteeringParameters();
 
         m_pPandora = new pandora::Pandora();
-        m_pGeometryCreator = new GeometryCreator(m_geometryCreatorSettings);
-        m_pCaloHitCreator = new CaloHitCreator(m_caloHitCreatorSettings);
-        m_pTrackCreator = new TrackCreator(m_trackCreatorSettings);
-        m_pMCParticleCreator = new MCParticleCreator(m_mcParticleCreatorSettings);
-        m_pPfoCreator = new PfoCreator(m_pfoCreatorSettings);
+        m_pGeometryCreator = new GeometryCreator(m_geometryCreatorSettings, m_pPandora);
+        m_pCaloHitCreator = new CaloHitCreator(m_caloHitCreatorSettings, m_pPandora);
+        m_pTrackCreator = new TrackCreator(m_trackCreatorSettings, m_pPandora);
+        m_pMCParticleCreator = new MCParticleCreator(m_mcParticleCreatorSettings, m_pPandora);
+        m_pPfoCreator = new PfoCreator(m_pfoCreatorSettings, m_pPandora);
 
         PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->RegisterUserComponents());
         PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pGeometryCreator->CreateGeometry());
@@ -91,15 +88,6 @@ void PandoraPFANewProcessor::processRunHeader(LCRunHeader *pLCRunHeader)
 
 void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
 {
-    static int eventCounter = 0;
-    m_pLcioEvent = pLCEvent;
-
-    if (eventCounter < m_settings.m_nEventsToSkip)
-    {
-        ++eventCounter;
-        throw marlin::SkipEventException(this);
-    }
-
     try
     {
         streamlog_out(DEBUG5) << "PandoraPFANewProcessor, Run " << m_nRun << ", Event " << ++m_nEvent << std::endl;
@@ -107,9 +95,9 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
         PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pMCParticleCreator->CreateMCParticles(pLCEvent));
         PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pTrackCreator->CreateTrackAssociations(pLCEvent));
         PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pTrackCreator->CreateTracks(pLCEvent));
-        PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pMCParticleCreator->CreateTrackToMCParticleRelationships(pLCEvent));
+        PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pMCParticleCreator->CreateTrackToMCParticleRelationships(pLCEvent, m_pTrackCreator->GetTrackVector()));
         PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pCaloHitCreator->CreateCaloHits(pLCEvent));
-        PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pMCParticleCreator->CreateCaloHitToMCParticleRelationships(pLCEvent));
+        PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pMCParticleCreator->CreateCaloHitToMCParticleRelationships(pLCEvent, m_pCaloHitCreator->GetCalorimeterHitVector()));
 
         PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pPandora));
         PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pPfoCreator->CreateParticleFlowObjects(pLCEvent));
@@ -165,34 +153,18 @@ void PandoraPFANewProcessor::end()
 pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 {
     // Register content from external pandora libraries
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerCalculator(*m_pPandora,
-        new FineGranularityPseudoLayerCalculator()));
-
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetShowerProfileCalculator(*m_pPandora,
-        new FineGranularityShowerProfileCalculator()));
-
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterAlgorithms(*m_pPandora));
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterHelperFunctions(*m_pPandora));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterPlugins(*m_pPandora));
 
     // Register local content
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldCalculator(*m_pPandora,
-        new SimpleBFieldCalculator()));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldPlugin(*m_pPandora, new SimpleBFieldCalculator()));
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ExternalClustering",
         new ExternalClusteringAlgorithm::Factory));
 
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionFunction(*m_pPandora,
-            "NonLinearity", pandora::HADRONIC, &CaloHitCreator::NonLinearityCorrection));
-
-    // Example registrations
-    //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionFunction(*m_pPandora,
-    //    "MyHadronicEnergyCorrection", pandora::HADRONIC, &PandoraPFANewProcessor::MyHadronicEnergyCorrection));
-
-    //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterParticleIdFunction(*m_pPandora, "MyParticleId",
-    //    &PandoraPFANewProcessor::MyParticleId));
-
-    //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "MyAlgorithm",
-    //    new MyAlgorithm::Factory));
+// TODO static
+//    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionFunction(*m_pPandora,
+//            "NonLinearity", pandora::HADRONIC, &CaloHitCreator::NonLinearityCorrection));
 
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -310,18 +282,6 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                               m_pfoCreatorSettings.m_pfoCollectionName,
                               std::string("PandoraPFANewPFOs"));
 
-    registerOutputCollection( LCIO::LCGENERICOBJECT,
-                              "ReclusterMonitoringCollectionName",
-                              "Recluster Monitoring Collection Name",
-                              m_pfoCreatorSettings.m_reclusterMonitoringCollectionName,
-                              std::string("PandoraPFANewReclusterMonitoring"));
-
-    registerOutputCollection( LCIO::LCRELATION,
-                              "ReclusterRelationsCollectionName",
-                              "Recluster Relations Collection Name",
-                              m_pfoCreatorSettings.m_reclusterRelationsCollectionName,
-                              std::string("PandoraPFANewReclusterRelations"));
-
     // Calibration constants
     registerProcessorParameter("ECalToMipCalibration",
                             "The calibration from deposited ECal energy to mip",
@@ -399,15 +359,16 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             float(250.f));
 
     // B-field parameters
-    registerProcessorParameter("MuonBarrelBField",
-                            "The bfield in the muon barrel, units Tesla",
-                            SimpleBFieldCalculator::m_muonBarrelBField,
-                            float(-1.5f));
-
-    registerProcessorParameter("MuonEndCapBField",
-                            "The bfield in the muon endcap, units Tesla",
-                            SimpleBFieldCalculator::m_muonEndCapBField,
-                            float(0.01f));
+// TODO static
+//    registerProcessorParameter("MuonBarrelBField",
+//                            "The bfield in the muon barrel, units Tesla",
+//                            SimpleBFieldCalculator::m_muonBarrelBField,
+//                            float(-1.5f));
+//
+//    registerProcessorParameter("MuonEndCapBField",
+//                            "The bfield in the muon endcap, units Tesla",
+//                            SimpleBFieldCalculator::m_muonEndCapBField,
+//                            float(0.01f));
 
     // Track relationship parameters
     registerProcessorParameter("ShouldFormTrackRelationships",
@@ -615,12 +576,6 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_geometryCreatorSettings.m_hCalRingOuterPhiCoordinate,
                             float(0.));
 
-    // Number of events to skip
-    registerProcessorParameter("NEventsToSkip",
-                            "Number of events to skip at start of reconstruction job",
-                            m_settings.m_nEventsToSkip,
-                            int(0));
-
     // For Strip Splitting method and also for hybrid ECAL
     registerProcessorParameter("StripSplittingOn",
                             "To use strip splitting algorithm, this should be true",
@@ -699,16 +654,17 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_caloHitCreatorSettings.m_eCalScToHadGeVBarrel,
                             float(1.));
 
-    // Hadronic energy non-linearity correction
-    registerProcessorParameter("InputEnergyCorrectionPoints",
-                            "The input energy points for hadronic energy correction",
-                            CaloHitCreator::Settings::m_inputEnergyCorrectionPoints,
-                            std::vector<float>());
-
-    registerProcessorParameter("OutputEnergyCorrectionPoints",
-                            "The output energy points for hadronic energy correction",
-                            CaloHitCreator::Settings::m_outputEnergyCorrectionPoints,
-                            std::vector<float>());
+// TODO static
+//    // Hadronic energy non-linearity correction
+//    registerProcessorParameter("InputEnergyCorrectionPoints",
+//                            "The input energy points for hadronic energy correction",
+//                            CaloHitCreator::Settings::m_inputEnergyCorrectionPoints,
+//                            std::vector<float>());
+//
+//    registerProcessorParameter("OutputEnergyCorrectionPoints",
+//                            "The output energy points for hadronic energy correction",
+//                            CaloHitCreator::Settings::m_outputEnergyCorrectionPoints,
+//                            std::vector<float>());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -725,8 +681,8 @@ void PandoraPFANewProcessor::FinaliseSteeringParameters()
     m_trackCreatorSettings.m_prongSplitVertexCollections = m_trackCreatorSettings.m_prongVertexCollections;
     m_trackCreatorSettings.m_prongSplitVertexCollections.insert(m_trackCreatorSettings.m_prongSplitVertexCollections.end(),
         m_trackCreatorSettings.m_splitVertexCollections.begin(), m_trackCreatorSettings.m_splitVertexCollections.end());
-
-    SimpleBFieldCalculator::m_innerBField = marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z();
+// TODO static
+//    SimpleBFieldCalculator::m_innerBField = marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

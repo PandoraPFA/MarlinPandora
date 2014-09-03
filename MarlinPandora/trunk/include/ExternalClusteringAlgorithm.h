@@ -10,6 +10,10 @@
 
 #include "Pandora/Algorithm.h"
 
+namespace pandora { class CaloHit; }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  ExternalClusteringAlgorithm class
  */

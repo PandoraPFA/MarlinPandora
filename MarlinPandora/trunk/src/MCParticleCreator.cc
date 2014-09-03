@@ -25,9 +25,9 @@
 #include <cmath>
 #include <limits>
 
-MCParticleCreator::MCParticleCreator(const Settings &settings) :
+MCParticleCreator::MCParticleCreator(const Settings &settings, const pandora::Pandora *const pPandora) :
     m_settings(settings),
-    m_pPandora(PandoraPFANewProcessor::GetPandora()),
+    m_pPandora(pPandora),
     m_bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z())
 {
 }
@@ -101,7 +101,7 @@ pandora::StatusCode MCParticleCreator::CreateMCParticles(const EVENT::LCEvent *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const
+pandora::StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent, const TrackVector &trackVector) const
 {
     for (StringVector::const_iterator iter = m_settings.m_lcTrackRelationCollections.begin(), iterEnd = m_settings.m_lcTrackRelationCollections.end();
          iter != iterEnd; ++iter)
@@ -110,8 +110,6 @@ pandora::StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(cons
         {
             const EVENT::LCCollection *pMCRelationCollection = pLCEvent->getCollection(*iter);
             UTIL::LCRelationNavigator navigate(pMCRelationCollection);
-
-            const TrackVector &trackVector = TrackCreator::GetTrackVector();
 
             for (TrackVector::const_iterator trackIter = trackVector.begin(), trackIterEnd = trackVector.end();
                 trackIter != trackIterEnd; ++trackIter)
@@ -176,7 +174,7 @@ pandora::StatusCode MCParticleCreator::CreateTrackToMCParticleRelationships(cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode MCParticleCreator::CreateCaloHitToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent) const
+pandora::StatusCode MCParticleCreator::CreateCaloHitToMCParticleRelationships(const EVENT::LCEvent *const pLCEvent, const CalorimeterHitVector &calorimeterHitVector) const
 {
     typedef std::map<MCParticle *, float> MCParticleToEnergyWeightMap;
     MCParticleToEnergyWeightMap mcParticleToEnergyWeightMap;
@@ -188,8 +186,6 @@ pandora::StatusCode MCParticleCreator::CreateCaloHitToMCParticleRelationships(co
         {
             const EVENT::LCCollection *pMCRelationCollection = pLCEvent->getCollection(*iter);
             UTIL::LCRelationNavigator navigate(pMCRelationCollection);
-
-            const CalorimeterHitVector &calorimeterHitVector = CaloHitCreator::GetCalorimeterHitVector();
 
             for (CalorimeterHitVector::const_iterator caloHitIter = calorimeterHitVector.begin(),
                 caloHitIterEnd = calorimeterHitVector.end(); caloHitIter != caloHitIterEnd; ++caloHitIter)

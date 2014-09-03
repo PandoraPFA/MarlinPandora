@@ -48,8 +48,9 @@ public:
      *  @brief  Constructor
      * 
      *  @param  settings the creator settings
+     *  @param  pPandora address of the relevant pandora instance
      */
-     GeometryCreator(const Settings &settings);
+     GeometryCreator(const Settings &settings, const pandora::Pandora *const pPandora);
 
     /**
      *  @brief  Destructor
@@ -66,31 +67,27 @@ private:
      *  @brief  Set sub detector parameters to their gear default values
      * 
      *  @param  inputParameters input parameters, from gear
-     *  @param  subDetectorParameters the sub detector parameters
+     *  @param  parameters the sub detector parameters
      */
     void SetDefaultSubDetectorParameters(const gear::CalorimeterParameters &inputParameters,
-        PandoraApi::GeometryParameters::SubDetectorParameters &subDetectorParameters) const;
+        PandoraApi::Geometry::SubDetector::Parameters &parameters) const;
 
     /**
      *  @brief  Set additional sub detector parameters
-     * 
-     *  @param  geometryParameters the pandora geometry parameters
      */
-    void SetAdditionalSubDetectorParameters(PandoraApi::GeometryParameters &geometryParameters) const;
+    void SetAdditionalSubDetectorParameters() const;
 
     /**
      *  @brief  Set positions of gaps in ILD detector and add information missing from GEAR parameters file
      * 
-     *  @param  geometryParameters the pandora geometry parameters
+     *  @param  parameters the sub detector parameters
      */
-    pandora::StatusCode SetILDSpecificGeometry(PandoraApi::GeometryParameters &geometryParameters) const;
+    pandora::StatusCode SetILDSpecificGeometry() const;
 
     /**
      *  @brief  Add information missing from GEAR parameters file for ILD SDHCAL detector
-     * 
-     *  @param  geometryParameters the pandora geometry parameters
      */
-    pandora::StatusCode SetILD_SDHCALSpecificGeometry(PandoraApi::GeometryParameters &geometryParameters) const;
+    pandora::StatusCode SetILD_SDHCALSpecificGeometry() const;
 
     /**
      *  @brief  Specify positions of hcal barrel box gaps - ILD specific

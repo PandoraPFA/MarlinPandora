@@ -76,17 +76,19 @@ public:
         float           m_eCalSiToHadGeVEndCap;                 ///< The calibration from deposited Si-layer energy on the enecaps to hadronic energy
         float           m_eCalScToHadGeVEndCap;                 ///< The calibration from deposited Sc-layer energy on the endcaps to hadronic energy
 
-        // Hadronic energy non-linearity correction
-        static FloatVector m_inputEnergyCorrectionPoints;       ///< The input energy points for hadronic energy correction
-        static FloatVector m_outputEnergyCorrectionPoints;      ///< The output energy points for hadronic energy correction
+// TODO static
+//        // Hadronic energy non-linearity correction
+//        static FloatVector m_inputEnergyCorrectionPoints;       ///< The input energy points for hadronic energy correction
+//        static FloatVector m_outputEnergyCorrectionPoints;      ///< The output energy points for hadronic energy correction
     };
 
     /**
      *  @brief  Constructor
      * 
      *  @param  settings the creator settings
+     *  @param  pPandora address of the relevant pandora instance
      */
-     CaloHitCreator(const Settings &settings);
+     CaloHitCreator(const Settings &settings, const pandora::Pandora *const pPandora);
 
     /**
      *  @brief  Destructor
@@ -105,20 +107,21 @@ public:
      * 
      *  @return The calorimeter hit vector
      */
-    static const CalorimeterHitVector &GetCalorimeterHitVector();
+    const CalorimeterHitVector &GetCalorimeterHitVector() const;
 
     /**
      *  @brief  Reset the calo hit creator
      */
     void Reset();
 
-    /**
-     *  @brief  Correct cluster energy to account for non-linearities in calibration
-     * 
-     *  @param  pCluster address of the cluster
-     *  @param  correctedHadronicEnergy the current corrected hadronic energy measure, which may be modified by this function
-     */
-    static void NonLinearityCorrection(const pandora::Cluster *const pCluster, float &correctedHadronicEnergy);
+// TODO static
+//    /**
+//     *  @brief  Correct cluster energy to account for non-linearities in calibration
+//     * 
+//     *  @param  pCluster address of the cluster
+//     *  @param  correctedHadronicEnergy the current corrected hadronic energy measure, which may be modified by this function
+//     */
+//    static void NonLinearityCorrection(const pandora::Cluster *const pCluster, float &correctedHadronicEnergy);
 
 private:
     /**
@@ -233,12 +236,12 @@ private:
     float                               m_hCalBarrelLayerThickness;         ///< HCal barrel layer thickness
     float                               m_hCalEndCapLayerThickness;         ///< HCal endcap layer thickness
 
-    static CalorimeterHitVector         m_calorimeterHitVector;             ///< The calorimeter hit vector
+    CalorimeterHitVector                m_calorimeterHitVector;             ///< The calorimeter hit vector
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const CalorimeterHitVector &CaloHitCreator::GetCalorimeterHitVector()
+inline const CalorimeterHitVector &CaloHitCreator::GetCalorimeterHitVector() const
 {
     return m_calorimeterHitVector;
 }
