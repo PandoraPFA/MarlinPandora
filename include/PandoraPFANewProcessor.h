@@ -36,7 +36,6 @@ public:
     {
     public:
         std::string     m_pandoraSettingsXmlFile;           ///< The pandora settings xml file
-        int             m_nEventsToSkip;                    ///< Number of events to skip at start of reconstruction job
     };
 
     /**
@@ -85,14 +84,14 @@ public:
      * 
      *  @return address of the pandora instance
      */
-    static pandora::Pandora *GetPandora();
+    const pandora::Pandora *GetPandora() const;
 
     /**
      *  @brief  Get address of the current lcio event
      * 
      *  @return address of the current lcio event
      */
-    static EVENT::LCEvent *GetCurrentEvent();
+    const EVENT::LCEvent *GetCurrentEvent() const;
 
 private:
     /**
@@ -116,8 +115,8 @@ private:
      */
     void Reset();
 
-    static pandora::Pandora        *m_pPandora;                     ///< Address of the pandora instance
-    static EVENT::LCEvent           *m_pLcioEvent;                   ///< Address of the current lcio event
+    pandora::Pandora               *m_pPandora;                     ///< Address of the pandora instance
+    EVENT::LCEvent                 *m_pLcioEvent;                   ///< Address of the current lcio event
 
     GeometryCreator                *m_pGeometryCreator;             ///< The geometry creator
     CaloHitCreator                 *m_pCaloHitCreator;              ///< The calo hit creator
@@ -146,7 +145,7 @@ inline marlin::Processor *PandoraPFANewProcessor::newProcessor()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::Pandora *PandoraPFANewProcessor::GetPandora()
+inline const pandora::Pandora *PandoraPFANewProcessor::GetPandora() const
 {
     if (NULL == m_pPandora)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
@@ -156,7 +155,7 @@ inline pandora::Pandora *PandoraPFANewProcessor::GetPandora()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline EVENT::LCEvent *PandoraPFANewProcessor::GetCurrentEvent()
+inline const EVENT::LCEvent *PandoraPFANewProcessor::GetCurrentEvent() const
 {
     if (NULL == m_pLcioEvent)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);

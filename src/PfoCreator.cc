@@ -30,9 +30,9 @@
 
 #include <cmath>
 
-PfoCreator::PfoCreator(const Settings &settings) :
+PfoCreator::PfoCreator(const Settings &settings, const pandora::Pandora *const pPandora) :
     m_settings(settings),
-    m_pPandora(PandoraPFANewProcessor::GetPandora())
+    m_pPandora(pPandora)
 {
 }
 
@@ -51,8 +51,6 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
 
     IMPL::LCCollectionVec *pClusterCollection = new IMPL::LCCollectionVec(LCIO::CLUSTER);
     IMPL::LCCollectionVec *pReconstructedParticleCollection = new IMPL::LCCollectionVec(LCIO::RECONSTRUCTEDPARTICLE);
-    IMPL::LCCollectionVec *pReclusterMonitoringCollection = new IMPL::LCCollectionVec(LCIO::LCGENERICOBJECT);
-    IMPL::LCCollectionVec *pReclusterRelationsCollection = new IMPL::LCCollectionVec(LCIO::LCRELATION);
 
     IMPL::LCFlagImpl lcFlagImpl(pClusterCollection->getFlag());
     lcFlagImpl.setBit(LCIO::CLBIT_HITS);
@@ -137,22 +135,6 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
             itTrack != itTrackEnd; ++itTrack)
         {
             pReconstructedParticle->addTrack((Track*)(*itTrack));
-
-            float netEnergyChange(0.f), sumModulusEnergyChanges(0.f), sumSquaredEnergyChanges(0.f);
-            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::GetReclusterMonitoringResults(*m_pPandora, *itTrack,
-                netEnergyChange, sumModulusEnergyChanges, sumSquaredEnergyChanges));
-
-            if (sumSquaredEnergyChanges > 0.f)
-            {
-                IMPL::LCGenericObjectImpl *pLCGenericObject = new LCGenericObjectImpl(0, 3, 0);
-                pLCGenericObject->setFloatVal(0, netEnergyChange);
-                pLCGenericObject->setFloatVal(1, sumModulusEnergyChanges);
-                pLCGenericObject->setFloatVal(2, sumSquaredEnergyChanges);
-                pReclusterMonitoringCollection->addElement(pLCGenericObject);
-
-                IMPL::LCRelationImpl *pLCRelation = new LCRelationImpl(pLCGenericObject, (Track*)(*itTrack));
-                pReclusterRelationsCollection->addElement(pLCRelation);
-           }
         }
 
         float momentum[3] = {(*itPFO)->GetMomentum().GetX(), (*itPFO)->GetMomentum().GetY(), (*itPFO)->GetMomentum().GetZ()};
@@ -167,8 +149,6 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
 
     pLCEvent->addCollection(pClusterCollection, m_settings.m_clusterCollectionName.c_str());
     pLCEvent->addCollection(pReconstructedParticleCollection, m_settings.m_pfoCollectionName.c_str());
-    pLCEvent->addCollection(pReclusterMonitoringCollection, m_settings.m_reclusterMonitoringCollectionName.c_str());
-    pLCEvent->addCollection(pReclusterRelationsCollection, m_settings.m_reclusterRelationsCollectionName.c_str());
 
     return pandora::STATUS_CODE_SUCCESS;
 }

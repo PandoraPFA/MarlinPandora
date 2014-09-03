@@ -28,8 +28,9 @@ StatusCode ExternalClusteringAlgorithm::Run()
             return STATUS_CODE_SUCCESS;
 
         // Get external photon cluster collection
-        const EVENT::LCEvent *const pLCEvent(PandoraPFANewProcessor::GetCurrentEvent());
-
+// TODO static
+        const EVENT::LCEvent *const pLCEvent(NULL);//PandoraPFANewProcessor::GetCurrentEvent(this->GetPandora()));
+throw StatusCodeException(STATUS_CODE_FAILURE);
         const EVENT::LCCollection *pExternalClusterCollection = pLCEvent->getCollection(m_externalClusterCollectionName);
         const unsigned int nExternalClusters(pExternalClusterCollection->getNumberOfElements());
 

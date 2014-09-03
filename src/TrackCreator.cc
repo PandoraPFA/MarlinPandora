@@ -29,13 +29,9 @@
 #include <cmath>
 #include <limits>
 
-TrackVector TrackCreator::m_trackVector;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-TrackCreator::TrackCreator(const Settings &settings) :
+TrackCreator::TrackCreator(const Settings &settings, const pandora::Pandora *const pPandora) :
     m_settings(settings),
-    m_pPandora(PandoraPFANewProcessor::GetPandora()),
+    m_pPandora(pPandora),
     m_bField(marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z()),
     m_tpcInnerR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[0]),
     m_tpcOuterR(marlin::Global::GEAR->getTPCParameters().getPadLayout().getPlaneExtent()[1]),
@@ -422,7 +418,7 @@ bool TrackCreator::IsConflictingRelationship(const EVENT::TrackVec &trackVec) co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode TrackCreator::CreateTracks(EVENT::LCEvent *pLCEvent) const
+pandora::StatusCode TrackCreator::CreateTracks(EVENT::LCEvent *pLCEvent)
 {
     LCCollectionVec *pTracksNotPassedToPFA = newTrkCol("TracksNotPassedToPFA", pLCEvent, true);
     LCCollectionVec *pTracksReachEcal = newTrkCol("TracksReachEcal", pLCEvent, true);
@@ -639,13 +635,12 @@ void TrackCreator::GetECalProjectionOld(const pandora::Helix *const pHelix, cons
     (void) pHelix->GetPointInZ(static_cast<float>(signPz) * m_eCalEndCapInnerZ, referencePoint, bestECalProjection, minGenericTime);
 
     // Then project to barrel surface(s)
-    static const float pi(std::acos(-1.));
     pandora::CartesianVector barrelProjection(0.f, 0.f, 0.f);
 
     if (m_eCalBarrelInnerSymmetry > 0)
     {
         // Polygon
-        float twopi_n = 2. * pi / (static_cast<float>(m_eCalBarrelInnerSymmetry));
+        float twopi_n = 2. * M_PI / (static_cast<float>(m_eCalBarrelInnerSymmetry));
 
         for (int i = 0; i < m_eCalBarrelInnerSymmetry; ++i)
         {
@@ -653,7 +648,7 @@ void TrackCreator::GetECalProjectionOld(const pandora::Helix *const pHelix, cons
             const float phi(twopi_n * static_cast<float>(i) + m_eCalBarrelInnerPhi0);
 
             const pandora::StatusCode statusCode(pHelix->GetPointInXY(m_eCalBarrelInnerR * std::cos(phi), m_eCalBarrelInnerR * std::sin(phi),
-                std::cos(phi + 0.5 * pi), std::sin(phi + 0.5 * pi), referencePoint, barrelProjection, genericTime));
+                std::cos(phi + 0.5 * M_PI), std::sin(phi + 0.5 * M_PI), referencePoint, barrelProjection, genericTime));
 
             if ((pandora::STATUS_CODE_SUCCESS == statusCode) && (genericTime < minGenericTime))
             {
@@ -925,10 +920,10 @@ bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const Pan
 
         const EVENT::IntVec &hitsBySubdetector(pTrack->getSubdetectorHitNumbers());
 
-	//fg: hit numbers are now given in different order wrt LOI:  
-	// trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 1 ] =  hitsInFit ;  
-	// trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 2 ] =  hitCount ;  
-	// ---- use hitsInFit :
+        //fg: hit numbers are now given in different order wrt LOI:  
+        // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 1 ] =  hitsInFit ;  
+        // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 2 ] =  hitCount ;  
+        // ---- use hitsInFit :
         const int nTpcHits = hitsBySubdetector[ 2 * lcio::ILDDetID::TPC - 1 ];
         const int nFtdHits = hitsBySubdetector[ 2 * lcio::ILDDetID::FTD - 1 ];
 

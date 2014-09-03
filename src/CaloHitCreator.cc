@@ -27,15 +27,16 @@
 #include <cmath>
 #include <limits>
 
-CalorimeterHitVector CaloHitCreator::m_calorimeterHitVector;
-CaloHitCreator::FloatVector CaloHitCreator::Settings::m_inputEnergyCorrectionPoints;
-CaloHitCreator::FloatVector CaloHitCreator::Settings::m_outputEnergyCorrectionPoints;
+// TODO static
+//CalorimeterHitVector CaloHitCreator::m_calorimeterHitVector;
+//CaloHitCreator::FloatVector CaloHitCreator::Settings::m_inputEnergyCorrectionPoints;
+//CaloHitCreator::FloatVector CaloHitCreator::Settings::m_outputEnergyCorrectionPoints;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CaloHitCreator::CaloHitCreator(const Settings &settings) :
+CaloHitCreator::CaloHitCreator(const Settings &settings, const pandora::Pandora *const pPandora) :
     m_settings(settings),
-    m_pPandora(PandoraPFANewProcessor::GetPandora()),
+    m_pPandora(pPandora),
     m_eCalBarrelOuterZ(marlin::Global::GEAR->getEcalBarrelParameters().getExtent()[3]),
     m_hCalBarrelOuterZ(marlin::Global::GEAR->getHcalBarrelParameters().getExtent()[3]),
     m_muonBarrelOuterZ(marlin::Global::GEAR->getYokeBarrelParameters().getExtent()[3]),
@@ -66,7 +67,7 @@ CaloHitCreator::CaloHitCreator(const Settings &settings) :
     m_hCalEndCapLayerThickness = hCalEndCapLayerLayout.getThickness(hCalEndCapLayerLayout.getNLayers() - 1);
     m_hCalBarrelLayerThickness = hCalBarrelLayerLayout.getThickness(hCalBarrelLayerLayout.getNLayers() - 1);
 
-    if ((0.f == m_hCalEndCapLayerThickness) || (0.f == m_hCalBarrelLayerThickness))
+    if ((m_hCalEndCapLayerThickness < std::numeric_limits<float>::epsilon()) || (m_hCalBarrelLayerThickness < std::numeric_limits<float>::epsilon()))
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
@@ -93,57 +94,58 @@ pandora::StatusCode CaloHitCreator::CreateCaloHits(const EVENT::LCEvent *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CaloHitCreator::NonLinearityCorrection(const pandora::Cluster *const pCluster, float &correctedHadronicEnergy)
-{
-    static FloatVector corrections;
-    static const FloatVector &inputEnergyPoints(CaloHitCreator::Settings::m_inputEnergyCorrectionPoints);
-    static const FloatVector &outputEnergyPoints(CaloHitCreator::Settings::m_outputEnergyCorrectionPoints);
-    static unsigned int nEnergyBins(0);
-
-    if (corrections.empty())
-    {
-        if (inputEnergyPoints.size() != outputEnergyPoints.size())
-            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
-        nEnergyBins = inputEnergyPoints.size();
-
-        for (unsigned int i = 0; i < nEnergyBins; ++i)
-        {
-            const float inputEnergy(inputEnergyPoints.at(i));
-            const float outputEnergy(outputEnergyPoints.at(i));
-
-            if (std::fabs(inputEnergy) < std::numeric_limits<float>::epsilon())
-                throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
-            corrections.push_back(outputEnergy / inputEnergy);
-        }
-    }
-
-    unsigned int index(nEnergyBins);
-    for (unsigned int i = 0; i < nEnergyBins; ++i)
-    {
-        if (correctedHadronicEnergy < inputEnergyPoints.at(i))
-        {
-            index = i;
-            break;
-        }
-    }
-
-    float correction(1.f);
-
-    if ((0 == index) || (nEnergyBins == index))
-    {
-        correction = corrections.at(std::min(index, nEnergyBins - 1));
-    }
-    else
-    {
-        const float lowCorrection(corrections.at(index - 1)), highCorrection(corrections.at(index));
-        const float lowEnergy(inputEnergyPoints.at(index - 1)), highEnergy(inputEnergyPoints.at(index));
-        correction = lowCorrection + (correctedHadronicEnergy - lowEnergy) * (highCorrection - lowCorrection) / (highEnergy - lowEnergy);
-    }
-
-    correctedHadronicEnergy *= correction;
-}
+// TODO static
+//void CaloHitCreator::NonLinearityCorrection(const pandora::Cluster *const pCluster, float &correctedHadronicEnergy)
+//{
+//    static FloatVector corrections;
+//    static const FloatVector &inputEnergyPoints(CaloHitCreator::Settings::m_inputEnergyCorrectionPoints);
+//    static const FloatVector &outputEnergyPoints(CaloHitCreator::Settings::m_outputEnergyCorrectionPoints);
+//    static unsigned int nEnergyBins(0);
+//
+//    if (corrections.empty())
+//    {
+//        if (inputEnergyPoints.size() != outputEnergyPoints.size())
+//            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+//
+//        nEnergyBins = inputEnergyPoints.size();
+//
+//        for (unsigned int i = 0; i < nEnergyBins; ++i)
+//        {
+//            const float inputEnergy(inputEnergyPoints.at(i));
+//            const float outputEnergy(outputEnergyPoints.at(i));
+//
+//            if (std::fabs(inputEnergy) < std::numeric_limits<float>::epsilon())
+//                throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+//
+//            corrections.push_back(outputEnergy / inputEnergy);
+//        }
+//    }
+//
+//    unsigned int index(nEnergyBins);
+//    for (unsigned int i = 0; i < nEnergyBins; ++i)
+//    {
+//        if (correctedHadronicEnergy < inputEnergyPoints.at(i))
+//        {
+//            index = i;
+//            break;
+//        }
+//    }
+//
+//    float correction(1.f);
+//
+//    if ((0 == index) || (nEnergyBins == index))
+//    {
+//        correction = corrections.at(std::min(index, nEnergyBins - 1));
+//    }
+//    else
+//    {
+//        const float lowCorrection(corrections.at(index - 1)), highCorrection(corrections.at(index));
+//        const float lowEnergy(inputEnergyPoints.at(index - 1)), highEnergy(inputEnergyPoints.at(index));
+//        correction = lowCorrection + (correctedHadronicEnergy - lowEnergy) * (highCorrection - lowCorrection) / (highEnergy - lowEnergy);
+//    }
+//
+//    correctedHadronicEnergy *= correction;
+//}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -160,8 +162,8 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
             if (0 == nElements)
                 continue;
 
-            static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getEcalEndcapParameters().getLayerLayout());
-            static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getEcalBarrelParameters().getLayerLayout()); 
+            const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getEcalEndcapParameters().getLayerLayout());
+            const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getEcalBarrelParameters().getLayerLayout()); 
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -282,8 +284,8 @@ pandora::StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *con
             if (0 == nElements)
                 continue;
 
-            static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getHcalEndcapParameters().getLayerLayout());
-            static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getHcalBarrelParameters().getLayerLayout());
+            const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getHcalEndcapParameters().getLayerLayout());
+            const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getHcalBarrelParameters().getLayerLayout());
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -362,9 +364,9 @@ pandora::StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *con
             if (0 == nElements)
                 continue;
 
-            static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getYokeEndcapParameters().getLayerLayout());
-            static const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getYokeBarrelParameters().getLayerLayout()); 
-            static const gear::LayerLayout &plugLayerLayout(marlin::Global::GEAR->getYokePlugParameters().getLayerLayout());
+            const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getYokeEndcapParameters().getLayerLayout());
+            const gear::LayerLayout &barrelLayerLayout(marlin::Global::GEAR->getYokeBarrelParameters().getLayerLayout()); 
+            const gear::LayerLayout &plugLayerLayout(marlin::Global::GEAR->getYokePlugParameters().getLayerLayout());
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -461,7 +463,7 @@ pandora::StatusCode CaloHitCreator::CreateLCalCaloHits(const EVENT::LCEvent *con
             if (0 == nElements)
                 continue;
 
-            static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getLcalParameters().getLayerLayout()); 
+            const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getLcalParameters().getLayerLayout()); 
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -531,7 +533,7 @@ pandora::StatusCode CaloHitCreator::CreateLHCalCaloHits(const EVENT::LCEvent *co
             if (0 == nElements)
                 continue;
 
-            static const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getLHcalParameters().getLayerLayout());
+            const gear::LayerLayout &endcapLayerLayout(marlin::Global::GEAR->getLHcalParameters().getLayerLayout());
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
@@ -667,8 +669,7 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
 
     if (barrelSymmetryOrder > 2)
     {
-        static const float pi(std::acos(-1.));
-        const float phi = barrelPhi0 + (2. * pi * static_cast<float>(staveNumber) / static_cast<float>(barrelSymmetryOrder));
+        const float phi = barrelPhi0 + (2. * M_PI * static_cast<float>(staveNumber) / static_cast<float>(barrelSymmetryOrder));
         caloHitParameters.m_cellNormalVector = pandora::CartesianVector(-std::sin(phi), std::cos(phi), 0);
     }
     else
@@ -740,7 +741,7 @@ float CaloHitCreator::GetMaximumRadius(const EVENT::CalorimeterHit *const pCaloH
         return std::sqrt((pCaloHitPosition[0] * pCaloHitPosition[0]) + (pCaloHitPosition[1] * pCaloHitPosition[1]));
 
     float maximumRadius(0.f);
-    static const float twoPi = static_cast<float>(2. * std::acos(-1.));
+    const float twoPi(2.f * M_PI);
 
     for (unsigned int i = 0; i < symmetryOrder; ++i)
     {
