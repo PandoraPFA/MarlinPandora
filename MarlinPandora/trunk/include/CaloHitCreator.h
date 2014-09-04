@@ -24,7 +24,6 @@ class CaloHitCreator
 {
 public:
     typedef std::vector<std::string> StringVector;
-    typedef std::vector<float> FloatVector;
 
     /**
      *  @brief  Settings class
@@ -75,11 +74,6 @@ public:
         float           m_eCalScToHadGeVBarrel;                 ///< The calibration from deposited Sc-layer energy on the endcaps to hadronic energy
         float           m_eCalSiToHadGeVEndCap;                 ///< The calibration from deposited Si-layer energy on the enecaps to hadronic energy
         float           m_eCalScToHadGeVEndCap;                 ///< The calibration from deposited Sc-layer energy on the endcaps to hadronic energy
-
-// TODO static
-//        // Hadronic energy non-linearity correction
-//        static FloatVector m_inputEnergyCorrectionPoints;       ///< The input energy points for hadronic energy correction
-//        static FloatVector m_outputEnergyCorrectionPoints;      ///< The output energy points for hadronic energy correction
     };
 
     /**
@@ -113,15 +107,6 @@ public:
      *  @brief  Reset the calo hit creator
      */
     void Reset();
-
-// TODO static
-//    /**
-//     *  @brief  Correct cluster energy to account for non-linearities in calibration
-//     * 
-//     *  @param  pCluster address of the cluster
-//     *  @param  correctedHadronicEnergy the current corrected hadronic energy measure, which may be modified by this function
-//     */
-//    static void NonLinearityCorrection(const pandora::Cluster *const pCluster, float &correctedHadronicEnergy);
 
 private:
     /**

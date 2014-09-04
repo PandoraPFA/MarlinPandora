@@ -236,7 +236,7 @@ pandora::StatusCode GeometryCreator::SetILD_SDHCALSpecificGeometry() const
 //    geometryParameters.m_hCalEndCapParameters.m_outerPhiCoordinate = m_settings.m_hCalEndCapOuterPhiCoordinate;
 
     // Gaps in detector active material
-    // TODO, implement Gap between module.
+    // TODO implement Gap between module.
     //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelConcentricGaps());
 
     return pandora::STATUS_CODE_SUCCESS;

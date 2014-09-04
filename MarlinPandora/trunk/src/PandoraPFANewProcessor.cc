@@ -17,7 +17,7 @@
 
 #include "ExternalClusteringAlgorithm.h"
 #include "PandoraPFANewProcessor.h"
-#include "SimpleBFieldCalculator.h"
+#include "BFieldPlugin.h"
 
 #include <cstdlib>
 
@@ -157,14 +157,14 @@ pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterPlugins(*m_pPandora));
 
     // Register local content
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldPlugin(*m_pPandora, new SimpleBFieldCalculator()));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldPlugin(*m_pPandora,
+        new BFieldPlugin(m_bFieldPluginSettings)));
 
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora, "ExternalClustering",
-        new ExternalClusteringAlgorithm::Factory));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora,
+        "ExternalClustering", new ExternalClusteringAlgorithm::Factory));
 
-// TODO static
-//    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionFunction(*m_pPandora,
-//            "NonLinearity", pandora::HADRONIC, &CaloHitCreator::NonLinearityCorrection));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionPlugin(*m_pPandora,
+        "NonLinearity", pandora::HADRONIC, new NonLinearityCorrection(m_nonLinearityCorrectionSettings)));
 
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -359,16 +359,15 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             float(250.f));
 
     // B-field parameters
-// TODO static
-//    registerProcessorParameter("MuonBarrelBField",
-//                            "The bfield in the muon barrel, units Tesla",
-//                            SimpleBFieldCalculator::m_muonBarrelBField,
-//                            float(-1.5f));
-//
-//    registerProcessorParameter("MuonEndCapBField",
-//                            "The bfield in the muon endcap, units Tesla",
-//                            SimpleBFieldCalculator::m_muonEndCapBField,
-//                            float(0.01f));
+    registerProcessorParameter("MuonBarrelBField",
+                            "The bfield in the muon barrel, units Tesla",
+                            m_bFieldPluginSettings.m_muonBarrelBField,
+                            float(-1.5f));
+
+    registerProcessorParameter("MuonEndCapBField",
+                            "The bfield in the muon endcap, units Tesla",
+                            m_bFieldPluginSettings.m_muonEndCapBField,
+                            float(0.01f));
 
     // Track relationship parameters
     registerProcessorParameter("ShouldFormTrackRelationships",
@@ -654,17 +653,16 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_caloHitCreatorSettings.m_eCalScToHadGeVBarrel,
                             float(1.));
 
-// TODO static
-//    // Hadronic energy non-linearity correction
-//    registerProcessorParameter("InputEnergyCorrectionPoints",
-//                            "The input energy points for hadronic energy correction",
-//                            CaloHitCreator::Settings::m_inputEnergyCorrectionPoints,
-//                            std::vector<float>());
-//
-//    registerProcessorParameter("OutputEnergyCorrectionPoints",
-//                            "The output energy points for hadronic energy correction",
-//                            CaloHitCreator::Settings::m_outputEnergyCorrectionPoints,
-//                            std::vector<float>());
+    // Hadronic energy non-linearity correction
+    registerProcessorParameter("InputEnergyCorrectionPoints",
+                            "The input energy points for hadronic energy correction",
+                            m_nonLinearityCorrectionSettings.m_inputEnergyCorrectionPoints,
+                            std::vector<float>());
+
+    registerProcessorParameter("OutputEnergyCorrectionPoints",
+                            "The output energy points for hadronic energy correction",
+                            m_nonLinearityCorrectionSettings.m_outputEnergyCorrectionPoints,
+                            std::vector<float>());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -681,8 +679,8 @@ void PandoraPFANewProcessor::FinaliseSteeringParameters()
     m_trackCreatorSettings.m_prongSplitVertexCollections = m_trackCreatorSettings.m_prongVertexCollections;
     m_trackCreatorSettings.m_prongSplitVertexCollections.insert(m_trackCreatorSettings.m_prongSplitVertexCollections.end(),
         m_trackCreatorSettings.m_splitVertexCollections.begin(), m_trackCreatorSettings.m_splitVertexCollections.end());
-// TODO static
-//    SimpleBFieldCalculator::m_innerBField = marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z();
+
+    m_bFieldPluginSettings.m_innerBField = marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
