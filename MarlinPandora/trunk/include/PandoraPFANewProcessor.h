@@ -91,9 +91,11 @@ public:
     /**
      *  @brief  Get address of the current lcio event
      * 
+     *  @param  pPandora address of the relevant pandora instance
+     * 
      *  @return address of the current lcio event
      */
-    const EVENT::LCEvent *GetCurrentEvent() const;
+    static const EVENT::LCEvent *GetCurrentEvent(const pandora::Pandora *const pPandora);
 
 private:
     /**
@@ -118,8 +120,6 @@ private:
     void Reset();
 
     pandora::Pandora                   *m_pPandora;                         ///< Address of the pandora instance
-    EVENT::LCEvent                     *m_pLcioEvent;                       ///< Address of the current lcio event
-
     GeometryCreator                    *m_pGeometryCreator;                 ///< The geometry creator
     CaloHitCreator                     *m_pCaloHitCreator;                  ///< The calo hit creator
     TrackCreator                       *m_pTrackCreator;                    ///< The track creator
@@ -135,9 +135,8 @@ private:
     TrackCreator::Settings              m_trackCreatorSettings;             ///< The track creator settings
     PfoCreator::Settings                m_pfoCreatorSettings;               ///< The pfo creator settings
 
-    std::string                         m_detectorName;                     ///< The detector name
-    unsigned int                        m_nRun;                             ///< The run number
-    unsigned int                        m_nEvent;                           ///< The event number
+    typedef std::map<const pandora::Pandora *, EVENT::LCEvent *> PandoraToLCEventMap;
+    static PandoraToLCEventMap          m_pandoraToLCEventMap;              ///< The pandora to lc event map
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -159,12 +158,14 @@ inline const pandora::Pandora *PandoraPFANewProcessor::GetPandora() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const EVENT::LCEvent *PandoraPFANewProcessor::GetCurrentEvent() const
+inline const EVENT::LCEvent *PandoraPFANewProcessor::GetCurrentEvent(const pandora::Pandora *const pPandora)
 {
-    if (NULL == m_pLcioEvent)
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+    PandoraToLCEventMap::iterator iter = m_pandoraToLCEventMap.find(pPandora);
 
-    return m_pLcioEvent;
+    if (m_pandoraToLCEventMap.end() == iter)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+
+    return iter->second;
 }
 
 #endif // #ifndef PANDORA_PFA_NEW_PROCESSOR_H

@@ -61,7 +61,7 @@ pandora::StatusCode MCParticleCreator::CreateMCParticles(const EVENT::LCEvent *c
                     PandoraApi::MCParticle::Parameters mcParticleParameters;
                     mcParticleParameters.m_energy = pMcParticle->getEnergy();
                     mcParticleParameters.m_particleId = pMcParticle->getPDG();
-                    mcParticleParameters.m_mcParticleType = pandora::MC_STANDARD;
+                    mcParticleParameters.m_mcParticleType = pandora::MC_3D;
                     mcParticleParameters.m_pParentAddress = pMcParticle;
                     mcParticleParameters.m_momentum = pandora::CartesianVector(pMcParticle->getMomentum()[0], pMcParticle->getMomentum()[1],
                         pMcParticle->getMomentum()[2]);

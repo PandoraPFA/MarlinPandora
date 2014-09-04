@@ -9,9 +9,11 @@
 #ifndef GEOMETRY_CREATOR_H
 #define GEOMETRY_CREATOR_H 1
 
-#include "gear/CalorimeterParameters.h"
-
 #include "Api/PandoraApi.h"
+
+namespace gear { class CalorimeterParameters; }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  GeometryCreator class
@@ -63,31 +65,48 @@ public:
     pandora::StatusCode CreateGeometry() const;
 
 private:
+    typedef std::map<pandora::SubDetectorType, PandoraApi::Geometry::SubDetector::Parameters> SubDetectorTypeMap;
+    typedef std::map<std::string, PandoraApi::Geometry::SubDetector::Parameters> SubDetectorNameMap;
+
+    /**
+     *  @brief  Set mandatory sub detector parameters
+     * 
+     *  @param  subDetectorTypeMap the sub detector type map
+     */
+    void SetMandatorySubDetectorParameters(SubDetectorTypeMap &subDetectorTypeMap) const;
+
+    /**
+     *  @brief  Set additional sub detector parameters
+     * 
+     *  @param  subDetectorNameMap the sub detector name map (for smaller sub detectors, identified uniquely only by name)
+     */
+    void SetAdditionalSubDetectorParameters(SubDetectorNameMap &subDetectorNameMap) const;
+
     /**
      *  @brief  Set sub detector parameters to their gear default values
      * 
      *  @param  inputParameters input parameters, from gear
+     *  @param  subDetectorName the sub detector name
+     *  @param  subDetectorType the sub detector type
      *  @param  parameters the sub detector parameters
      */
-    void SetDefaultSubDetectorParameters(const gear::CalorimeterParameters &inputParameters,
-        PandoraApi::Geometry::SubDetector::Parameters &parameters) const;
-
-    /**
-     *  @brief  Set additional sub detector parameters
-     */
-    void SetAdditionalSubDetectorParameters() const;
+    void SetDefaultSubDetectorParameters(const gear::CalorimeterParameters &inputParameters, const std::string &subDetectorName,
+        const pandora::SubDetectorType subDetectorType, PandoraApi::Geometry::SubDetector::Parameters &parameters) const;
 
     /**
      *  @brief  Set positions of gaps in ILD detector and add information missing from GEAR parameters file
      * 
-     *  @param  parameters the sub detector parameters
+     *  @param  subDetectorTypeMap the sub detector type map
+     *  @param  subDetectorNameMap the sub detector name map (for smaller sub detectors, identified uniquely only by name)
      */
-    pandora::StatusCode SetILDSpecificGeometry() const;
+    pandora::StatusCode SetILDSpecificGeometry(SubDetectorTypeMap &subDetectorTypeMap, SubDetectorNameMap &subDetectorNameMap) const;
 
     /**
      *  @brief  Add information missing from GEAR parameters file for ILD SDHCAL detector
+     * 
+     *  @param  subDetectorTypeMap the sub detector type map
      */
-    pandora::StatusCode SetILD_SDHCALSpecificGeometry() const;
+    pandora::StatusCode SetILD_SDHCALSpecificGeometry(SubDetectorTypeMap &subDetectorTypeMap) const;
 
     /**
      *  @brief  Specify positions of hcal barrel box gaps - ILD specific

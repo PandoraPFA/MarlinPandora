@@ -545,7 +545,7 @@ void CaloHitCreator::GetCommonCaloHitProperties(const EVENT::CalorimeterHit *con
 void CaloHitCreator::GetEndCapCaloHitProperties(const EVENT::CalorimeterHit *const pCaloHit, const gear::LayerLayout &layerLayout,
     PandoraApi::CaloHit::Parameters &caloHitParameters, float &absorberCorrection) const
 {
-    caloHitParameters.m_detectorRegion = pandora::ENDCAP;
+    caloHitParameters.m_hitRegion = pandora::ENDCAP;
 
     const int physicalLayer(std::min(static_cast<int>(caloHitParameters.m_layer.Get()), layerLayout.getNLayers() - 1));
     caloHitParameters.m_cellSizeU = layerLayout.getCellSize0(physicalLayer);
@@ -580,7 +580,7 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
     unsigned int barrelSymmetryOrder, float barrelPhi0, unsigned int staveNumber, PandoraApi::CaloHit::Parameters &caloHitParameters,
     float &absorberCorrection) const
 {
-    caloHitParameters.m_detectorRegion = pandora::BARREL;
+    caloHitParameters.m_hitRegion = pandora::BARREL;
 
     const int physicalLayer(std::min(static_cast<int>(caloHitParameters.m_layer.Get()), layerLayout.getNLayers() - 1));
     caloHitParameters.m_cellSizeU = layerLayout.getCellSize0(physicalLayer);

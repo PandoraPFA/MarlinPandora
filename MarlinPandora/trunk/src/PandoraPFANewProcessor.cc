@@ -23,17 +23,18 @@
 
 PandoraPFANewProcessor pandoraPFANewProcessor;
 
+PandoraPFANewProcessor::PandoraToLCEventMap PandoraPFANewProcessor::m_pandoraToLCEventMap;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 PandoraPFANewProcessor::PandoraPFANewProcessor() :
     Processor("PandoraPFANewProcessor"),
     m_pPandora(NULL),
-    m_pLcioEvent(NULL),
     m_pGeometryCreator(NULL),
     m_pCaloHitCreator(NULL),
     m_pTrackCreator(NULL),
     m_pMCParticleCreator(NULL),
-    m_pPfoCreator(NULL),
-    m_nRun(0),
-    m_nEvent(0)
+    m_pPfoCreator(NULL)
 {
     _description = "Pandora reconstructs clusters and particle flow objects";
     this->ProcessSteeringFile();
@@ -80,8 +81,6 @@ void PandoraPFANewProcessor::init()
 
 void PandoraPFANewProcessor::processRunHeader(LCRunHeader *pLCRunHeader)
 {
-    m_detectorName = pLCRunHeader->getDetectorName();
-    streamlog_out(DEBUG5) << "Detector Name " << m_detectorName << ", Run " << ++m_nRun <<  std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -90,7 +89,8 @@ void PandoraPFANewProcessor::processEvent(LCEvent *pLCEvent)
 {
     try
     {
-        streamlog_out(DEBUG5) << "PandoraPFANewProcessor, Run " << m_nRun << ", Event " << ++m_nEvent << std::endl;
+        streamlog_out(DEBUG) << "PandoraPFANewProcessor - Run " << std::endl;
+        (void) m_pandoraToLCEventMap.insert(PandoraToLCEventMap::value_type(m_pPandora, pLCEvent));
 
         PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pMCParticleCreator->CreateMCParticles(pLCEvent));
         PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, m_pTrackCreator->CreateTrackAssociations(pLCEvent));
@@ -152,11 +152,9 @@ void PandoraPFANewProcessor::end()
 
 pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 {
-    // Register content from external pandora libraries
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterAlgorithms(*m_pPandora));
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterPlugins(*m_pPandora));
 
-    // Register local content
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldPlugin(*m_pPandora,
         new BFieldPlugin(m_bFieldPluginSettings)));
 
@@ -689,4 +687,11 @@ void PandoraPFANewProcessor::Reset()
 {
     m_pCaloHitCreator->Reset();
     m_pTrackCreator->Reset();
+
+    PandoraToLCEventMap::iterator iter = m_pandoraToLCEventMap.find(m_pPandora);
+
+    if (m_pandoraToLCEventMap.end() == iter)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+
+    m_pandoraToLCEventMap.erase(iter);
 }

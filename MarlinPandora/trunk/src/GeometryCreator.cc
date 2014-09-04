@@ -38,56 +38,20 @@ pandora::StatusCode GeometryCreator::CreateGeometry() const
 {
     try
     {
-// TODO static
-//        const gear::TPCParameters &tpcParameters    = marlin::Global::GEAR->getTPCParameters();
-//        const gear::PadRowLayout2D &tpcPadLayout    = tpcParameters.getPadLayout();
-//        geometryParameters.m_mainTrackerInnerRadius = tpcPadLayout.getPlaneExtent()[0];
-//        geometryParameters.m_mainTrackerOuterRadius = tpcPadLayout.getPlaneExtent()[1];
-//        geometryParameters.m_mainTrackerZExtent     = tpcParameters.getMaxDriftLength();
-//
-//        const gear::GearParameters &coilParameters  = marlin::Global::GEAR->getGearParameters("CoilParameters");
-//        geometryParameters.m_coilInnerRadius        = coilParameters.getDoubleVal("Coil_cryostat_inner_radius");
-//        geometryParameters.m_coilOuterRadius        = coilParameters.getDoubleVal("Coil_cryostat_outer_radius");
-//        geometryParameters.m_coilZExtent            = coilParameters.getDoubleVal("Coil_cryostat_half_z");
-//
-//        const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
-//        const gear::CalorimeterParameters &hCalEndCapParameters = marlin::Global::GEAR->getHcalEndcapParameters();
-//
-//        // Initialize settings to gear defaults
-//        SetDefaultSubDetectorParameters(marlin::Global::GEAR->getEcalBarrelParameters(), geometryParameters.m_eCalBarrelParameters);
-//        SetDefaultSubDetectorParameters(marlin::Global::GEAR->getEcalEndcapParameters(), geometryParameters.m_eCalEndCapParameters);
-//        SetDefaultSubDetectorParameters(hCalBarrelParameters, geometryParameters.m_hCalBarrelParameters);
-//        SetDefaultSubDetectorParameters(hCalEndCapParameters, geometryParameters.m_hCalEndCapParameters);
-//        SetDefaultSubDetectorParameters(marlin::Global::GEAR->getYokeBarrelParameters(), geometryParameters.m_muonBarrelParameters);
-//        SetDefaultSubDetectorParameters(marlin::Global::GEAR->getYokeEndcapParameters(), geometryParameters.m_muonEndCapParameters);
-//
-//        // Additional subdetectors
-//        this->SetAdditionalSubDetectorParameters(geometryParameters);
-//
-//        // Set positions of gaps in ILD detector and add information missing from GEAR parameters file
-//        if (std::string::npos != marlin::Global::GEAR->getDetectorName().find("ILD"))
-//        {
-//            bool aLaVideauGeometry(false);
-//
-//            try
-//            {
-//                hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
-//                hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
-//            }
-//            catch (gear::Exception &)
-//            {
-//                aLaVideauGeometry = true;
-//            }
-//
-//            if (aLaVideauGeometry)
-//            {
-//                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->SetILD_SDHCALSpecificGeometry(geometryParameters));
-//            }
-//            else
-//            {
-//                PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->SetILDSpecificGeometry(geometryParameters));
-//            }
-//        }
+        SubDetectorTypeMap subDetectorTypeMap;
+        this->SetMandatorySubDetectorParameters(subDetectorTypeMap);
+
+        SubDetectorNameMap subDetectorNameMap;
+        this->SetAdditionalSubDetectorParameters(subDetectorNameMap);
+
+        if (std::string::npos != marlin::Global::GEAR->getDetectorName().find("ILD"))
+            this->SetILDSpecificGeometry(subDetectorTypeMap, subDetectorNameMap);
+
+        for (SubDetectorTypeMap::const_iterator iter = subDetectorTypeMap.begin(), iterEnd = subDetectorTypeMap.end(); iter != iterEnd; ++iter)
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::SubDetector::Create(*m_pPandora, iter->second));
+
+        for (SubDetectorNameMap::const_iterator iter = subDetectorNameMap.begin(), iterEnd = subDetectorNameMap.end(); iter != iterEnd; ++iter)
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::SubDetector::Create(*m_pPandora, iter->second));
     }
     catch (gear::Exception &exception)
     {
@@ -100,144 +64,198 @@ pandora::StatusCode GeometryCreator::CreateGeometry() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void GeometryCreator::SetDefaultSubDetectorParameters(const gear::CalorimeterParameters &inputParameters,
-    PandoraApi::Geometry::SubDetector::Parameters &parameters) const
+void GeometryCreator::SetMandatorySubDetectorParameters(SubDetectorTypeMap &subDetectorTypeMap) const
 {
-// TODO static
-//    const gear::LayerLayout &layerLayout = inputParameters.getLayerLayout();
-//
-//    parameters.m_innerRCoordinate    = inputParameters.getExtent()[0];
-//    parameters.m_innerZCoordinate    = inputParameters.getExtent()[2];
-//    parameters.m_innerPhiCoordinate  = inputParameters.getPhi0();
-//    parameters.m_innerSymmetryOrder  = inputParameters.getSymmetryOrder();
-//    parameters.m_outerRCoordinate    = inputParameters.getExtent()[1];
-//    parameters.m_outerZCoordinate    = inputParameters.getExtent()[3];
-//    parameters.m_outerPhiCoordinate  = inputParameters.getPhi0();
-//    parameters.m_outerSymmetryOrder  = inputParameters.getSymmetryOrder();
-//    parameters.m_isMirroredInZ       = true;
-//    parameters.m_nLayers             = layerLayout.getNLayers();
-//
-//    for (int i = 0; i < layerLayout.getNLayers(); ++i)
-//    {
-//        PandoraApi::Geometry::Parameters::LayerParameters layerParameters;
-//        layerParameters.m_closestDistanceToIp   = layerLayout.getDistance(i) + (0.5 * (layerLayout.getThickness(i) + layerLayout.getAbsorberThickness(i)));
-//        layerParameters.m_nRadiationLengths     = m_settings.m_absorberRadiationLength * layerLayout.getAbsorberThickness(i);
-//        layerParameters.m_nInteractionLengths   = m_settings.m_absorberInteractionLength * layerLayout.getAbsorberThickness(i);
-//        parameters.m_layerParametersList.push_back(layerParameters);
-//    }
+    PandoraApi::Geometry::SubDetector::Parameters eCalBarrelParameters, eCalEndCapParameters, hCalBarrelParameters, hCalEndCapParameters,
+        muonBarrelParameters, muonEndCapParameters;
+
+    this->SetDefaultSubDetectorParameters(marlin::Global::GEAR->getEcalBarrelParameters(), "ECalBarrel", pandora::ECAL_BARREL, eCalBarrelParameters);
+    this->SetDefaultSubDetectorParameters(marlin::Global::GEAR->getEcalEndcapParameters(), "ECalEndCap", pandora::ECAL_ENDCAP, eCalEndCapParameters);
+    this->SetDefaultSubDetectorParameters(marlin::Global::GEAR->getHcalBarrelParameters(), "HCalBarrel", pandora::HCAL_BARREL, hCalBarrelParameters);
+    this->SetDefaultSubDetectorParameters(marlin::Global::GEAR->getHcalEndcapParameters(), "HCalEndCap", pandora::HCAL_ENDCAP, hCalEndCapParameters);
+    this->SetDefaultSubDetectorParameters(marlin::Global::GEAR->getYokeBarrelParameters(), "MuonBarrel", pandora::MUON_BARREL, muonBarrelParameters);
+    this->SetDefaultSubDetectorParameters(marlin::Global::GEAR->getYokeEndcapParameters(), "MuonEndCap", pandora::MUON_ENDCAP, muonEndCapParameters);
+
+    subDetectorTypeMap[pandora::ECAL_BARREL] = eCalBarrelParameters;
+    subDetectorTypeMap[pandora::ECAL_ENDCAP] = eCalEndCapParameters;
+    subDetectorTypeMap[pandora::HCAL_BARREL] = hCalBarrelParameters;
+    subDetectorTypeMap[pandora::HCAL_ENDCAP] = hCalEndCapParameters;
+    subDetectorTypeMap[pandora::MUON_BARREL] = muonBarrelParameters;
+    subDetectorTypeMap[pandora::MUON_ENDCAP] = muonEndCapParameters;
+
+    PandoraApi::Geometry::SubDetector::Parameters trackerParameters;
+    const gear::TPCParameters &tpcParameters(marlin::Global::GEAR->getTPCParameters());
+    trackerParameters.m_subDetectorName = "Tracker";
+    trackerParameters.m_subDetectorType = pandora::INNER_TRACKER;
+    trackerParameters.m_innerRCoordinate = tpcParameters.getPadLayout().getPlaneExtent()[0];
+    trackerParameters.m_innerZCoordinate = 0.f;
+    trackerParameters.m_innerPhiCoordinate = 0.f;
+    trackerParameters.m_innerSymmetryOrder = 0;
+    trackerParameters.m_outerRCoordinate = tpcParameters.getPadLayout().getPlaneExtent()[1];
+    trackerParameters.m_outerZCoordinate = tpcParameters.getMaxDriftLength();
+    trackerParameters.m_outerPhiCoordinate = 0.f;
+    trackerParameters.m_outerSymmetryOrder = 0;
+    trackerParameters.m_isMirroredInZ = true;
+    trackerParameters.m_nLayers = 0;
+    subDetectorTypeMap[pandora::INNER_TRACKER] = trackerParameters;
+
+    PandoraApi::Geometry::SubDetector::Parameters coilParameters;
+    const gear::GearParameters &gearParameters(marlin::Global::GEAR->getGearParameters("CoilParameters"));
+    coilParameters.m_subDetectorName = "Coil";
+    coilParameters.m_subDetectorType = pandora::COIL;
+    coilParameters.m_innerRCoordinate = gearParameters.getDoubleVal("Coil_cryostat_inner_radius");
+    coilParameters.m_innerZCoordinate = 0.f;
+    coilParameters.m_innerPhiCoordinate = 0.f;
+    coilParameters.m_innerSymmetryOrder = 0;
+    coilParameters.m_outerRCoordinate = gearParameters.getDoubleVal("Coil_cryostat_outer_radius");
+    coilParameters.m_outerZCoordinate = gearParameters.getDoubleVal("Coil_cryostat_half_z");
+    coilParameters.m_outerPhiCoordinate = 0.f;
+    coilParameters.m_outerSymmetryOrder = 0;
+    coilParameters.m_isMirroredInZ = true;
+    coilParameters.m_nLayers = 0;
+    subDetectorTypeMap[pandora::COIL] = coilParameters;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void GeometryCreator::SetAdditionalSubDetectorParameters() const
+void GeometryCreator::SetAdditionalSubDetectorParameters(SubDetectorNameMap &subDetectorNameMap) const
 {
-// TODO static
-//    try
-//    {
-//        PandoraApi::Geometry::Parameters::SubDetectorParameters eCalPlugParameters;
-//        const gear::CalorimeterParameters &eCalPlugInputParameters = marlin::Global::GEAR->getEcalPlugParameters();
-//        SetDefaultSubDetectorParameters(eCalPlugInputParameters, eCalPlugParameters);
-//        geometryParameters.m_additionalSubDetectors["ECalPlug"] = eCalPlugParameters;
-//    }
-//    catch (gear::Exception &exception)
-//    {
-//        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
-//    }
-//
-//    try
-//    {
-//        PandoraApi::Geometry::Parameters::SubDetectorParameters hCalRingParameters;
-//        const gear::CalorimeterParameters &hCalRingInputParameters = marlin::Global::GEAR->getHcalRingParameters();
-//        SetDefaultSubDetectorParameters(hCalRingInputParameters, hCalRingParameters);
-//        geometryParameters.m_additionalSubDetectors["HCalRing"] = hCalRingParameters;
-//    }
-//    catch (gear::Exception &exception)
-//    {
-//        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
-//    }
-//
-//    try
-//    {
-//        PandoraApi::Geometry::Parameters::SubDetectorParameters lCalParameters;
-//        const gear::CalorimeterParameters &lCalInputParameters = marlin::Global::GEAR->getLcalParameters();
-//        SetDefaultSubDetectorParameters(lCalInputParameters, lCalParameters);
-//        geometryParameters.m_additionalSubDetectors["LCal"] = lCalParameters;
-//    }
-//    catch (gear::Exception &exception)
-//    {
-//        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
-//    }
-//
-//    try
-//    {
-//        PandoraApi::Geometry::Parameters::SubDetectorParameters lHCalParameters;
-//        const gear::CalorimeterParameters &lHCalInputParameters = marlin::Global::GEAR->getLHcalParameters();
-//        SetDefaultSubDetectorParameters(lHCalInputParameters, lHCalParameters);
-//        geometryParameters.m_additionalSubDetectors["LHCal"] = lHCalParameters;
-//    }
-//    catch (gear::Exception &exception)
-//    {
-//        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
-//    }
+    try
+    {
+        PandoraApi::Geometry::SubDetector::Parameters parameters;
+        this->SetDefaultSubDetectorParameters(marlin::Global::GEAR->getEcalPlugParameters(), "ECalPlug", pandora::SUB_DETECTOR_OTHER, parameters);
+        subDetectorNameMap[parameters.m_subDetectorName.Get()] = parameters;
+    }
+    catch (gear::Exception &exception)
+    {
+        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
+    }
+
+    try
+    {
+        PandoraApi::Geometry::SubDetector::Parameters parameters;
+        this->SetDefaultSubDetectorParameters(marlin::Global::GEAR->getHcalRingParameters(), "HCalRing", pandora::SUB_DETECTOR_OTHER, parameters);
+        subDetectorNameMap[parameters.m_subDetectorName.Get()] = parameters;
+    }
+    catch (gear::Exception &exception)
+    {
+        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
+    }
+
+    try
+    {
+        PandoraApi::Geometry::SubDetector::Parameters parameters;
+        this->SetDefaultSubDetectorParameters(marlin::Global::GEAR->getLcalParameters(), "LCal", pandora::SUB_DETECTOR_OTHER, parameters);
+        subDetectorNameMap[parameters.m_subDetectorName.Get()] = parameters;
+    }
+    catch (gear::Exception &exception)
+    {
+        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
+    }
+
+    try
+    {
+        PandoraApi::Geometry::SubDetector::Parameters parameters;
+        this->SetDefaultSubDetectorParameters(marlin::Global::GEAR->getLHcalParameters(), "LHCal", pandora::SUB_DETECTOR_OTHER, parameters);
+        subDetectorNameMap[parameters.m_subDetectorName.Get()] = parameters;
+    }
+    catch (gear::Exception &exception)
+    {
+        streamlog_out(WARNING) << "Marlin pandora geometry creator: " << exception.what() << std::endl;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode GeometryCreator::SetILDSpecificGeometry() const
+void GeometryCreator::SetDefaultSubDetectorParameters(const gear::CalorimeterParameters &inputParameters, const std::string &subDetectorName,
+    const pandora::SubDetectorType subDetectorType, PandoraApi::Geometry::SubDetector::Parameters &parameters) const
 {
-// TODO static
-//    // Non-default values (and those missing from GEAR parameters file)...
-//    const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
-//    geometryParameters.m_hCalBarrelParameters.m_outerPhiCoordinate = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
-//    geometryParameters.m_hCalBarrelParameters.m_outerSymmetryOrder = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
-//
-//    geometryParameters.m_eCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_eCalEndCapInnerSymmetryOrder;
-//    geometryParameters.m_eCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_eCalEndCapInnerPhiCoordinate;
-//    geometryParameters.m_eCalEndCapParameters.m_outerSymmetryOrder = m_settings.m_eCalEndCapOuterSymmetryOrder;
-//    geometryParameters.m_eCalEndCapParameters.m_outerPhiCoordinate = m_settings.m_eCalEndCapOuterPhiCoordinate;
-//
-//    geometryParameters.m_hCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_hCalEndCapInnerSymmetryOrder;
-//    geometryParameters.m_hCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_hCalEndCapInnerPhiCoordinate;
-//    geometryParameters.m_hCalEndCapParameters.m_outerSymmetryOrder = m_settings.m_hCalEndCapOuterSymmetryOrder;
-//    geometryParameters.m_hCalEndCapParameters.m_outerPhiCoordinate = m_settings.m_hCalEndCapOuterPhiCoordinate;
-//
-//    geometryParameters.m_additionalSubDetectors["HCalRing"].m_innerSymmetryOrder = m_settings.m_hCalRingInnerSymmetryOrder;
-//    geometryParameters.m_additionalSubDetectors["HCalRing"].m_innerPhiCoordinate = m_settings.m_hCalRingInnerPhiCoordinate;
-//    geometryParameters.m_additionalSubDetectors["HCalRing"].m_outerSymmetryOrder = m_settings.m_hCalRingOuterSymmetryOrder;
-//    geometryParameters.m_additionalSubDetectors["HCalRing"].m_outerPhiCoordinate = m_settings.m_hCalRingOuterPhiCoordinate;
-//    
-//    // Gaps in detector active material
-//    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelBoxGaps());
-//    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalEndCapBoxGaps());
-//    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelConcentricGaps());
+    const gear::LayerLayout &layerLayout = inputParameters.getLayerLayout();
+
+    parameters.m_subDetectorName = subDetectorName;
+    parameters.m_subDetectorType = subDetectorType;
+    parameters.m_innerRCoordinate = inputParameters.getExtent()[0];
+    parameters.m_innerZCoordinate = inputParameters.getExtent()[2];
+    parameters.m_innerPhiCoordinate = inputParameters.getPhi0();
+    parameters.m_innerSymmetryOrder = inputParameters.getSymmetryOrder();
+    parameters.m_outerRCoordinate = inputParameters.getExtent()[1];
+    parameters.m_outerZCoordinate = inputParameters.getExtent()[3];
+    parameters.m_outerPhiCoordinate = inputParameters.getPhi0();
+    parameters.m_outerSymmetryOrder = inputParameters.getSymmetryOrder();
+    parameters.m_isMirroredInZ = true;
+    parameters.m_nLayers = layerLayout.getNLayers();
+
+    for (int i = 0; i < layerLayout.getNLayers(); ++i)
+    {
+        PandoraApi::Geometry::LayerParameters layerParameters;
+        layerParameters.m_closestDistanceToIp = layerLayout.getDistance(i) + (0.5 * (layerLayout.getThickness(i) + layerLayout.getAbsorberThickness(i)));
+        layerParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * layerLayout.getAbsorberThickness(i);
+        layerParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * layerLayout.getAbsorberThickness(i);
+        parameters.m_layerParametersList.push_back(layerParameters);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::StatusCode GeometryCreator::SetILDSpecificGeometry(SubDetectorTypeMap &subDetectorTypeMap, SubDetectorNameMap &subDetectorNameMap) const
+{
+    // Set positions of gaps in ILD detector and add information missing from GEAR parameters file
+    try
+    {
+        const gear::CalorimeterParameters &hCalBarrelParameters = marlin::Global::GEAR->getHcalBarrelParameters();
+        subDetectorTypeMap[pandora::HCAL_BARREL].m_outerPhiCoordinate = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_phi0");
+        subDetectorTypeMap[pandora::HCAL_BARREL].m_outerSymmetryOrder = hCalBarrelParameters.getIntVal("Hcal_outer_polygon_order");
+    }
+    catch (gear::Exception &)
+    {
+        // aLaVideauGeometry
+        return this->SetILD_SDHCALSpecificGeometry(subDetectorTypeMap);
+    }
+
+    subDetectorTypeMap[pandora::ECAL_ENDCAP].m_innerSymmetryOrder = m_settings.m_eCalEndCapInnerSymmetryOrder;
+    subDetectorTypeMap[pandora::ECAL_ENDCAP].m_innerPhiCoordinate = m_settings.m_eCalEndCapInnerPhiCoordinate;
+    subDetectorTypeMap[pandora::ECAL_ENDCAP].m_outerSymmetryOrder = m_settings.m_eCalEndCapOuterSymmetryOrder;
+    subDetectorTypeMap[pandora::ECAL_ENDCAP].m_outerPhiCoordinate = m_settings.m_eCalEndCapOuterPhiCoordinate;
+
+    subDetectorTypeMap[pandora::HCAL_ENDCAP].m_innerSymmetryOrder = m_settings.m_hCalEndCapInnerSymmetryOrder;
+    subDetectorTypeMap[pandora::HCAL_ENDCAP].m_innerPhiCoordinate = m_settings.m_hCalEndCapInnerPhiCoordinate;
+    subDetectorTypeMap[pandora::HCAL_ENDCAP].m_outerSymmetryOrder = m_settings.m_hCalEndCapOuterSymmetryOrder;
+    subDetectorTypeMap[pandora::HCAL_ENDCAP].m_outerPhiCoordinate = m_settings.m_hCalEndCapOuterPhiCoordinate;
+
+    subDetectorNameMap["HCalRing"].m_innerSymmetryOrder = m_settings.m_hCalRingInnerSymmetryOrder;
+    subDetectorNameMap["HCalRing"].m_innerPhiCoordinate = m_settings.m_hCalRingInnerPhiCoordinate;
+    subDetectorNameMap["HCalRing"].m_outerSymmetryOrder = m_settings.m_hCalRingOuterSymmetryOrder;
+    subDetectorNameMap["HCalRing"].m_outerPhiCoordinate = m_settings.m_hCalRingOuterPhiCoordinate;
+
+    // Gaps in detector active material
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelBoxGaps());
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalEndCapBoxGaps());
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelConcentricGaps());
 
     return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode GeometryCreator::SetILD_SDHCALSpecificGeometry() const
+pandora::StatusCode GeometryCreator::SetILD_SDHCALSpecificGeometry(SubDetectorTypeMap &subDetectorTypeMap) const
 {
-// TODO static
-//    // Non-default values (and those missing from GEAR parameters file)...
-//    // The following 2 parameters have no sense for Videau Geometry, set them to 0
-//    geometryParameters.m_hCalBarrelParameters.m_outerPhiCoordinate = 0;
-//    geometryParameters.m_hCalBarrelParameters.m_outerSymmetryOrder = 0;
-//
-//    // Endcap is identical to standard ILD geometry, only HCAL barrel is different
-//    geometryParameters.m_eCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_eCalEndCapInnerSymmetryOrder;
-//    geometryParameters.m_eCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_eCalEndCapInnerPhiCoordinate;
-//    geometryParameters.m_eCalEndCapParameters.m_outerSymmetryOrder = m_settings.m_eCalEndCapOuterSymmetryOrder;
-//    geometryParameters.m_eCalEndCapParameters.m_outerPhiCoordinate = m_settings.m_eCalEndCapOuterPhiCoordinate;
-//
-//    geometryParameters.m_hCalEndCapParameters.m_innerSymmetryOrder = m_settings.m_hCalEndCapInnerSymmetryOrder;
-//    geometryParameters.m_hCalEndCapParameters.m_innerPhiCoordinate = m_settings.m_hCalEndCapInnerPhiCoordinate;
-//    geometryParameters.m_hCalEndCapParameters.m_outerSymmetryOrder = m_settings.m_hCalEndCapOuterSymmetryOrder;
-//    geometryParameters.m_hCalEndCapParameters.m_outerPhiCoordinate = m_settings.m_hCalEndCapOuterPhiCoordinate;
+    // Non-default values (and those missing from GEAR parameters file)...
+    // The following 2 parameters have no sense for Videau Geometry, set them to 0
+    subDetectorTypeMap[pandora::HCAL_BARREL].m_outerPhiCoordinate = 0;
+    subDetectorTypeMap[pandora::HCAL_BARREL].m_outerSymmetryOrder = 0;
 
-    // Gaps in detector active material
-    // TODO implement Gap between module.
-    //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CreateHCalBarrelConcentricGaps());
+    // Endcap is identical to standard ILD geometry, only HCAL barrel is different
+    subDetectorTypeMap[pandora::ECAL_ENDCAP].m_innerSymmetryOrder = m_settings.m_eCalEndCapInnerSymmetryOrder;
+    subDetectorTypeMap[pandora::ECAL_ENDCAP].m_innerPhiCoordinate = m_settings.m_eCalEndCapInnerPhiCoordinate;
+    subDetectorTypeMap[pandora::ECAL_ENDCAP].m_outerSymmetryOrder = m_settings.m_eCalEndCapOuterSymmetryOrder;
+    subDetectorTypeMap[pandora::ECAL_ENDCAP].m_outerPhiCoordinate = m_settings.m_eCalEndCapOuterPhiCoordinate;
+
+    subDetectorTypeMap[pandora::HCAL_ENDCAP].m_innerSymmetryOrder = m_settings.m_hCalEndCapInnerSymmetryOrder;
+    subDetectorTypeMap[pandora::HCAL_ENDCAP].m_innerPhiCoordinate = m_settings.m_hCalEndCapInnerPhiCoordinate;
+    subDetectorTypeMap[pandora::HCAL_ENDCAP].m_outerSymmetryOrder = m_settings.m_hCalEndCapOuterSymmetryOrder;
+    subDetectorTypeMap[pandora::HCAL_ENDCAP].m_outerPhiCoordinate = m_settings.m_hCalEndCapOuterPhiCoordinate;
+
+    // TODO implement gaps between modules
 
     return pandora::STATUS_CODE_SUCCESS;
 }

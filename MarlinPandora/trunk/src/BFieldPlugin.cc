@@ -38,9 +38,9 @@ pandora::StatusCode BFieldPlugin::Initialize()
 {
     try
     {
-        m_muonEndCapInnerZ = this->GetPandora().GetGeometry()->GetSubDetector("MuonEndCap").GetInnerZCoordinate();
-        m_coilMidPointR = (0.5f * (this->GetPandora().GetGeometry()->GetSubDetector("Coil").GetInnerRCoordinate() +
-            this->GetPandora().GetGeometry()->GetSubDetector("Coil").GetOuterRCoordinate()));
+        m_muonEndCapInnerZ = this->GetPandora().GetGeometry()->GetSubDetector(pandora::MUON_ENDCAP).GetInnerZCoordinate();
+        m_coilMidPointR = (0.5f * (this->GetPandora().GetGeometry()->GetSubDetector(pandora::COIL).GetInnerRCoordinate() +
+            this->GetPandora().GetGeometry()->GetSubDetector(pandora::COIL).GetOuterRCoordinate()));
     }
     catch (pandora::StatusCodeException &statusCodeException)
     {
