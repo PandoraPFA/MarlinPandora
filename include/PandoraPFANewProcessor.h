@@ -11,9 +11,11 @@
 
 #include "marlin/Processor.h"
 
+#include "BFieldPlugin.h"
 #include "CaloHitCreator.h"
 #include "GeometryCreator.h"
 #include "MCParticleCreator.h"
+#include "NonLinearityCorrection.h"
 #include "PfoCreator.h"
 #include "TrackCreator.h"
 
@@ -115,25 +117,27 @@ private:
      */
     void Reset();
 
-    pandora::Pandora               *m_pPandora;                     ///< Address of the pandora instance
-    EVENT::LCEvent                 *m_pLcioEvent;                   ///< Address of the current lcio event
+    pandora::Pandora                   *m_pPandora;                         ///< Address of the pandora instance
+    EVENT::LCEvent                     *m_pLcioEvent;                       ///< Address of the current lcio event
 
-    GeometryCreator                *m_pGeometryCreator;             ///< The geometry creator
-    CaloHitCreator                 *m_pCaloHitCreator;              ///< The calo hit creator
-    TrackCreator                   *m_pTrackCreator;                ///< The track creator
-    MCParticleCreator              *m_pMCParticleCreator;           ///< The mc particle creator
-    PfoCreator                     *m_pPfoCreator;                  ///< The pfo creator
+    GeometryCreator                    *m_pGeometryCreator;                 ///< The geometry creator
+    CaloHitCreator                     *m_pCaloHitCreator;                  ///< The calo hit creator
+    TrackCreator                       *m_pTrackCreator;                    ///< The track creator
+    MCParticleCreator                  *m_pMCParticleCreator;               ///< The mc particle creator
+    PfoCreator                         *m_pPfoCreator;                      ///< The pfo creator
 
-    Settings                        m_settings;                     ///< The settings for the pandora pfa new processor
-    GeometryCreator::Settings       m_geometryCreatorSettings;      ///< The geometry creator settings
-    TrackCreator::Settings          m_trackCreatorSettings;         ///< The track creator settings
-    CaloHitCreator::Settings        m_caloHitCreatorSettings;       ///< The calo hit creator settings
-    MCParticleCreator::Settings     m_mcParticleCreatorSettings;    ///< The mc particle creator settings
-    PfoCreator::Settings            m_pfoCreatorSettings;           ///< The pfo creator settings
+    Settings                            m_settings;                         ///< The settings for the pandora pfa new processor
+    BFieldPlugin::Settings              m_bFieldPluginSettings;             ///< The b field plugin settings
+    CaloHitCreator::Settings            m_caloHitCreatorSettings;           ///< The calo hit creator settings
+    GeometryCreator::Settings           m_geometryCreatorSettings;          ///< The geometry creator settings
+    MCParticleCreator::Settings         m_mcParticleCreatorSettings;        ///< The mc particle creator settings
+    NonLinearityCorrection::Settings    m_nonLinearityCorrectionSettings;   ///< The non linearity correction settings
+    TrackCreator::Settings              m_trackCreatorSettings;             ///< The track creator settings
+    PfoCreator::Settings                m_pfoCreatorSettings;               ///< The pfo creator settings
 
-    std::string                     m_detectorName;                 ///< The detector name
-    unsigned int                    m_nRun;                         ///< The run number
-    unsigned int                    m_nEvent;                       ///< The event number
+    std::string                         m_detectorName;                     ///< The detector name
+    unsigned int                        m_nRun;                             ///< The run number
+    unsigned int                        m_nEvent;                           ///< The event number
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

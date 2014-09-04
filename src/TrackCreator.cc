@@ -558,7 +558,9 @@ void TrackCreator::GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::
     this->CopyTrackState(pEndTrack->getTrackState(TrackState::AtCalorimeter), trackParameters.m_trackStateAtCalorimeter);
 
     trackParameters.m_isProjectedToEndCap = ((std::fabs(trackParameters.m_trackStateAtCalorimeter.Get().GetPosition().GetZ()) < m_eCalEndCapInnerZ) ? false : true);
-    trackParameters.m_timeAtCalorimeter = 0.f; // TODO minGenericTime * particleEnergy / 300.f;
+
+    // TODO minGenericTime * particleEnergy / 300.f;
+    trackParameters.m_timeAtCalorimeter = 0.f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

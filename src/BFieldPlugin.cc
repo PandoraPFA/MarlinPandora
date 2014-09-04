@@ -1,20 +1,19 @@
 /**
- *  @file   MarlinPandora/src/SimpleBFieldCalculator.cc
+ *  @file   MarlinPandora/src/BFieldPlugin.cc
  * 
- *  @brief  Implementation of the simple bfield calculator class.
+ *  @brief  Implementation of the bfield plugin class.
  * 
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "SimpleBFieldCalculator.h"
+#include "BFieldPlugin.h"
 
-// TODO static make parameters configurable via Marlin processor
-SimpleBFieldCalculator::SimpleBFieldCalculator() :
-    m_innerBField(4.f),
-    m_muonBarrelBField(-1.5f),
-    m_muonEndCapBField(0.01f),
+BFieldPlugin::BFieldPlugin(const Settings &settings) :
+    m_innerBField(settings.m_innerBField),
+    m_muonBarrelBField(settings.m_muonBarrelBField),
+    m_muonEndCapBField(settings.m_muonEndCapBField),
     m_muonEndCapInnerZ(std::numeric_limits<float>::max()),
     m_coilMidPointR(std::numeric_limits<float>::max())
 {
@@ -22,13 +21,7 @@ SimpleBFieldCalculator::SimpleBFieldCalculator() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-SimpleBFieldCalculator::~SimpleBFieldCalculator()
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float SimpleBFieldCalculator::GetBField(const pandora::CartesianVector &positionVector) const
+float BFieldPlugin::GetBField(const pandora::CartesianVector &positionVector) const
 {
     if (std::fabs(positionVector.GetZ()) >= m_muonEndCapInnerZ)
         return m_muonEndCapBField;
@@ -41,9 +34,8 @@ float SimpleBFieldCalculator::GetBField(const pandora::CartesianVector &position
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode SimpleBFieldCalculator::Initialize()
+pandora::StatusCode BFieldPlugin::Initialize()
 {
-// TODO read detector name from settings
     try
     {
         m_muonEndCapInnerZ = this->GetPandora().GetGeometry()->GetSubDetector("MuonEndCap").GetInnerZCoordinate();
@@ -52,7 +44,7 @@ pandora::StatusCode SimpleBFieldCalculator::Initialize()
     }
     catch (pandora::StatusCodeException &statusCodeException)
     {
-        std::cout << "SimpleBFieldCalculator: Unable to extract Muon EndCap and Coil geometry." << std::endl;
+        std::cout << "BFieldPlugin: Unable to extract Muon EndCap and Coil geometry." << std::endl;
         return statusCodeException.GetStatusCode();
     }
 
@@ -61,7 +53,7 @@ pandora::StatusCode SimpleBFieldCalculator::Initialize()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode SimpleBFieldCalculator::ReadSettings(const pandora::TiXmlHandle /*xmlHandle*/)
+pandora::StatusCode BFieldPlugin::ReadSettings(const pandora::TiXmlHandle /*xmlHandle*/)
 {
     return pandora::STATUS_CODE_SUCCESS;
 }
