@@ -17,7 +17,6 @@
 
 #include "ExternalClusteringAlgorithm.h"
 #include "PandoraPFANewProcessor.h"
-#include "BFieldPlugin.h"
 
 #include <cstdlib>
 
@@ -153,16 +152,16 @@ void PandoraPFANewProcessor::end()
 pandora::StatusCode PandoraPFANewProcessor::RegisterUserComponents() const
 {
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterAlgorithms(*m_pPandora));
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterPlugins(*m_pPandora));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterBasicPlugins(*m_pPandora));
 
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::SetBFieldPlugin(*m_pPandora,
-        new BFieldPlugin(m_bFieldPluginSettings)));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterBFieldPlugin(*m_pPandora,
+        m_settings.m_innerBField, m_settings.m_muonBarrelBField, m_settings.m_muonEndCapBField));
+
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, FineGranularityContent::RegisterNonLinearityEnergyCorrection(*m_pPandora,
+        "NonLinearity", pandora::HADRONIC, m_settings.m_inputEnergyCorrectionPoints, m_settings.m_outputEnergyCorrectionPoints));
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterAlgorithmFactory(*m_pPandora,
         "ExternalClustering", new ExternalClusteringAlgorithm::Factory));
-
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::RegisterEnergyCorrectionPlugin(*m_pPandora,
-        "NonLinearity", pandora::HADRONIC, new NonLinearityCorrection(m_nonLinearityCorrectionSettings)));
 
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -359,12 +358,12 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     // B-field parameters
     registerProcessorParameter("MuonBarrelBField",
                             "The bfield in the muon barrel, units Tesla",
-                            m_bFieldPluginSettings.m_muonBarrelBField,
+                            m_settings.m_muonBarrelBField,
                             float(-1.5f));
 
     registerProcessorParameter("MuonEndCapBField",
                             "The bfield in the muon endcap, units Tesla",
-                            m_bFieldPluginSettings.m_muonEndCapBField,
+                            m_settings.m_muonEndCapBField,
                             float(0.01f));
 
     // Track relationship parameters
@@ -654,13 +653,13 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     // Hadronic energy non-linearity correction
     registerProcessorParameter("InputEnergyCorrectionPoints",
                             "The input energy points for hadronic energy correction",
-                            m_nonLinearityCorrectionSettings.m_inputEnergyCorrectionPoints,
-                            std::vector<float>());
+                            m_settings.m_inputEnergyCorrectionPoints,
+                            FloatVector());
 
     registerProcessorParameter("OutputEnergyCorrectionPoints",
                             "The output energy points for hadronic energy correction",
-                            m_nonLinearityCorrectionSettings.m_outputEnergyCorrectionPoints,
-                            std::vector<float>());
+                            m_settings.m_outputEnergyCorrectionPoints,
+                            FloatVector());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -678,7 +677,7 @@ void PandoraPFANewProcessor::FinaliseSteeringParameters()
     m_trackCreatorSettings.m_prongSplitVertexCollections.insert(m_trackCreatorSettings.m_prongSplitVertexCollections.end(),
         m_trackCreatorSettings.m_splitVertexCollections.begin(), m_trackCreatorSettings.m_splitVertexCollections.end());
 
-    m_bFieldPluginSettings.m_innerBField = marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z();
+    m_settings.m_innerBField = marlin::Global::GEAR->getBField().at(gear::Vector3D(0., 0., 0.)).z();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
