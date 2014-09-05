@@ -11,11 +11,9 @@
 
 #include "marlin/Processor.h"
 
-#include "BFieldPlugin.h"
 #include "CaloHitCreator.h"
 #include "GeometryCreator.h"
 #include "MCParticleCreator.h"
-#include "NonLinearityCorrection.h"
 #include "PfoCreator.h"
 #include "TrackCreator.h"
 
@@ -29,6 +27,7 @@ namespace pandora {class Pandora;}
 class PandoraPFANewProcessor : public marlin::Processor
 {
 public:
+    typedef std::vector<float> FloatVector;
     typedef std::vector<std::string> StringVector;
 
     /**
@@ -38,6 +37,13 @@ public:
     {
     public:
         std::string     m_pandoraSettingsXmlFile;           ///< The pandora settings xml file
+
+        float           m_innerBField;                      ///< The bfield in the main tracker, ecal and hcal, units Tesla
+        float           m_muonBarrelBField;                 ///< The bfield in the muon barrel, units Tesla
+        float           m_muonEndCapBField;                 ///< The bfield in the muon endcap, units Tesla
+
+        FloatVector     m_inputEnergyCorrectionPoints;      ///< The input energy points for non-linearity energy correction
+        FloatVector     m_outputEnergyCorrectionPoints;     ///< The output energy points for non-linearity energy correction
     };
 
     /**
@@ -127,11 +133,9 @@ private:
     PfoCreator                         *m_pPfoCreator;                      ///< The pfo creator
 
     Settings                            m_settings;                         ///< The settings for the pandora pfa new processor
-    BFieldPlugin::Settings              m_bFieldPluginSettings;             ///< The b field plugin settings
     CaloHitCreator::Settings            m_caloHitCreatorSettings;           ///< The calo hit creator settings
     GeometryCreator::Settings           m_geometryCreatorSettings;          ///< The geometry creator settings
     MCParticleCreator::Settings         m_mcParticleCreatorSettings;        ///< The mc particle creator settings
-    NonLinearityCorrection::Settings    m_nonLinearityCorrectionSettings;   ///< The non linearity correction settings
     TrackCreator::Settings              m_trackCreatorSettings;             ///< The track creator settings
     PfoCreator::Settings                m_pfoCreatorSettings;               ///< The pfo creator settings
 
