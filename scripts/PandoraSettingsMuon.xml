@@ -4,6 +4,7 @@
     <!-- GLOBAL SETTINGS -->
     <IsMonitoringEnabled> true </IsMonitoringEnabled>
     <ShouldDisplayAlgorithmInfo> false </ShouldDisplayAlgorithmInfo>
+    <ShouldCollapseMCParticlesToPfoTarget> true </ShouldCollapseMCParticlesToPfoTarget>
 
     <!-- PLUGIN SETTINGS -->
     <HadronicEnergyCorrectionPlugins> CleanClusters ScaleHotHadrons </HadronicEnergyCorrectionPlugins>
