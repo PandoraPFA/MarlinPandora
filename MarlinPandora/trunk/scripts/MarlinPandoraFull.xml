@@ -936,8 +936,6 @@
   <parameter name="InputParticleCollections" type="StringVec" lcioInType="ReconstructedParticle">PandoraPFOs </parameter>
   <!--Names of input quark particle collections-->
   <parameter name="InputQuarkParticleCollections" type="StringVec" lcioInType="ReconstructedParticle">QuarkPFOs </parameter>
-  <!--Names of input recluster monitoring collections-->
-  <parameter name="InputReclusterMonitoringCollections" type="StringVec" lcioInType="LCGenericObject">PandoraPFANewReclusterMonitoring </parameter>
   <!--Names of mc particle collections-->
   <parameter name="MCParticleCollections" type="StringVec" lcioInType="MCParticle">MCParticle </parameter>
   <!--Set the debug print level-->
