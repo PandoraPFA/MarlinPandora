@@ -1,18 +1,18 @@
 <!-- Pandora settings xml file -->
 
 <pandora>
-    <!-- HELPER CLASS SETTINGS -->
+    <!-- GLOBAL SETTINGS -->
     <IsMonitoringEnabled> true </IsMonitoringEnabled>
     <ShouldDisplayAlgorithmInfo> false </ShouldDisplayAlgorithmInfo>
 
-    <!-- Plugin helper functions -->
-    <HadronicEnergyCorrectionFunctions> CleanClusters ScaleHotHadrons </HadronicEnergyCorrectionFunctions>
-    <EmShowerFunction> LCEmShowerId </EmShowerFunction>
-    <PhotonFunction> LCPhotonId </PhotonFunction>
-    <ElectronFunction> LCElectronId </ElectronFunction>
-    <MuonFunction> LCMuonId </MuonFunction>
+    <!-- PLUGIN SETTINGS -->
+    <HadronicEnergyCorrectionPlugins> CleanClusters ScaleHotHadrons </HadronicEnergyCorrectionPlugins>
+    <EmShowerPlugin> LCEmShowerId </EmShowerPlugin>
+    <PhotonPlugin> LCPhotonId </PhotonPlugin>
+    <ElectronPlugin> LCElectronId </ElectronPlugin>
+    <MuonPlugin> LCMuonId </MuonPlugin>
 
-    <!-- PANDORA ALGORITHM SETTINGS -->
+    <!-- ALGORITHM SETTINGS -->
 
     <!-- Set calo hit properties, then select tracks and hits to use for clustering -->
     <algorithm type = "CaloHitPreparation"/>
