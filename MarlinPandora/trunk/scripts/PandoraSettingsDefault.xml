@@ -54,8 +54,8 @@
         <!-- Current list management -->
         <ReplacementTrackListName>MuonRemovedTracks</ReplacementTrackListName>
         <ReplacementCaloHitListName>MuonRemovedCaloHits</ReplacementCaloHitListName>
-        <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
-        <ReplaceCurrentPfoList>true</ReplaceCurrentPfoList>
+        <ReplaceCurrentClusterList>false</ReplaceCurrentClusterList>
+        <ReplaceCurrentPfoList>false</ReplaceCurrentPfoList>
     </algorithm>
 
     <!-- Standalone photon clustering -->
@@ -67,7 +67,7 @@
             <ConeApproachMaxSeparation>250.</ConeApproachMaxSeparation>
         </algorithm>
         <ClusterListName>PhotonClusters</ClusterListName>
-        <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
+        <ReplaceCurrentClusterList>false</ReplaceCurrentClusterList>
         <ShouldMakePdfHistograms>false</ShouldMakePdfHistograms>
         <NEnergyBins>9</NEnergyBins>
         <HistogramFile>PandoraLikelihoodData9EBin.xml</HistogramFile>
