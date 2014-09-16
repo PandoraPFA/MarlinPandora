@@ -54,8 +54,8 @@
         <!-- Current list management -->
         <ReplacementTrackListName>MuonRemovedTracks</ReplacementTrackListName>
         <ReplacementCaloHitListName>MuonRemovedCaloHits</ReplacementCaloHitListName>
-        <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
-        <ReplaceCurrentPfoList>true</ReplaceCurrentPfoList>
+        <ReplaceCurrentClusterList>false</ReplaceCurrentClusterList>
+        <ReplaceCurrentPfoList>false</ReplaceCurrentPfoList>
     </algorithm>
 
     <!-- Clustering parent algorithm runs a daughter clustering algorithm -->
