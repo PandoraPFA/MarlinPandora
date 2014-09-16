@@ -48,10 +48,11 @@ StatusCode ExternalClusteringAlgorithm::Run()
         for (unsigned int iCluster = 0; iCluster < nExternalClusters; ++iCluster)
         {
             EVENT::Cluster *pExternalCluster = dynamic_cast<EVENT::Cluster *>(pExternalClusterCollection->getElementAt(iCluster));
-            const CalorimeterHitVec &calorimeterHitVec(pExternalCluster->getCalorimeterHits());
 
             if (NULL == pExternalCluster)
                 throw EVENT::Exception("Collection type mismatch");
+
+            const CalorimeterHitVec &calorimeterHitVec(pExternalCluster->getCalorimeterHits());
 
             pandora::Cluster *pPandoraCluster = NULL;
 

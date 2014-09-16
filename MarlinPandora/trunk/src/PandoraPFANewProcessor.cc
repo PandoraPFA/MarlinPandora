@@ -29,8 +29,8 @@ PandoraPFANewProcessor::PandoraToLCEventMap PandoraPFANewProcessor::m_pandoraToL
 PandoraPFANewProcessor::PandoraPFANewProcessor() :
     Processor("PandoraPFANewProcessor"),
     m_pPandora(NULL),
-    m_pGeometryCreator(NULL),
     m_pCaloHitCreator(NULL),
+    m_pGeometryCreator(NULL),
     m_pTrackCreator(NULL),
     m_pMCParticleCreator(NULL),
     m_pPfoCreator(NULL)
@@ -145,6 +145,28 @@ void PandoraPFANewProcessor::end()
     delete m_pPfoCreator;
 
     streamlog_out(MESSAGE) << "PandoraPFANewProcessor - End" << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const pandora::Pandora *PandoraPFANewProcessor::GetPandora() const
+{
+    if (NULL == m_pPandora)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    return m_pPandora;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const EVENT::LCEvent *PandoraPFANewProcessor::GetCurrentEvent(const pandora::Pandora *const pPandora)
+{
+    PandoraToLCEventMap::iterator iter = m_pandoraToLCEventMap.find(pPandora);
+
+    if (m_pandoraToLCEventMap.end() == iter)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+
+    return iter->second;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
