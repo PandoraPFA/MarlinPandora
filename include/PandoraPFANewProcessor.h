@@ -126,8 +126,8 @@ private:
     void Reset();
 
     pandora::Pandora                   *m_pPandora;                         ///< Address of the pandora instance
-    GeometryCreator                    *m_pGeometryCreator;                 ///< The geometry creator
     CaloHitCreator                     *m_pCaloHitCreator;                  ///< The calo hit creator
+    GeometryCreator                    *m_pGeometryCreator;                 ///< The geometry creator
     TrackCreator                       *m_pTrackCreator;                    ///< The track creator
     MCParticleCreator                  *m_pMCParticleCreator;               ///< The mc particle creator
     PfoCreator                         *m_pPfoCreator;                      ///< The pfo creator
@@ -148,28 +148,6 @@ private:
 inline marlin::Processor *PandoraPFANewProcessor::newProcessor()
 {
     return new PandoraPFANewProcessor;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::Pandora *PandoraPFANewProcessor::GetPandora() const
-{
-    if (NULL == m_pPandora)
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
-
-    return m_pPandora;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const EVENT::LCEvent *PandoraPFANewProcessor::GetCurrentEvent(const pandora::Pandora *const pPandora)
-{
-    PandoraToLCEventMap::iterator iter = m_pandoraToLCEventMap.find(pPandora);
-
-    if (m_pandoraToLCEventMap.end() == iter)
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-
-    return iter->second;
 }
 
 #endif // #ifndef PANDORA_PFA_NEW_PROCESSOR_H
