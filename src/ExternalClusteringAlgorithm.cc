@@ -17,6 +17,13 @@
 
 using namespace pandora;
 
+ExternalClusteringAlgorithm::ExternalClusteringAlgorithm() :
+    m_flagClustersAsPhotons(true)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ExternalClusteringAlgorithm::Run()
 {
     try
@@ -103,7 +110,6 @@ StatusCode ExternalClusteringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "ExternalClusterCollectionName", m_externalClusterCollectionName));
 
-    m_flagClustersAsPhotons = true;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FlagClustersAsPhotons", m_flagClustersAsPhotons));
 
