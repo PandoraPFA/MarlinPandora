@@ -379,3 +379,24 @@ pandora::StatusCode GeometryCreator::CreateRegularBoxGaps(unsigned int symmetryO
 
     return pandora::STATUS_CODE_SUCCESS;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+GeometryCreator::Settings::Settings() :
+    m_absorberRadiationLength(1.f),
+    m_absorberInteractionLength(1.f),
+    m_eCalEndCapInnerSymmetryOrder(4),
+    m_eCalEndCapInnerPhiCoordinate(0.f),
+    m_eCalEndCapOuterSymmetryOrder(8),
+    m_eCalEndCapOuterPhiCoordinate(0.f),
+    m_hCalEndCapInnerSymmetryOrder(4),
+    m_hCalEndCapInnerPhiCoordinate(0.f),
+    m_hCalEndCapOuterSymmetryOrder(16),
+    m_hCalEndCapOuterPhiCoordinate(0.f),
+    m_hCalRingInnerSymmetryOrder(8),
+    m_hCalRingInnerPhiCoordinate(0.f),
+    m_hCalRingOuterSymmetryOrder(16),
+    m_hCalRingOuterPhiCoordinate(0.f)
+{
+}

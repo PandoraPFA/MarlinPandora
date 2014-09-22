@@ -30,6 +30,11 @@ public:
     class Settings
     {
     public:
+        /**
+         *  @brief  Default constructor
+         */
+        Settings();
+
         StringVector    m_mcParticleCollections;                ///< The mc particle collections
         StringVector    m_lcCaloHitRelationCollections;         ///< The SimCaloHit to CaloHit particle relations
         StringVector    m_lcTrackRelationCollections;           ///< The SimTrackerHit to TrackerHit particle relations

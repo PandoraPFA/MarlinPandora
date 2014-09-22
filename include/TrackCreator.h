@@ -54,6 +54,11 @@ public:
     class Settings
     {
     public:
+        /**
+         *  @brief  Default constructor
+         */
+        Settings();
+
         StringVector    m_trackCollections;                     ///< The reconstructed track collections
         StringVector    m_kinkVertexCollections;                ///< The kink vertex collections
         StringVector    m_prongVertexCollections;               ///< The prong vertex collections

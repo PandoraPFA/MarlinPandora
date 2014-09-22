@@ -36,6 +36,11 @@ public:
     class Settings
     {
     public:
+        /**
+         *  @brief  Default constructor
+         */
+        Settings();
+
         std::string     m_pandoraSettingsXmlFile;           ///< The pandora settings xml file
 
         float           m_innerBField;                      ///< The bfield in the main tracker, ecal and hcal, units Tesla
