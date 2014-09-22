@@ -31,6 +31,11 @@ public:
     class Settings
     {
     public:
+        /**
+         *  @brief  Default constructor
+         */
+        Settings();
+
         StringVector    m_eCalCaloHitCollections;               ///< The ecal calorimeter hit collections
         StringVector    m_hCalCaloHitCollections;               ///< The hcal calorimeter hit collections
         StringVector    m_lCalCaloHitCollections;               ///< The lcal calorimeter hit collections
@@ -62,8 +67,8 @@ public:
         float           m_hCalEndCapInnerPhiCoordinate;         ///< HCal end cap inner phi coordinate (missing from ILD00 gear file)
 
         // For Strip Splitting method and hybrid ECAL.
-        bool            m_stripSplittingOn;                     ///< To use SSA, this should be true (default is false)
-        bool            m_useEcalScLayers;                      ///< To use scintillator layers ~ hybrid ECAL, this should be true (default is false)
+        int             m_stripSplittingOn;                     ///< To use SSA, this should be true (default is false)
+        int             m_useEcalScLayers;                      ///< To use scintillator layers ~ hybrid ECAL, this should be true (default is false)
         float           m_eCalSiToMip;                          ///< The calibration from deposited Si-layer energy to mip
         float           m_eCalScToMip;                          ///< The calibration from deposited Sc-layer energy to mip
         float           m_eCalSiMipThreshold;                   ///< Threshold for creating calo hits in the Si-layers of ECAL, units mip

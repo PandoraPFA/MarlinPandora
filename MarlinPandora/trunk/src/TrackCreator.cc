@@ -916,3 +916,38 @@ bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const Pan
 
     return true;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TrackCreator::Settings::Settings() :
+    m_shouldFormTrackRelationships(1),
+    m_minTrackHits(5),
+    m_minFtdTrackHits(0),
+    m_maxTrackHits(5000.f),
+    m_useOldTrackStateCalculation(0),
+    m_d0TrackCut(50.f),
+    m_z0TrackCut(50.f),
+    m_usingNonVertexTracks(1),
+    m_usingUnmatchedNonVertexTracks(0),
+    m_usingUnmatchedVertexTracks(1),
+    m_unmatchedVertexTrackMaxEnergy(5.f),
+    m_d0UnmatchedVertexTrackCut(5.f),
+    m_z0UnmatchedVertexTrackCut(5.f),
+    m_zCutForNonVertexTracks(250.f),
+    m_reachesECalNTpcHits(11),
+    m_reachesECalNFtdHits(4),
+    m_reachesECalTpcOuterDistance(-100.f),
+    m_reachesECalMinFtdLayer(9),
+    m_reachesECalTpcZMaxDistance(-50.f),
+    m_reachesECalFtdZMaxDistance(1.f),
+    m_curvatureToMomentumFactor(0.3f / 2000.f),
+    m_minTrackECalDistanceFromIp(100.f),
+    m_maxTrackSigmaPOverP(0.15f),
+    m_minMomentumForTrackHitChecks(1.f),
+    m_tpcMembraneMaxZ(10.f),
+    m_maxTpcInnerRDistance(50.f),
+    m_minTpcHitFractionOfExpected(0.2f),
+    m_minFtdHitsForTpcHitFraction(2)
+{
+}

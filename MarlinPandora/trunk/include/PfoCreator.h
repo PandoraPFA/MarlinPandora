@@ -25,6 +25,11 @@ public:
     class Settings
     {
     public:
+        /**
+         *  @brief  Default constructor
+         */
+        Settings();
+
         std::string     m_clusterCollectionName;                ///< The name of the cluster output collection
         std::string     m_pfoCollectionName;                    ///< The name of the pfo output collection
     };

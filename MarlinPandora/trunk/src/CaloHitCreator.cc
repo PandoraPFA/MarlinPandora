@@ -692,3 +692,42 @@ float CaloHitCreator::GetMaximumRadius(const EVENT::CalorimeterHit *const pCaloH
 
     return maximumRadius;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CaloHitCreator::Settings::Settings() :
+    m_absorberRadiationLength(1.f),
+    m_absorberInteractionLength(1.f),
+    m_eCalToMip(1.f),
+    m_hCalToMip(1.f),
+    m_muonToMip(1.f),
+    m_eCalMipThreshold(0.f),
+    m_hCalMipThreshold(0.f),
+    m_muonMipThreshold(0.f),
+    m_eCalToEMGeV(1.f),
+    m_eCalToHadGeVBarrel(1.f),
+    m_eCalToHadGeVEndCap(1.f),
+    m_hCalToEMGeV(1.f),
+    m_hCalToHadGeV(1.f),
+    m_muonDigitalHits(1),
+    m_muonHitEnergy(0.5f),
+    m_maxHCalHitHadronicEnergy(10000.f),
+    m_nOuterSamplingLayers(3),
+    m_layersFromEdgeMaxRearDistance(250.f),
+    m_hCalEndCapInnerSymmetryOrder(4),
+    m_hCalEndCapInnerPhiCoordinate(0.f),
+    m_stripSplittingOn(0),
+    m_useEcalScLayers(0),
+    m_eCalSiToMip(1.f),
+    m_eCalScToMip(1.f),
+    m_eCalSiMipThreshold(0.f),
+    m_eCalScMipThreshold(0.f),
+    m_eCalSiToEMGeV(1.f),
+    m_eCalScToEMGeV(1.f),
+    m_eCalSiToHadGeVBarrel(1.f),
+    m_eCalScToHadGeVBarrel(1.f),
+    m_eCalSiToHadGeVEndCap(1.f),
+    m_eCalScToHadGeVEndCap(1.f)
+{
+}

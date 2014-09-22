@@ -289,17 +289,17 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             float(1.));
 
     // Name of PFO collection written by MarlinPandora
-    registerOutputCollection( LCIO::CLUSTER,
-                              "ClusterCollectionName",
-                              "Cluster Collection Name",
-                              m_pfoCreatorSettings.m_clusterCollectionName,
-                              std::string("PandoraPFANewClusters"));
+    registerOutputCollection(LCIO::CLUSTER,
+                             "ClusterCollectionName",
+                             "Cluster Collection Name",
+                             m_pfoCreatorSettings.m_clusterCollectionName,
+                             std::string("PandoraPFANewClusters"));
 
-    registerOutputCollection( LCIO::RECONSTRUCTEDPARTICLE,
-                              "PFOCollectionName",
-                              "PFO Collection Name",
-                              m_pfoCreatorSettings.m_pfoCollectionName,
-                              std::string("PandoraPFANewPFOs"));
+    registerOutputCollection(LCIO::RECONSTRUCTEDPARTICLE,
+                             "PFOCollectionName",
+                             "PFO Collection Name",
+                             m_pfoCreatorSettings.m_pfoCollectionName,
+                             std::string("PandoraPFANewPFOs"));
 
     // Calibration constants
     registerProcessorParameter("ECalToMipCalibration",
@@ -320,7 +320,7 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     registerProcessorParameter("MuonToMipCalibration",
                             "The calibration from deposited Muon energy to mip",
                             m_caloHitCreatorSettings.m_muonToMip,
-                            float(10.));
+                            float(1.));
 
     registerProcessorParameter("HCalMipThreshold",
                             "Threshold for creating calo hits in the HCal, units mip",
@@ -365,7 +365,7 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     registerProcessorParameter("MaxHCalHitHadronicEnergy",
                             "The maximum hadronic energy allowed for a single hcal hit",
                             m_caloHitCreatorSettings.m_maxHCalHitHadronicEnergy,
-                            float(1.));
+                            float(10000.));
 
     registerProcessorParameter("NOuterSamplingLayers",
                             "Number of layers from edge for hit to be flagged as an outer layer hit",
@@ -429,17 +429,17 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     registerProcessorParameter("UseNonVertexTracks",
                             "Whether can form pfos from tracks that don't start at vertex",
                             m_trackCreatorSettings.m_usingNonVertexTracks,
-                            int(1.));
+                            int(1));
 
     registerProcessorParameter("UseUnmatchedNonVertexTracks",
                             "Whether can form pfos from unmatched tracks that don't start at vertex",
                             m_trackCreatorSettings.m_usingUnmatchedNonVertexTracks,
-                            int(0.));
+                            int(0));
 
     registerProcessorParameter("UseUnmatchedVertexTracks",
                             "Whether can form pfos from unmatched tracks that start at vertex",
                             m_trackCreatorSettings.m_usingUnmatchedVertexTracks,
-                            int(1.));
+                            int(1));
 
     registerProcessorParameter("UnmatchedVertexTrackMaxEnergy",
                             "Maximum energy for unmatched vertex track",
@@ -598,13 +598,13 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
     registerProcessorParameter("StripSplittingOn",
                             "To use strip splitting algorithm, this should be true",
                             m_caloHitCreatorSettings.m_stripSplittingOn,
-                            bool(false));
+                            int(0));
 
     // For Strip Splitting method and also for hybrid ECAL
     registerProcessorParameter("UseEcalScLayers",
                             "To use scintillator layers ~ hybrid ECAL, this should be true",
                             m_caloHitCreatorSettings.m_useEcalScLayers,
-                            bool(false));
+                            int(0));
 
     // Parameters for hybrid ECAL
     // Energy to MIP for Si-layers and Sc-layers, respectively.
@@ -715,4 +715,14 @@ void PandoraPFANewProcessor::Reset()
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 
     m_pandoraToLCEventMap.erase(iter);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+PandoraPFANewProcessor::Settings::Settings() :
+    m_innerBField(3.5f),
+    m_muonBarrelBField(-1.5f),
+    m_muonEndCapBField(0.01f)
+{
 }
