@@ -36,7 +36,7 @@ FOREACH( pkg Marlin MarlinUtil PandoraSDK LCContent )
 ENDFOREACH()
 
 IF( PANDORA_MONITORING )
-    FIND_PACKAGE( PandoraMonitoring 0.16 REQUIRED )
+    FIND_PACKAGE( PandoraMonitoring 0.17 REQUIRED )
     IF( PandoraMonitoring_FOUND )
         INCLUDE_DIRECTORIES( ${PandoraMonitoring_INCLUDE_DIRS} )
         LINK_LIBRARIES( ${PandoraMonitoring_LIBRARIES} )
