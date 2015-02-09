@@ -81,7 +81,11 @@ StatusCode ExternalClusteringAlgorithm::Run()
                     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pPandoraCluster));
 
                     if (m_flagClustersAsPhotons)
-                        pPandoraCluster->SetIsFixedPhotonFlag(true);
+                    {
+                        PandoraContentApi::Cluster::Metadata metadata;
+                        metadata.m_particleId = PHOTON;
+                        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPandoraCluster, metadata));
+                    }
                 }
                 else
                 {
