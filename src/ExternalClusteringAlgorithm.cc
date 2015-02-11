@@ -36,7 +36,7 @@ StatusCode ExternalClusteringAlgorithm::Run()
 
         // Get external photon cluster collection
         const EVENT::LCEvent *const pLCEvent(PandoraPFANewProcessor::GetCurrentEvent(&(this->GetPandora())));
-        const EVENT::LCCollection *pExternalClusterCollection = pLCEvent->getCollection(m_externalClusterCollectionName);
+        const EVENT::LCCollection *const pExternalClusterCollection = pLCEvent->getCollection(m_externalClusterCollectionName);
         const unsigned int nExternalClusters(pExternalClusterCollection->getNumberOfElements());
 
         if (0 == nExternalClusters)
@@ -47,21 +47,21 @@ StatusCode ExternalClusteringAlgorithm::Run()
 
         for (CaloHitList::const_iterator hitIter = pCaloHitList->begin(), hitIterEnd = pCaloHitList->end(); hitIter != hitIterEnd; ++hitIter)
         {
-            pandora::CaloHit *pCaloHit = *hitIter;
+            const pandora::CaloHit *const pCaloHit = *hitIter;
             parentAddressToCaloHitMap.insert(ParentAddressToCaloHitMap::value_type(pCaloHit->GetParentCaloHitAddress(), pCaloHit));
         }
 
         // Recreate external clusters within the pandora framework
         for (unsigned int iCluster = 0; iCluster < nExternalClusters; ++iCluster)
         {
-            EVENT::Cluster *pExternalCluster = dynamic_cast<EVENT::Cluster *>(pExternalClusterCollection->getElementAt(iCluster));
+            const EVENT::Cluster *const pExternalCluster = dynamic_cast<const EVENT::Cluster*>(pExternalClusterCollection->getElementAt(iCluster));
 
             if (NULL == pExternalCluster)
                 throw EVENT::Exception("Collection type mismatch");
 
             const CalorimeterHitVec &calorimeterHitVec(pExternalCluster->getCalorimeterHits());
 
-            pandora::Cluster *pPandoraCluster = NULL;
+            const pandora::Cluster *pPandoraCluster = NULL;
 
             for (CalorimeterHitVec::const_iterator iter = calorimeterHitVec.begin(), iterEnd = calorimeterHitVec.end(); iter != iterEnd; ++iter)
             {
@@ -72,7 +72,7 @@ StatusCode ExternalClusteringAlgorithm::Run()
                     continue;
                 }
 
-                pandora::CaloHit *pPandoraCaloHit = pandoraCaloHitIter->second;
+                const pandora::CaloHit *const pPandoraCaloHit = pandoraCaloHitIter->second;
 
                 if (NULL == pPandoraCluster)
                 {
