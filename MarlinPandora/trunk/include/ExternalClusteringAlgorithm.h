@@ -38,7 +38,7 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::map<const void *, pandora::CaloHit *> ParentAddressToCaloHitMap;
+    typedef std::map<const void *, const pandora::CaloHit *> ParentAddressToCaloHitMap;
 
     std::string     m_externalClusterCollectionName;        ///< The collection name for the external clusters
     bool            m_flagClustersAsPhotons;                ///< Whether to automatically flag new clusters as fixed photons
