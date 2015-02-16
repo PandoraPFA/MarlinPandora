@@ -30,6 +30,7 @@ These control the cone parameters used in the fine granularity region (i.e. ECAL
 
 A number of sample PandoraSettings.xml files are present in your MarlinPandora/scripts directory:
 
+*PandoraSettingsBasic.xml - The core Pandora reconstruction, without photon clustering or standalone muon reconstruction.
 *PandoraSettingsMuon.xml - The basic Pandora reconstruction, including a standalone muon reconstruction algorithm that reconstructs muons and removes them from the event before the remaining pattern recognition.
 *PandoraSettingsDefault.xml - As above, but also includes a standalone photon reconstruction algorithm, which requires associated Likelihood data. Offers the best performance and is recommended for use with ILD_o1_v05/v06.
 
