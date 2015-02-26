@@ -185,12 +185,18 @@ void GeometryCreator::SetDefaultSubDetectorParameters(const gear::CalorimeterPar
     parameters.m_isMirroredInZ = true;
     parameters.m_nLayers = layerLayout.getNLayers();
 
+    // ATTN Not always going to be correct for any optional subdetectors, but impact of this is negligible for ILD
+    const float radiationLength(((pandora::ECAL_BARREL == subDetectorType) || (pandora::ECAL_ENDCAP == subDetectorType)) ? m_settings.m_absorberRadLengthECal :
+        ((pandora::HCAL_BARREL == subDetectorType) || (pandora::HCAL_ENDCAP == subDetectorType)) ? m_settings.m_absorberRadLengthHCal : m_settings.m_absorberRadLengthOther);
+    const float interactionLength(((pandora::ECAL_BARREL == subDetectorType) || (pandora::ECAL_ENDCAP == subDetectorType)) ? m_settings.m_absorberIntLengthECal :
+        ((pandora::HCAL_BARREL == subDetectorType) || (pandora::HCAL_ENDCAP == subDetectorType)) ? m_settings.m_absorberIntLengthHCal : m_settings.m_absorberIntLengthOther);
+
     for (int i = 0; i < layerLayout.getNLayers(); ++i)
     {
         PandoraApi::Geometry::LayerParameters layerParameters;
         layerParameters.m_closestDistanceToIp = layerLayout.getDistance(i) + (0.5 * (layerLayout.getThickness(i) + layerLayout.getAbsorberThickness(i)));
-        layerParameters.m_nRadiationLengths = m_settings.m_absorberRadiationLength * layerLayout.getAbsorberThickness(i);
-        layerParameters.m_nInteractionLengths = m_settings.m_absorberInteractionLength * layerLayout.getAbsorberThickness(i);
+        layerParameters.m_nRadiationLengths = radiationLength * layerLayout.getAbsorberThickness(i);
+        layerParameters.m_nInteractionLengths = interactionLength * layerLayout.getAbsorberThickness(i);
         parameters.m_layerParametersList.push_back(layerParameters);
     }
 }
@@ -384,8 +390,12 @@ pandora::StatusCode GeometryCreator::CreateRegularBoxGaps(unsigned int symmetryO
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 GeometryCreator::Settings::Settings() :
-    m_absorberRadiationLength(1.f),
-    m_absorberInteractionLength(1.f),
+    m_absorberRadLengthECal(1.f),
+    m_absorberIntLengthECal(1.f),
+    m_absorberRadLengthHCal(1.f),
+    m_absorberIntLengthHCal(1.f),
+    m_absorberRadLengthOther(1.f),
+    m_absorberIntLengthOther(1.f),
     m_eCalEndCapInnerSymmetryOrder(4),
     m_eCalEndCapInnerPhiCoordinate(0.f),
     m_eCalEndCapOuterSymmetryOrder(8),

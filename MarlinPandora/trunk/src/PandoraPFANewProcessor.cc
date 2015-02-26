@@ -285,15 +285,35 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             StringVector());
 
     // Absorber properties
-    registerProcessorParameter("AbsorberRadiationLength",
-                            "The absorber radation length",
-                            m_geometryCreatorSettings.m_absorberRadiationLength,
-                            float(1.));
+    registerProcessorParameter("AbsorberRadLengthECal",
+                            "The absorber radation length in the ECal",
+                            m_geometryCreatorSettings.m_absorberRadLengthECal,
+                            float(0.2854)); // Default: W, 1 / X0[mm]
 
-    registerProcessorParameter("AbsorberInteractionLength",
-                            "The absorber interaction length",
-                            m_geometryCreatorSettings.m_absorberInteractionLength,
-                            float(1.));
+    registerProcessorParameter("AbsorberIntLengthECal",
+                            "The absorber interaction length in the ECal",
+                            m_geometryCreatorSettings.m_absorberIntLengthECal,
+                            float(0.0101)); // Default: W, 1 / lambdaI[mm]
+
+    registerProcessorParameter("AbsorberRadLengthHCal",
+                            "The absorber radation length in the HCal",
+                            m_geometryCreatorSettings.m_absorberRadLengthHCal,
+                            float(0.0569)); // Default: Fe, 1 / X0[mm]
+
+    registerProcessorParameter("AbsorberIntLengthECal",
+                            "The absorber interaction length in the HCal",
+                            m_geometryCreatorSettings.m_absorberIntLengthECal,
+                            float(0.0060)); // Default: Fe, 1 / lambdaI[mm]
+
+    registerProcessorParameter("AbsorberRadLengthOther",
+                            "The absorber radation length in other detector regions",
+                            m_geometryCreatorSettings.m_absorberRadLengthOther,
+                            float(0.0569)); // Default: Fe, 1 / X0[mm]
+
+    registerProcessorParameter("AbsorberIntLengthOther",
+                            "The absorber interaction length in other detector regions",
+                            m_geometryCreatorSettings.m_absorberIntLengthOther,
+                            float(0.0060)); // Default: Fe, 1 / lambdaI[mm]
 
     // Name of PFO collection written by MarlinPandora
     registerOutputCollection(LCIO::CLUSTER,
@@ -697,8 +717,13 @@ void PandoraPFANewProcessor::FinaliseSteeringParameters()
 {
     // ATTN: This function seems to be necessary for operations that cannot easily be performed at construction of the processor,
     // when the steering file is parsed e.g. the call to GEAR to get the inner bfield
-    m_caloHitCreatorSettings.m_absorberRadiationLength = m_geometryCreatorSettings.m_absorberRadiationLength;
-    m_caloHitCreatorSettings.m_absorberInteractionLength = m_geometryCreatorSettings.m_absorberInteractionLength;
+    m_caloHitCreatorSettings.m_absorberRadLengthECal = m_geometryCreatorSettings.m_absorberRadLengthECal;
+    m_caloHitCreatorSettings.m_absorberIntLengthECal = m_geometryCreatorSettings.m_absorberIntLengthECal;
+    m_caloHitCreatorSettings.m_absorberRadLengthHCal = m_geometryCreatorSettings.m_absorberRadLengthHCal;
+    m_caloHitCreatorSettings.m_absorberIntLengthHCal = m_geometryCreatorSettings.m_absorberIntLengthHCal;
+    m_caloHitCreatorSettings.m_absorberRadLengthOther = m_geometryCreatorSettings.m_absorberRadLengthOther;
+    m_caloHitCreatorSettings.m_absorberIntLengthOther = m_geometryCreatorSettings.m_absorberIntLengthOther;
+
     m_caloHitCreatorSettings.m_hCalEndCapInnerSymmetryOrder = m_geometryCreatorSettings.m_hCalEndCapInnerSymmetryOrder;
     m_caloHitCreatorSettings.m_hCalEndCapInnerPhiCoordinate = m_geometryCreatorSettings.m_hCalEndCapInnerPhiCoordinate;
 
