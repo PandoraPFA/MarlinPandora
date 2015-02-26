@@ -552,9 +552,14 @@ void CaloHitCreator::GetEndCapCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
+    const float radiationLength((pandora::ECAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberRadLengthECal :
+        (pandora::HCAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberRadLengthHCal : m_settings.m_absorberRadLengthOther);
+    const float interactionLength((pandora::ECAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberIntLengthECal :
+        (pandora::HCAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberIntLengthHCal : m_settings.m_absorberIntLengthOther);
+
     const float layerAbsorberThickness(layerLayout.getAbsorberThickness(physicalLayer));
-    caloHitParameters.m_nCellRadiationLengths = m_settings.m_absorberRadiationLength * layerAbsorberThickness;
-    caloHitParameters.m_nCellInteractionLengths = m_settings.m_absorberInteractionLength * layerAbsorberThickness;
+    caloHitParameters.m_nCellRadiationLengths = radiationLength * layerAbsorberThickness;
+    caloHitParameters.m_nCellInteractionLengths = interactionLength * layerAbsorberThickness;
 
     absorberCorrection = 1.;
     for (unsigned int i = 0, iMax = layerLayout.getNLayers(); i < iMax; ++i)
@@ -587,9 +592,14 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
+    const float radiationLength((pandora::ECAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberRadLengthECal :
+        (pandora::HCAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberRadLengthHCal : m_settings.m_absorberRadLengthOther);
+    const float interactionLength((pandora::ECAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberIntLengthECal :
+        (pandora::HCAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberIntLengthHCal : m_settings.m_absorberIntLengthOther);
+
     const float layerAbsorberThickness(layerLayout.getAbsorberThickness(physicalLayer));
-    caloHitParameters.m_nCellRadiationLengths = m_settings.m_absorberRadiationLength * layerAbsorberThickness;
-    caloHitParameters.m_nCellInteractionLengths = m_settings.m_absorberInteractionLength * layerAbsorberThickness;
+    caloHitParameters.m_nCellRadiationLengths = radiationLength * layerAbsorberThickness;
+    caloHitParameters.m_nCellInteractionLengths = interactionLength * layerAbsorberThickness;
 
     absorberCorrection = 1.;
     for (unsigned int i = 0, iMax = layerLayout.getNLayers(); i < iMax; ++i)
@@ -697,8 +707,12 @@ float CaloHitCreator::GetMaximumRadius(const EVENT::CalorimeterHit *const pCaloH
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 CaloHitCreator::Settings::Settings() :
-    m_absorberRadiationLength(1.f),
-    m_absorberInteractionLength(1.f),
+    m_absorberRadLengthECal(1.f),
+    m_absorberIntLengthECal(1.f),
+    m_absorberRadLengthHCal(1.f),
+    m_absorberIntLengthHCal(1.f),
+    m_absorberRadLengthOther(1.f),
+    m_absorberIntLengthOther(1.f),
     m_eCalToMip(1.f),
     m_hCalToMip(1.f),
     m_muonToMip(1.f),
