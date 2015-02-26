@@ -59,8 +59,13 @@
   <parameter name="HCalToHadGeVCalibration" type="float">1.027</parameter>
   <parameter name="MuonToMipCalibration" type="float">10.0</parameter>
   <parameter name="DigitalMuonHits" type="int">0</parameter>
-  <parameter name="MaxHCalHitHadronicEnergy" type="float">1.</parameter> 
-  <parameter name="AbsorberRadiationLength" type="float">0.2857</parameter>
+  <parameter name="MaxHCalHitHadronicEnergy" type="float">1.</parameter>
+  <parameter name="AbsorberRadLengthECal" type="float">0.2854</parameter>
+  <parameter name="AbsorberIntLengthECal" type="float">0.0101</parameter>
+  <parameter name="AbsorberRadLengthHCal" type="float">0.0569</parameter>
+  <parameter name="AbsorberIntLengthHCal" type="float">0.0060</parameter>
+  <parameter name="AbsorberRadLengthOther" type="float">0.0569</parameter>
+  <parameter name="AbsorberIntLengthOther" type="float">0.0060</parameter>
   <!--Whether to calculate track states manually, rather than copy stored fitter values-->
   <parameter name="UseOldTrackStateCalculation" type="int">0 </parameter>
   <!--<parameter name="NEventsToSkip" type="int">0</parameter>-->

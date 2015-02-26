@@ -32,8 +32,12 @@ public:
          */
         Settings();
 
-        float           m_absorberRadiationLength;              ///< The absorber radiation length
-        float           m_absorberInteractionLength;            ///< The absorber interaction length
+        float           m_absorberRadLengthECal;                ///< The absorber radiation length in the ECal
+        float           m_absorberIntLengthECal;                ///< The absorber interaction length in the ECal
+        float           m_absorberRadLengthHCal;                ///< The absorber radiation length in the HCal
+        float           m_absorberIntLengthHCal;                ///< The absorber interaction length in the HCal
+        float           m_absorberRadLengthOther;               ///< The absorber radiation length in other detector regions
+        float           m_absorberIntLengthOther;               ///< The absorber interaction length in other detector regions
 
         int             m_eCalEndCapInnerSymmetryOrder;         ///< ECal end cap inner symmetry order (missing from ILD gear files)
         float           m_eCalEndCapInnerPhiCoordinate;         ///< ECal end cap inner phi coordinate (missing from ILD gear files)
