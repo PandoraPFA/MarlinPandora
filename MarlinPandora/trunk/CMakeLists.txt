@@ -15,13 +15,39 @@ SET( MarlinPandora_VERSION_MINOR 15 )
 SET( MarlinPandora_VERSION_PATCH 0 )
 
 
-
-### DEPENDENCIES ############################################################
+### CMAKE ###################################################################
 
 # load default settings from ILCSOFT_CMAKE_MODULES
 FIND_PACKAGE( ILCUTIL COMPONENTS ILCSOFT_CMAKE_MODULES REQUIRED )
 
 INCLUDE( ilcsoft_default_settings )
+
+
+### SOURCE ##################################################################
+
+#include directories
+INCLUDE_DIRECTORIES( ./include )
+INSTALL_DIRECTORY( ./include DESTINATION . FILES_MATCHING PATTERN "*.h" )
+
+AUX_SOURCE_DIRECTORY( ./src/ MarlinPandora_SRCS )
+
+# require proper C++
+ADD_DEFINITIONS( "-Wall -ansi -pedantic" )
+
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+if(COMPILER_SUPPORTS_CXX11)
+    message( STATUS "The compiler ${CMAKE_CXX_COMPILER} has C++11 support." )
+    ADD_DEFINITIONS( "-std=c++11" )
+else()
+    message( STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Some functionality will be limited." )
+endif()
+
+# need long long for int64 for now
+ADD_DEFINITIONS( "-Wno-long-long -Wno-sign-compare -fno-strict-aliasing" )
+
+
+### DEPENDENCIES ############################################################
 
 FIND_PACKAGE( Marlin 1.0 REQUIRED )
 FIND_PACKAGE( MarlinUtil REQUIRED )
@@ -46,7 +72,8 @@ IF( PANDORA_MONITORING )
 ENDIF()
 
 
-### DOCUMENTATION ############################################################
+### DOCUMENTATION ###########################################################
+
 OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" OFF )
 
 IF( INSTALL_DOC AND EXISTS "${PROJECT_SOURCE_DIR}/doc/CMakeLists.txt" )
@@ -57,31 +84,13 @@ ELSE()
 ENDIF()
 
 
-### LIBRARY AND TOOLS #######################################################
-
-#include directories
-INCLUDE_DIRECTORIES( ./include )
-INSTALL_DIRECTORY( ./include DESTINATION . FILES_MATCHING PATTERN "*.h" )
-
-AUX_SOURCE_DIRECTORY( ./src/ MarlinPandora_SRCS )
-
-# require proper C++
-ADD_DEFINITIONS( "-Wall -ansi -pedantic" )
-
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-if(COMPILER_SUPPORTS_CXX11)
-    message( STATUS "The compiler ${CMAKE_CXX_COMPILER} has C++11 support." )
-    ADD_DEFINITIONS( "-std=c++11" )
-else()
-    message( STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Some functionality will be limited." )
-endif()
-
-# need long long for int64 for now
-ADD_DEFINITIONS( "-Wno-long-long -Wno-sign-compare -fno-strict-aliasing" )
+### LIBRARY #################################################################
 
 # add library
 ADD_SHARED_LIBRARY( MarlinPandora ${MarlinPandora_SRCS} )
+
+
+### INSTALL #################################################################
 
 # install library
 INSTALL_SHARED_LIBRARY( MarlinPandora DESTINATION lib )
