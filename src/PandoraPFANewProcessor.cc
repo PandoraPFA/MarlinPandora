@@ -300,9 +300,9 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             m_geometryCreatorSettings.m_absorberRadLengthHCal,
                             float(0.0569)); // Default: Fe, 1 / X0[mm]
 
-    registerProcessorParameter("AbsorberIntLengthECal",
+    registerProcessorParameter("AbsorberIntLengthHCal",
                             "The absorber interaction length in the HCal",
-                            m_geometryCreatorSettings.m_absorberIntLengthECal,
+                            m_geometryCreatorSettings.m_absorberIntLengthHCal,
                             float(0.0060)); // Default: Fe, 1 / lambdaI[mm]
 
     registerProcessorParameter("AbsorberRadLengthOther",
