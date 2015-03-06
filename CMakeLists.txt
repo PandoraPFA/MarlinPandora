@@ -10,9 +10,9 @@ PROJECT( MarlinPandora )
 
 
 # project version
-SET( MarlinPandora_VERSION_MAJOR 0 )
-SET( MarlinPandora_VERSION_MINOR 15 )
-SET( MarlinPandora_VERSION_PATCH 0 )
+SET( MarlinPandora_VERSION_MAJOR 01 )
+SET( MarlinPandora_VERSION_MINOR 00 )
+SET( MarlinPandora_VERSION_PATCH 00 )
 
 
 ### CMAKE ###################################################################
@@ -51,8 +51,8 @@ ADD_DEFINITIONS( "-Wno-long-long -Wno-sign-compare -fno-strict-aliasing" )
 
 FIND_PACKAGE( Marlin 1.0 REQUIRED )
 FIND_PACKAGE( MarlinUtil REQUIRED )
-FIND_PACKAGE( PandoraSDK 0.17 REQUIRED )
-FIND_PACKAGE( LCContent 0.17 REQUIRED )
+FIND_PACKAGE( PandoraSDK 01.00.00 REQUIRED )
+FIND_PACKAGE( LCContent 01.00.00 REQUIRED )
 FOREACH( pkg Marlin MarlinUtil PandoraSDK LCContent )
     IF( ${pkg}_FOUND )
         INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
@@ -62,7 +62,7 @@ FOREACH( pkg Marlin MarlinUtil PandoraSDK LCContent )
 ENDFOREACH()
 
 IF( PANDORA_MONITORING )
-    FIND_PACKAGE( PandoraMonitoring 0.17 REQUIRED )
+    FIND_PACKAGE( PandoraMonitoring 01.00.00 REQUIRED )
     IF( PandoraMonitoring_FOUND )
         INCLUDE_DIRECTORIES( ${PandoraMonitoring_INCLUDE_DIRS} )
         LINK_LIBRARIES( ${PandoraMonitoring_LIBRARIES} )

@@ -1,4 +1,17 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v01-00-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Milestone v01 release.
+Update to reflect recent changes to PandoraSDK.
+Improved const-correctness. Algorithms are now only exposed to pointers to const managed-objects. Access to managed-object non-const functionality is now only via Pandora APIs.
+Use LCContentFast if c++11 is available: contains faster versions of algorithms in the LCContent library, using e.g. KD-trees and relying on c++11.
+Corrected radiation length and nuclear interaction lengths specified for Pandora CaloHits and Pandora SubDetectors.
+Restored PandoraSettingsBasic.xml to repository.
+Added to list of cheated neutral hadrons in PandoraSettingsPerfectPhotonNeutronK0L.xml
+Updated PandoraSettings readme.
+CMakeLists overhaul.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v00-15
 --------------------------------------------------------------------------------------------------------------------------------------------
 Update to reflect recent changes to PandoraSDK and LCContent.
