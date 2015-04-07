@@ -49,7 +49,7 @@ IF( NOT COMPILER_SUPPORTS_CXX_FLAGS )
     UNSET( CMAKE_CXX_FLAGS )
 ENDIF()
 
-SET( CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -ansi -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
+SET( CMAKE_CXX_FLAGS "-Wall -Werror -ansi -pedantic -Wno-long-long -Wno-sign-compare -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
 
 
 ### DEPENDENCIES ############################################################
