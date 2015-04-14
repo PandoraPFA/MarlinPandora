@@ -179,9 +179,9 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
                     // ATTN If using strip splitting, must correct cell sizes for use in PFA to minimum of strip width and strip length
                     if (m_settings.m_stripSplittingOn)
                     {
-                        const float splitCellSize(std::min(caloHitParameters.m_cellSizeU.Get(), caloHitParameters.m_cellSizeV.Get()));
-                        caloHitParameters.m_cellSizeU = splitCellSize;
-                        caloHitParameters.m_cellSizeV = splitCellSize;
+                        const float splitCellSize(std::min(caloHitParameters.m_cellSize0.Get(), caloHitParameters.m_cellSize1.Get()));
+                        caloHitParameters.m_cellSize0 = splitCellSize;
+                        caloHitParameters.m_cellSize1 = splitCellSize;
                     }
 
                     PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pPandora, caloHitParameters));
@@ -533,6 +533,7 @@ void CaloHitCreator::GetCommonCaloHitProperties(const EVENT::CalorimeterHit *con
     const float *pCaloHitPosition(pCaloHit->getPosition());
     const pandora::CartesianVector positionVector(pCaloHitPosition[0], pCaloHitPosition[1], pCaloHitPosition[2]);
 
+    caloHitParameters.m_cellGeometry = pandora::RECTANGULAR;
     caloHitParameters.m_positionVector = positionVector;
     caloHitParameters.m_expectedDirection = positionVector.GetUnitVector();
     caloHitParameters.m_pParentAddress = (void*)pCaloHit;
@@ -548,8 +549,8 @@ void CaloHitCreator::GetEndCapCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_hitRegion = pandora::ENDCAP;
 
     const int physicalLayer(std::min(static_cast<int>(caloHitParameters.m_layer.Get()), layerLayout.getNLayers() - 1));
-    caloHitParameters.m_cellSizeU = layerLayout.getCellSize0(physicalLayer);
-    caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
+    caloHitParameters.m_cellSize0 = layerLayout.getCellSize0(physicalLayer);
+    caloHitParameters.m_cellSize1 = layerLayout.getCellSize1(physicalLayer);
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
     const float radiationLength((pandora::ECAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberRadLengthECal :
@@ -588,8 +589,8 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
     caloHitParameters.m_hitRegion = pandora::BARREL;
 
     const int physicalLayer(std::min(static_cast<int>(caloHitParameters.m_layer.Get()), layerLayout.getNLayers() - 1));
-    caloHitParameters.m_cellSizeU = layerLayout.getCellSize0(physicalLayer);
-    caloHitParameters.m_cellSizeV = layerLayout.getCellSize1(physicalLayer);
+    caloHitParameters.m_cellSize0 = layerLayout.getCellSize0(physicalLayer);
+    caloHitParameters.m_cellSize1 = layerLayout.getCellSize1(physicalLayer);
     caloHitParameters.m_cellThickness = layerLayout.getThickness(physicalLayer);
 
     const float radiationLength((pandora::ECAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberRadLengthECal :
