@@ -87,6 +87,25 @@ pandora::StatusCode CaloHitCreator::CreateCaloHits(const EVENT::LCEvent *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+
+std::string getLayerCoding(const std::string& encoding_string ){
+  
+  if ( encoding_string.find("layer") != std::string::npos )  return std::string( "layer") ; 
+  if ( encoding_string.find("K-1")   != std::string::npos )  return std::string( "K-1") ; 
+  if ( encoding_string.find("K"  )   != std::string::npos )  return std::string( "K"  ) ; 
+  
+  return std::string("unknown_layer_encoding") ;
+} 
+
+std::string getStaveCoding(const std::string& encoding_string ){
+  
+  if ( encoding_string.find("stave") != std::string::npos )  return std::string( "stave") ; 
+  if ( encoding_string.find("S-1")   != std::string::npos )  return std::string( "S-1") ; 
+  
+  return std::string("unknown_stave_encoding") ;
+} 
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
     for (StringVector::const_iterator iter = m_settings.m_eCalCaloHitCollections.begin(), iterEnd = m_settings.m_eCalCaloHitCollections.end();
@@ -105,7 +124,9 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
-            std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+	    //            std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+            const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
+            const std::string staveCoding( getLayerCoding( layerCodingString ) ) ;
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -124,7 +145,7 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
                     {
                         std::string collectionName(*iter);
                         std::transform(collectionName.begin(), collectionName.end(), collectionName.begin(), ::tolower);
-                        layerCoding = "K-1";
+			//???                        layerCoding = "K-1";
 
                         if (collectionName.find("ecal", 0) == std::string::npos)
                             streamlog_out(MESSAGE) << "WARNING: mismatching hybrid Ecal collection name. " << collectionName << std::endl;
@@ -159,7 +180,7 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
                     if (std::fabs(pCaloHit->getPosition()[2]) < m_eCalBarrelOuterZ)
                     {
                         this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_eCalBarrelInnerSymmetry, m_eCalBarrelInnerPhi0,
-                            cellIdDecoder(pCaloHit)["S-1"], caloHitParameters, absorberCorrection);
+                            cellIdDecoder(pCaloHit)[ staveCoding], caloHitParameters, absorberCorrection);
 
                         caloHitParameters.m_hadronicEnergy = eCalToHadGeVBarrel * pCaloHit->getEnergy();
                     }
@@ -227,7 +248,9 @@ pandora::StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *con
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
-            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+            //const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+            const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
+            const std::string staveCoding( getLayerCoding( layerCodingString ) ) ;
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -250,7 +273,7 @@ pandora::StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *con
                     if (std::fabs(pCaloHit->getPosition()[2]) < m_hCalBarrelOuterZ)
                     {
                         this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_hCalBarrelInnerSymmetry, m_hCalBarrelInnerPhi0,
-                            m_hCalBarrelInnerSymmetry - int(cellIdDecoder(pCaloHit)["S-1"] / 2), caloHitParameters, absorberCorrection);
+                            m_hCalBarrelInnerSymmetry - int(cellIdDecoder(pCaloHit)[ staveCoding] / 2), caloHitParameters, absorberCorrection);
                     }
                     else
                     {
@@ -308,7 +331,9 @@ pandora::StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *con
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
-            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+	    //            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+            const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
+            const std::string staveCoding( getLayerCoding( layerCodingString ) ) ;
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -340,7 +365,7 @@ pandora::StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *con
                     else if (isInBarrelRegion)
                     {
                         this->GetBarrelCaloHitProperties(pCaloHit, barrelLayerLayout, m_muonBarrelInnerSymmetry, m_muonBarrelInnerPhi0,
-                            cellIdDecoder(pCaloHit)["S-1"], caloHitParameters, absorberCorrection);
+                            cellIdDecoder(pCaloHit)[ staveCoding ], caloHitParameters, absorberCorrection);
                     }
                     else
                     {
@@ -405,7 +430,8 @@ pandora::StatusCode CaloHitCreator::CreateLCalCaloHits(const EVENT::LCEvent *con
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
-            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+	    //            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+            const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -475,7 +501,8 @@ pandora::StatusCode CaloHitCreator::CreateLHCalCaloHits(const EVENT::LCEvent *co
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
-            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+	    //            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
+            const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
 
             for (int i = 0; i < nElements; ++i)
             {
