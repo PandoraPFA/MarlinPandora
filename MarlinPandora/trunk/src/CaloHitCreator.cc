@@ -126,7 +126,7 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
 	    //            std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
             const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
-            const std::string staveCoding( getLayerCoding( layerCodingString ) ) ;
+            const std::string staveCoding( getStaveCoding( layerCodingString ) ) ;
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -250,7 +250,7 @@ pandora::StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *con
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
             //const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
             const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
-            const std::string staveCoding( getLayerCoding( layerCodingString ) ) ;
+            const std::string staveCoding( getStaveCoding( layerCodingString ) ) ;
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -333,7 +333,7 @@ pandora::StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *con
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
 	    //            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
             const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
-            const std::string staveCoding( getLayerCoding( layerCodingString ) ) ;
+            const std::string staveCoding( getStaveCoding( layerCodingString ) ) ;
 
             for (int i = 0; i < nElements; ++i)
             {
