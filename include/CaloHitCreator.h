@@ -15,6 +15,8 @@
 
 #include "Api/PandoraApi.h"
 
+#include <string>
+
 typedef std::vector<CalorimeterHit *> CalorimeterHitVector;
 
 /**
@@ -205,6 +207,24 @@ private:
      *  @return the maximum radius
      */
     float GetMaximumRadius(const EVENT::CalorimeterHit *const pCaloHit, const unsigned int symmetryOrder, const float phi0) const;
+
+    /**
+     *  @brief  Get the layer coding string from the provided cell id encoding string
+     * 
+     *  @param  encodingString the cell id encoding string
+     * 
+     *  @return the layer coding string
+     */
+    std::string GetLayerCoding(const std::string &encodingString) const;
+
+    /**
+     *  @brief  Get the stave coding string from the provided cell id encoding string
+     * 
+     *  @param  encodingString the cell id encoding string
+     * 
+     *  @return the stave coding string
+     */
+    std::string GetStaveCoding(const std::string &encodingString) const;
 
     const Settings                      m_settings;                         ///< The calo hit creator settings
 

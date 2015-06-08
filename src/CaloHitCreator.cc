@@ -87,25 +87,6 @@ pandora::StatusCode CaloHitCreator::CreateCaloHits(const EVENT::LCEvent *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-
-std::string getLayerCoding(const std::string& encoding_string ){
-  
-  if ( encoding_string.find("layer") != std::string::npos )  return std::string( "layer") ; 
-  if ( encoding_string.find("K-1")   != std::string::npos )  return std::string( "K-1") ; 
-  if ( encoding_string.find("K"  )   != std::string::npos )  return std::string( "K"  ) ; 
-  
-  return std::string("unknown_layer_encoding") ;
-} 
-
-std::string getStaveCoding(const std::string& encoding_string ){
-  
-  if ( encoding_string.find("stave") != std::string::npos )  return std::string( "stave") ; 
-  if ( encoding_string.find("S-1")   != std::string::npos )  return std::string( "S-1") ; 
-  
-  return std::string("unknown_stave_encoding") ;
-} 
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *const pLCEvent)
 {
     for (StringVector::const_iterator iter = m_settings.m_eCalCaloHitCollections.begin(), iterEnd = m_settings.m_eCalCaloHitCollections.end();
@@ -124,9 +105,8 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
-	    //            std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
-            const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
-            const std::string staveCoding( getStaveCoding( layerCodingString ) ) ;
+            const std::string layerCoding(this->GetLayerCoding(layerCodingString));
+            const std::string staveCoding(this->GetStaveCoding(layerCodingString));
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -145,7 +125,6 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
                     {
                         std::string collectionName(*iter);
                         std::transform(collectionName.begin(), collectionName.end(), collectionName.begin(), ::tolower);
-			//???                        layerCoding = "K-1";
 
                         if (collectionName.find("ecal", 0) == std::string::npos)
                             streamlog_out(MESSAGE) << "WARNING: mismatching hybrid Ecal collection name. " << collectionName << std::endl;
@@ -248,9 +227,8 @@ pandora::StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *con
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
-            //const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
-            const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
-            const std::string staveCoding( getStaveCoding( layerCodingString ) ) ;
+            const std::string layerCoding(this->GetLayerCoding(layerCodingString));
+            const std::string staveCoding(this->GetStaveCoding(layerCodingString));
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -331,9 +309,8 @@ pandora::StatusCode CaloHitCreator::CreateMuonCaloHits(const EVENT::LCEvent *con
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
-	    //            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
-            const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
-            const std::string staveCoding( getStaveCoding( layerCodingString ) ) ;
+            const std::string layerCoding(this->GetLayerCoding(layerCodingString));
+            const std::string staveCoding(this->GetStaveCoding(layerCodingString));
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -430,8 +407,7 @@ pandora::StatusCode CaloHitCreator::CreateLCalCaloHits(const EVENT::LCEvent *con
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
-	    //            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
-            const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
+            const std::string layerCoding(this->GetLayerCoding(layerCodingString));
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -501,8 +477,7 @@ pandora::StatusCode CaloHitCreator::CreateLHCalCaloHits(const EVENT::LCEvent *co
 
             UTIL::CellIDDecoder<CalorimeterHit> cellIdDecoder(pCaloHitCollection);
             const std::string layerCodingString(pCaloHitCollection->getParameters().getStringVal(LCIO::CellIDEncoding));
-	    //            const std::string layerCoding((layerCodingString.find("K-1") == std::string::npos) ? "K" : "K-1");
-            const std::string layerCoding( getLayerCoding( layerCodingString ) ) ;
+            const std::string layerCoding(this->GetLayerCoding(layerCodingString));
 
             for (int i = 0; i < nElements; ++i)
             {
@@ -729,6 +704,35 @@ float CaloHitCreator::GetMaximumRadius(const EVENT::CalorimeterHit *const pCaloH
     }
 
     return maximumRadius;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::string CaloHitCreator::GetLayerCoding(const std::string &encodingString) const
+{
+    if (encodingString.find("layer") != std::string::npos)
+        return std::string("layer");
+
+    if (encodingString.find("K-1") != std::string::npos)
+        return std::string("K-1");
+
+    if (encodingString.find("K") != std::string::npos)
+        return std::string("K");
+
+    return std::string("unknown_layer_encoding");
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::string CaloHitCreator::GetStaveCoding(const std::string &encodingString) const
+{
+    if (encodingString.find("stave") != std::string::npos)
+        return std::string("stave");
+
+    if (encodingString.find("S-1") != std::string::npos)
+        return std::string("S-1");
+
+    return std::string("unknown_stave_encoding") ;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
