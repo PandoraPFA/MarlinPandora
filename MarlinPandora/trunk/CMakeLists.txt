@@ -10,9 +10,9 @@ PROJECT( MarlinPandora )
 
 
 # project version
-SET( MarlinPandora_VERSION_MAJOR 01 )
+SET( MarlinPandora_VERSION_MAJOR 02 )
 SET( MarlinPandora_VERSION_MINOR 00 )
-SET( MarlinPandora_VERSION_PATCH 01 )
+SET( MarlinPandora_VERSION_PATCH 00 )
 
 
 ### CMAKE ###################################################################
@@ -50,10 +50,9 @@ IF( NOT COMPILER_SUPPORTS_CXX_FLAGS )
 ENDIF()
 
 if( APPLE )
-#fg: the clang linker(!) does not like -ansi ...
-SET( CMAKE_CXX_FLAGS "-Wall -Werror -pedantic -Wno-long-long -Wno-sign-compare -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
+    SET( CMAKE_CXX_FLAGS "-Wall -Werror -pedantic -Wno-long-long -Wno-sign-compare -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
 else()
-SET( CMAKE_CXX_FLAGS "-Wall -Werror -ansi -pedantic -Wno-long-long -Wno-sign-compare -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
+    SET( CMAKE_CXX_FLAGS "-Wall -Werror -ansi -pedantic -Wno-long-long -Wno-sign-compare -fno-strict-aliasing ${CMAKE_CXX_FLAGS}" )
 endif()
 
 
@@ -61,8 +60,8 @@ endif()
 
 FIND_PACKAGE( Marlin 1.0 REQUIRED )
 FIND_PACKAGE( MarlinUtil REQUIRED )
-FIND_PACKAGE( PandoraSDK 01.00.00 REQUIRED )
-FIND_PACKAGE( LCContent 01.00.00 REQUIRED )
+FIND_PACKAGE( PandoraSDK 02.00.00 REQUIRED )
+FIND_PACKAGE( LCContent 02.00.00 REQUIRED )
 FOREACH( pkg Marlin MarlinUtil PandoraSDK LCContent )
     IF( ${pkg}_FOUND )
         INCLUDE_DIRECTORIES( ${${pkg}_INCLUDE_DIRS} )
@@ -72,7 +71,7 @@ FOREACH( pkg Marlin MarlinUtil PandoraSDK LCContent )
 ENDFOREACH()
 
 IF( PANDORA_MONITORING )
-    FIND_PACKAGE( PandoraMonitoring 01.00.00 REQUIRED )
+    FIND_PACKAGE( PandoraMonitoring 02.00.00 REQUIRED )
     IF( PandoraMonitoring_FOUND )
         INCLUDE_DIRECTORIES( ${PandoraMonitoring_INCLUDE_DIRS} )
         LINK_LIBRARIES( ${PandoraMonitoring_LIBRARIES} )
