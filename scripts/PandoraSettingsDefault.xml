@@ -70,7 +70,7 @@
         <ReplaceCurrentClusterList>false</ReplaceCurrentClusterList>
         <ShouldMakePdfHistograms>false</ShouldMakePdfHistograms>
         <NEnergyBins>9</NEnergyBins>
-        <HistogramFile>YOUR_PATH_HERE/PandoraLikelihoodData9EBin.xml</HistogramFile>
+        <HistogramFile>PandoraLikelihoodData9EBin.xml</HistogramFile>
         <ShouldDeleteNonPhotonClusters>false</ShouldDeleteNonPhotonClusters>
         <algorithm type = "RecoPhotonFragmentMerging" description = "PhotonFragmentMerging">
             <NonPhotonClusterListName>NonPhotonClusters</NonPhotonClusterListName>
