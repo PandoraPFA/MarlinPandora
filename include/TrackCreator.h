@@ -216,6 +216,13 @@ private:
     void CopyTrackState(const TrackState *const pTrackState, pandora::InputTrackState &inputTrackState) const;
 
     /**
+     *  @brief  Obtain track time when it reaches ECAL
+     * 
+     *  @param  pTrack the lcio track
+     */
+    float CalculateTrackTimeAtCalorimeter(const EVENT::Track *const pTrack) const;
+    
+    /**
      *  @brief  Obtain track states at start and end of track and the momentum at the dca
      * 
      *  @param  pTrack the lcio track
