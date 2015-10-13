@@ -1,4 +1,14 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+Update 13.10.2015 15:53
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+Major update on Pfo creator: ATTN it would only compile with the updated clusterShape class in ilcsoft v01-17-08 and above. 
+Two lines should be commented out if one wants to compile it with a lower version.
+Restructing of exisiting methods.
+Changed definition and added some new fields as agreed in High Level Reconstruction Workshop in June.
+Added a new vertex collection.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 Update 13.10.2015 09:03
 --------------------------------------------------------------------------------------------------------------------------------------------
 Update on Track creator: speed of light from 300 to 299.792.

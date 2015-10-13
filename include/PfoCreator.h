@@ -9,9 +9,11 @@
 #ifndef PFO_CREATOR_H
 #define PFO_CREATOR_H 1
 
-#include "EVENT/LCEvent.h"
-
+#include "ClusterShapes.h"
 #include "Api/PandoraApi.h"
+
+namespace IMPL { class ClusterImpl; class ReconstructedParticleImpl; }
+namespace EVENT { class LCEvent; }
 
 /**
  *  @brief  PfoCreator class
@@ -32,6 +34,12 @@ public:
 
         std::string     m_clusterCollectionName;                ///< The name of the cluster output collection
         std::string     m_pfoCollectionName;                    ///< The name of the pfo output collection
+        std::string     m_startVertexCollectionName;            ///< The name of the start vertex output collection
+        std::string     m_startVertexAlgName;                   ///< The name of the algorithm to fill the start vertex output collection
+        float           m_emStochasticTerm;                     ///< The stochastic term for EM shower energy resolution
+        float           m_hadStochasticTerm;                    ///< The stochastic term for Hadronic shower energy resolution
+        float           m_emConstantTerm;                       ///< The constant term for EM shower energy resolution
+        float           m_hadConstantTerm;                      ///< The constant term for Hadronic shower energy resolution
     };
 
     /**
@@ -55,8 +63,111 @@ public:
     pandora::StatusCode CreateParticleFlowObjects(EVENT::LCEvent *pLCEvent);
 
 private:
-    const Settings          m_settings;                         ///< The pfo creator settings
-    const pandora::Pandora *m_pPandora;                         ///< Address of the pandora object from which to extract the pfos
+    /**
+     *  @brief  index for the subdetector
+     */
+    enum Index
+    {
+        ECAL_INDEX = 0,
+        HCAL_INDEX = 1,
+        YOKE_INDEX = 2,
+        LCAL_INDEX = 3,
+        LHCAL_INDEX = 4,
+        BCAL_INDEX = 5
+    };
+    
+    /**
+     *  @brief  initialise sub detector name strings
+     */
+    void InitialiseSubDetectorsNames();
+    
+    /**
+     *  @brief  Set sub detector energies for a cluster
+     * 
+     *  @param  pLcioCluster the address of the lcio cluster to be set sub detector energies
+     *  @param  pandoraCaloHitList the pandora calorimeter hit list
+     *  @param  hitE the vector to receive the energy of hits
+     *  @param  hitX the vector to receive the x position of hits
+     *  @param  hitY the vector to receive the y position of hits
+     *  @param  hitZ the vector to receive the z position of hits
+     */
+    void SetClusterSubDetectorsEnergies(IMPL::ClusterImpl *const pLcioCluster, const pandora::CaloHitList &pandoraCaloHitList,
+        pandora::FloatVector &hitE, pandora::FloatVector &hitX, pandora::FloatVector &hitY, pandora::FloatVector &hitZ) const;
+
+    /**
+     *  @brief  Set cluster energies and errors
+     * 
+     *  @param  pPandoraPfo the address of the pandora pfo 
+     *  @param  pPandoraCluster the address of the pandora cluster 
+     *  @param  pLcioCluster the address of the lcio cluster to be set energies and erros
+     *  @param  clusterCorrectEnergy a number to receive the cluster correct energy
+     */
+    void SetClusterEnergyAndError(const pandora::ParticleFlowObject *const pPandoraPfo, const pandora::Cluster *const pPandoraCluster, 
+        IMPL::ClusterImpl *const pLcioCluster, float &clusterCorrectEnergy) const;
+
+    /**
+     *  @brief  Calculate cluster shape from number of hits, energies and positions
+     * 
+     *  @param  nHitsInCluster number of hits in cluster
+     *  @param  hitE the vector of the energy of hits
+     *  @param  hitX the vector of the x position of hits
+     *  @param  hitY the vector of the y position of hits
+     *  @param  hitZ the vector of the z position of hits
+     *
+     *  @return address of the cluster shape object
+     */    
+    ClusterShapes *const CalculateClusterShape(const unsigned int nHitsInCluster, pandora::FloatVector &hitE, pandora::FloatVector &hitX, 
+        pandora::FloatVector &hitY, pandora::FloatVector &hitZ) const;
+        
+    /**
+     *  @brief  Set cluster position, errors and other shape info, by calculating culster shape first
+     * 
+     *  @param  nHitsInCluster number of hits in cluster
+     *  @param  hitE the vector of the energy of hits
+     *  @param  hitX the vector of the x position of hits
+     *  @param  hitY the vector of the y position of hits
+     *  @param  hitZ the vector of the z position of hits
+     *  @param  pLcioCluster the lcio cluster to be set positions and errors
+     *  @param  clusterPosition a CartesianVector to receive the cluster position
+     */
+    void SetClusterPositionAndError(const unsigned int nHitsInCluster, pandora::FloatVector &hitE, pandora::FloatVector &hitX, 
+        pandora::FloatVector &hitY, pandora::FloatVector &hitZ, IMPL::ClusterImpl *const pLcioCluster, pandora::CartesianVector &clusterPositionVec) const;
+    
+    /**
+     *  @brief  Calculate reference point for pfo with tracks
+     * 
+     *  @param  pPandoraPfo the address of the pandora pfo 
+     *  @param  referencePoint a CartesianVector to receive the reference point
+     */
+    pandora::StatusCode CalculateTrackBasedReferencePoint(const pandora::ParticleFlowObject *const pPandoraPfo, pandora::CartesianVector &referencePoint) const;
+    
+    /**
+     *  @brief  Set reference point of the reconstructed particle
+     * 
+     *  @param  referencePoint a CartesianVector of the reference point
+     *  @param  pReconstructedParticle the address of the reconstructed particle to be reference point
+     */     
+    void SetRecoParticleReferencePoint(const pandora::CartesianVector &referencePoint, IMPL::ReconstructedParticleImpl *const pReconstructedParticle) const;
+    
+    /**
+     *  @brief  Add tracks to reconstructed particle
+     * 
+     *  @param  pPandoraPfo the address of the pandora pfo 
+     *  @param  pReconstructedParticle the address of the reconstructed particle to be added tracks
+     */     
+    void AddTracksToRecoParticle(const pandora::ParticleFlowObject *const pPandoraPfo, IMPL::ReconstructedParticleImpl *const pReconstructedParticle) const;
+    
+    /**
+     *  @brief  Set properties of reconstructed particle from pandora pfo
+     * 
+     *  @param  pPandoraPfo the address of the pandora pfo 
+     *  @param  pReconstructedParticle the address of the reconstructed particle to be set properties
+     */
+    void SetRecoParticlePropertiesFromPFO(const pandora::ParticleFlowObject *const pPandoraPfo, IMPL::ReconstructedParticleImpl *const pReconstructedParticle) const;
+
+    const Settings              m_settings;                         ///< The pfo creator settings
+    const pandora::Pandora      *m_pPandora;                        ///< Address of the pandora object from which to extract the pfos
+    pandora::StringVector       m_subDetectorNames;                 ///< String of sub detector names
 };
 
 #endif // #ifndef PFO_CREATOR_H
