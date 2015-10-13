@@ -716,7 +716,7 @@ void TrackCreator::GetECalProjectionOld(const pandora::Helix *const pHelix, cons
     // Convert generic time (length from reference point to intersection, divided by momentum) into nanoseconds
     const float particleMass(trackParameters.m_mass.Get());
     const float particleEnergy(std::sqrt(particleMass * particleMass + trackParameters.m_momentumAtDca.Get().GetMagnitudeSquared()));
-    trackParameters.m_timeAtCalorimeter = minGenericTime * particleEnergy / 300.f;
+    trackParameters.m_timeAtCalorimeter = minGenericTime * particleEnergy / 299.792f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
