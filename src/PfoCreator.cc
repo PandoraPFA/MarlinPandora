@@ -61,7 +61,7 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
     pClusterCollection->setFlag(lcFlagImpl.getFlag());
 
     pandora::StringVector subDetectorNames;
-    this->InitialiseSubDetectorsNames(subDetectorNames);
+    this->InitialiseSubDetectorNames(subDetectorNames);
     pClusterCollection->parameters().setValues("ClusterSubdetectorNames", subDetectorNames);
 
     // Create lcio "reconstructed particles" from the pandora "particle flow objects"
@@ -84,7 +84,7 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
 
             pandora::FloatVector hitE, hitX, hitY, hitZ;
             IMPL::ClusterImpl *const pLcioCluster(new ClusterImpl());
-            this->SetClusterSubDetectorsEnergies(subDetectorNames, pLcioCluster, pandoraCaloHitList, hitE, hitX, hitY, hitZ);
+            this->SetClusterSubDetectorEnergies(subDetectorNames, pLcioCluster, pandoraCaloHitList, hitE, hitX, hitY, hitZ);
 
             float clusterCorrectEnergy(0.f);
             this->SetClusterEnergyAndError(pPandoraPfo, pPandoraCluster, pLcioCluster, clusterCorrectEnergy);
