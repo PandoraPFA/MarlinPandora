@@ -221,7 +221,7 @@ private:
      *  @param  pTrack the lcio track
      */
     float CalculateTrackTimeAtCalorimeter(const EVENT::Track *const pTrack) const;
-    
+
     /**
      *  @brief  Obtain track states at start and end of track and the momentum at the dca
      * 

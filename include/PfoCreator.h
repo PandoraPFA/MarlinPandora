@@ -15,6 +15,8 @@
 namespace IMPL { class ClusterImpl; class ReconstructedParticleImpl; }
 namespace EVENT { class LCEvent; }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  PfoCreator class
  */
@@ -75,12 +77,12 @@ private:
         LHCAL_INDEX = 4,
         BCAL_INDEX = 5
     };
-    
+
     /**
      *  @brief  initialise sub detector name strings
      */
     void InitialiseSubDetectorsNames();
-    
+
     /**
      *  @brief  Set sub detector energies for a cluster
      * 
@@ -97,8 +99,8 @@ private:
     /**
      *  @brief  Set cluster energies and errors
      * 
-     *  @param  pPandoraPfo the address of the pandora pfo 
-     *  @param  pPandoraCluster the address of the pandora cluster 
+     *  @param  pPandoraPfo the address of the pandora pfo
+     *  @param  pPandoraCluster the address of the pandora cluster
      *  @param  pLcioCluster the address of the lcio cluster to be set energies and erros
      *  @param  clusterCorrectEnergy a number to receive the cluster correct energy
      */
@@ -115,7 +117,7 @@ private:
      *  @param  hitZ the vector of the z position of hits
      *
      *  @return address of the cluster shape object
-     */    
+     */
     ClusterShapes *const CalculateClusterShape(const unsigned int nHitsInCluster, pandora::FloatVector &hitE, pandora::FloatVector &hitX, 
         pandora::FloatVector &hitY, pandora::FloatVector &hitZ) const;
         
@@ -136,23 +138,23 @@ private:
     /**
      *  @brief  Calculate reference point for pfo with tracks
      * 
-     *  @param  pPandoraPfo the address of the pandora pfo 
+     *  @param  pPandoraPfo the address of the pandora pfo
      *  @param  referencePoint a CartesianVector to receive the reference point
      */
     pandora::StatusCode CalculateTrackBasedReferencePoint(const pandora::ParticleFlowObject *const pPandoraPfo, pandora::CartesianVector &referencePoint) const;
-    
+
     /**
      *  @brief  Set reference point of the reconstructed particle
      * 
      *  @param  referencePoint a CartesianVector of the reference point
      *  @param  pReconstructedParticle the address of the reconstructed particle to be reference point
-     */     
+     */
     void SetRecoParticleReferencePoint(const pandora::CartesianVector &referencePoint, IMPL::ReconstructedParticleImpl *const pReconstructedParticle) const;
-    
+
     /**
      *  @brief  Add tracks to reconstructed particle
      * 
-     *  @param  pPandoraPfo the address of the pandora pfo 
+     *  @param  pPandoraPfo the address of the pandora pfo
      *  @param  pReconstructedParticle the address of the reconstructed particle to be added tracks
      */     
     void AddTracksToRecoParticle(const pandora::ParticleFlowObject *const pPandoraPfo, IMPL::ReconstructedParticleImpl *const pReconstructedParticle) const;

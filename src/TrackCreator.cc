@@ -540,12 +540,13 @@ void TrackCreator::GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::
     const float particleEnergy(std::sqrt(particleMass * particleMass + trackParameters.m_momentumAtDca.Get().GetMagnitudeSquared()));
     trackParameters.m_timeAtCalorimeter = minGenericTime * particleEnergy / 299.792f;
 }
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float TrackCreator::CalculateTrackTimeAtCalorimeter(const EVENT::Track *const pTrack) const
 {
     pandora::Helix *pHelixFit = new pandora::Helix(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), m_bField);
-    
+
     const pandora::CartesianVector &referencePoint(pHelixFit->GetReferencePoint());
 
     // First project to endcap

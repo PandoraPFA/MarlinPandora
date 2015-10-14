@@ -18,8 +18,8 @@
 #include "IMPL/LCRelationImpl.h"
 #include "IMPL/ReconstructedParticleImpl.h"
 #include "IMPL/VertexImpl.h"
+
 #include "CalorimeterHitType.h"
-#include "ClusterShapes.h"
 
 #include "Api/PandoraApi.h"
 
@@ -84,14 +84,14 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
             pandora::FloatVector hitE, hitX, hitY, hitZ;
             IMPL::ClusterImpl *const pLcioCluster(new ClusterImpl());
             this->SetClusterSubDetectorsEnergies(pLcioCluster, pandoraCaloHitList, hitE, hitX, hitY, hitZ);
-            
+
             float clusterCorrectEnergy(0.f);
             this->SetClusterEnergyAndError(pPandoraPfo, pPandoraCluster, pLcioCluster, clusterCorrectEnergy);
-            
+
             pandora::CartesianVector clusterPosition(0.f, 0.f, 0.f);
             const unsigned int nHitsInCluster(pandoraCaloHitList.size());
             this->SetClusterPositionAndError(nHitsInCluster, hitE, hitX, hitY, hitZ, pLcioCluster, clusterPosition);
-            
+
             if (!hasTrack)
             {
                 clustersWeightedPosition += clusterPosition * clusterCorrectEnergy;
@@ -100,7 +100,7 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
             pClusterCollection->addElement(pLcioCluster);
             pReconstructedParticle->addCluster(pLcioCluster);
         }
-        
+
         if (!hasTrack)
         {
             if (clustersTotalEnergy < std::numeric_limits<float>::epsilon())
@@ -119,9 +119,9 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
         }
         this->SetRecoParticleReferencePoint(referencePoint, pReconstructedParticle);
         this->AddTracksToRecoParticle(pPandoraPfo, pReconstructedParticle);
-        this->SetRecoParticlePropertiesFromPFO(pPandoraPfo, pReconstructedParticle);    
+        this->SetRecoParticlePropertiesFromPFO(pPandoraPfo, pReconstructedParticle);
         pReconstructedParticleCollection->addElement(pReconstructedParticle);
-        
+
         IMPL::VertexImpl *const pStartVertex(new VertexImpl());
         pStartVertex->setAlgorithmType(m_settings.m_startVertexAlgName.c_str());
         pStartVertex->setPosition(referencePoint.GetX(),referencePoint.GetY(),referencePoint.GetZ());
@@ -140,12 +140,12 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
 
 void PfoCreator::InitialiseSubDetectorsNames()
 {
-    m_subDetectorNames.push_back("ecal"); 
-    m_subDetectorNames.push_back("hcal"); 
-    m_subDetectorNames.push_back("yoke"); 
-    m_subDetectorNames.push_back("lcal"); 
+    m_subDetectorNames.push_back("ecal");
+    m_subDetectorNames.push_back("hcal");
+    m_subDetectorNames.push_back("yoke");
+    m_subDetectorNames.push_back("lcal");
     m_subDetectorNames.push_back("lhcal");
-    m_subDetectorNames.push_back("bcal"); 
+    m_subDetectorNames.push_back("bcal");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -230,18 +230,18 @@ void PfoCreator::SetClusterPositionAndError(const unsigned int nHitsInCluster, p
         streamlog_out(WARNING) << "PfoCreator::SetClusterPositionAndError: unidentified exception caught." << std::endl;
     }
 
-    delete pClusterShapes;  
+    delete pClusterShapes;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 pandora::StatusCode PfoCreator::CalculateTrackBasedReferencePoint(const pandora::ParticleFlowObject *const pPandoraPfo, pandora::CartesianVector &referencePoint) const
-{  
+{
     const pandora::TrackList &trackList(pPandoraPfo->GetTrackList());
 
     float totalTrackMomentumAtDca(0.f), totalTrackMomentumAtStart(0.f);
     pandora::CartesianVector referencePointAtDCAWeighted(0.f, 0.f, 0.f), referencePointAtStartWeighted(0.f, 0.f, 0.f);
-    
+
     bool hasSiblings(false);
     for (pandora::TrackList::const_iterator tIter = trackList.begin(), tIterEnd = trackList.end(); tIter != tIterEnd; ++tIter)
     {
@@ -252,11 +252,11 @@ pandora::StatusCode PfoCreator::CalculateTrackBasedReferencePoint(const pandora:
 
         if (!pPandoraTrack->GetSiblingTrackList().empty())
         {
-            // Sibling tracks which is conversion 
+            // Presence of sibling tracks typically represents a conversion
             const pandora::CartesianVector &trackStartPoint((pPandoraTrack->GetTrackStateAtStart()).GetPosition());
             const float trackStartMomentum(((pPandoraTrack->GetTrackStateAtStart()).GetMomentum()).GetMagnitude());
             referencePointAtStartWeighted += trackStartPoint * trackStartMomentum;
-            totalTrackMomentumAtStart += trackStartMomentum;  
+            totalTrackMomentumAtStart += trackStartMomentum;
             hasSiblings = true;
         }
         else

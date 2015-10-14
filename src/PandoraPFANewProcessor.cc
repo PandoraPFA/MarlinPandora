@@ -327,7 +327,7 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                              "PFO Collection Name",
                              m_pfoCreatorSettings.m_pfoCollectionName,
                              std::string("PandoraPFANewPFOs"));
-                             
+
     registerOutputCollection(LCIO::VERTEX,
                              "StartVertexCollectionName",
                              "Start Vertex Collection Name",
@@ -344,17 +344,17 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "The stochastic term for EM shower",
                             m_pfoCreatorSettings.m_emStochasticTerm,
                             float(0.17));
-                            
+
     registerProcessorParameter("HadStochasticTerm",
                             "The stochastic term for Hadronic shower",
                             m_pfoCreatorSettings.m_hadStochasticTerm,
                             float(0.6));
-                            
+
     registerProcessorParameter("EMConstantTerm",
                             "The constant term for EM shower",
                             m_pfoCreatorSettings.m_emConstantTerm,
                             float(0.01));
-                            
+
     registerProcessorParameter("HadConstantTerm",
                             "The constant term for Hadronic shower",
                             m_pfoCreatorSettings.m_hadConstantTerm,
