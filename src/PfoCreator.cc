@@ -60,10 +60,11 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
     lcFlagImpl.setBit(LCIO::CLBIT_HITS);
     pClusterCollection->setFlag(lcFlagImpl.getFlag());
 
-    this->InitialiseSubDetectorsNames();
-    pClusterCollection->parameters().setValues("ClusterSubdetectorNames", m_subDetectorNames);
-    // Create lcio "reconstructed particles" from the pandora "particle flow objects"
+    pandora::StringVector subDetectorNames;
+    this->InitialiseSubDetectorsNames(subDetectorNames);
+    pClusterCollection->parameters().setValues("ClusterSubdetectorNames", subDetectorNames);
 
+    // Create lcio "reconstructed particles" from the pandora "particle flow objects"
     for (pandora::PfoList::const_iterator pIter = pPandoraPfoList->begin(), pIterEnd = pPandoraPfoList->end(); pIter != pIterEnd; ++pIter)
     {
         const pandora::ParticleFlowObject *const pPandoraPfo(*pIter);
@@ -83,7 +84,7 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
 
             pandora::FloatVector hitE, hitX, hitY, hitZ;
             IMPL::ClusterImpl *const pLcioCluster(new ClusterImpl());
-            this->SetClusterSubDetectorsEnergies(pLcioCluster, pandoraCaloHitList, hitE, hitX, hitY, hitZ);
+            this->SetClusterSubDetectorsEnergies(subDetectorNames, pLcioCluster, pandoraCaloHitList, hitE, hitX, hitY, hitZ);
 
             float clusterCorrectEnergy(0.f);
             this->SetClusterEnergyAndError(pPandoraPfo, pPandoraCluster, pLcioCluster, clusterCorrectEnergy);
@@ -97,6 +98,7 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
                 clustersWeightedPosition += clusterPosition * clusterCorrectEnergy;
                 clustersTotalEnergy += clusterCorrectEnergy;
             }
+
             pClusterCollection->addElement(pLcioCluster);
             pReconstructedParticle->addCluster(pLcioCluster);
         }
@@ -117,6 +119,7 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, this->CalculateTrackBasedReferencePoint(pPandoraPfo, referencePoint));
         }
+
         this->SetRecoParticleReferencePoint(referencePoint, pReconstructedParticle);
         this->AddTracksToRecoParticle(pPandoraPfo, pReconstructedParticle);
         this->SetRecoParticlePropertiesFromPFO(pPandoraPfo, pReconstructedParticle);
@@ -138,20 +141,21 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PfoCreator::InitialiseSubDetectorsNames()
+void PfoCreator::InitialiseSubDetectorNames(pandora::StringVector &subDetectorNames) const
 {
-    m_subDetectorNames.push_back("ecal");
-    m_subDetectorNames.push_back("hcal");
-    m_subDetectorNames.push_back("yoke");
-    m_subDetectorNames.push_back("lcal");
-    m_subDetectorNames.push_back("lhcal");
-    m_subDetectorNames.push_back("bcal");
+    subDetectorNames.push_back("ecal");
+    subDetectorNames.push_back("hcal");
+    subDetectorNames.push_back("yoke");
+    subDetectorNames.push_back("lcal");
+    subDetectorNames.push_back("lhcal");
+    subDetectorNames.push_back("bcal");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PfoCreator::SetClusterSubDetectorsEnergies(IMPL::ClusterImpl *const pLcioCluster, const pandora::CaloHitList &pandoraCaloHitList,
-    pandora::FloatVector &hitE, pandora::FloatVector &hitX, pandora::FloatVector &hitY, pandora::FloatVector &hitZ) const
+void PfoCreator::SetClusterSubDetectorEnergies(const pandora::StringVector &subDetectorNames, IMPL::ClusterImpl *const pLcioCluster,
+    const pandora::CaloHitList &pandoraCaloHitList, pandora::FloatVector &hitE, pandora::FloatVector &hitX, pandora::FloatVector &hitY,
+    pandora::FloatVector &hitZ) const
 {
     for (pandora::CaloHitList::const_iterator hIter = pandoraCaloHitList.begin(), hIterEnd = pandoraCaloHitList.end(); hIter != hIterEnd; ++hIter)
     {
@@ -166,7 +170,7 @@ void PfoCreator::SetClusterSubDetectorsEnergies(IMPL::ClusterImpl *const pLcioCl
         hitZ.push_back(pCalorimeterHit->getPosition()[2]);
 
         std::vector<float> &subDetectorEnergies = pLcioCluster->subdetectorEnergies();
-        subDetectorEnergies.resize(m_subDetectorNames.size());
+        subDetectorEnergies.resize(subDetectorNames.size());
 
         switch (CHT(pCalorimeterHit->getType()).caloID())
         {
@@ -176,7 +180,7 @@ void PfoCreator::SetClusterSubDetectorsEnergies(IMPL::ClusterImpl *const pLcioCl
             case CHT::lcal:  subDetectorEnergies[LCAL_INDEX ] += caloHitEnergy; break;
             case CHT::lhcal: subDetectorEnergies[LHCAL_INDEX] += caloHitEnergy; break;
             case CHT::bcal:  subDetectorEnergies[BCAL_INDEX ] += caloHitEnergy; break;
-            default: streamlog_out(WARNING) << "PfoCreator::SetClusterSubDetectorsEnergies: no subdetector found for hit with type: " << pCalorimeterHit->getType() << std::endl;
+            default: streamlog_out(WARNING) << "PfoCreator::SetClusterSubDetectorEnergies: no subdetector found for hit with type: " << pCalorimeterHit->getType() << std::endl;
         }
     }
 }
@@ -202,18 +206,10 @@ void PfoCreator::SetClusterEnergyAndError(const pandora::ParticleFlowObject *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ClusterShapes *const PfoCreator::CalculateClusterShape(const unsigned int nHitsInCluster, pandora::FloatVector &hitE, pandora::FloatVector &hitX, 
-    pandora::FloatVector &hitY, pandora::FloatVector &hitZ) const
-{
-    return new ClusterShapes(nHitsInCluster, hitE.data(), hitX.data(), hitY.data(), hitZ.data());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void PfoCreator::SetClusterPositionAndError(const unsigned int nHitsInCluster, pandora::FloatVector &hitE, pandora::FloatVector &hitX, 
     pandora::FloatVector &hitY, pandora::FloatVector &hitZ, IMPL::ClusterImpl *const pLcioCluster, pandora::CartesianVector &clusterPositionVec) const
 {
-    ClusterShapes *const pClusterShapes(this->CalculateClusterShape(nHitsInCluster, hitE, hitX, hitY, hitZ));
+    ClusterShapes *const pClusterShapes(new ClusterShapes(nHitsInCluster, hitE.data(), hitX.data(), hitY.data(), hitZ.data()));
 
     try
     {
@@ -271,6 +267,7 @@ pandora::StatusCode PfoCreator::CalculateTrackBasedReferencePoint(const pandora:
             totalTrackMomentumAtDca += trackMomentumAtDca;
         }
     }
+
     if (hasSiblings)
     {
         if (totalTrackMomentumAtStart < std::numeric_limits<float>::epsilon())

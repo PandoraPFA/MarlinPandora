@@ -80,12 +80,15 @@ private:
 
     /**
      *  @brief  initialise sub detector name strings
+     * 
+     *  @param  subDetectorNames to receive the list of sub detector names
      */
-    void InitialiseSubDetectorsNames();
+    void InitialiseSubDetectorNames(pandora::StringVector &subDetectorNames) const;
 
     /**
      *  @brief  Set sub detector energies for a cluster
      * 
+     *  @param  subDetectorNames the list of sub detector names
      *  @param  pLcioCluster the address of the lcio cluster to be set sub detector energies
      *  @param  pandoraCaloHitList the pandora calorimeter hit list
      *  @param  hitE the vector to receive the energy of hits
@@ -93,8 +96,9 @@ private:
      *  @param  hitY the vector to receive the y position of hits
      *  @param  hitZ the vector to receive the z position of hits
      */
-    void SetClusterSubDetectorsEnergies(IMPL::ClusterImpl *const pLcioCluster, const pandora::CaloHitList &pandoraCaloHitList,
-        pandora::FloatVector &hitE, pandora::FloatVector &hitX, pandora::FloatVector &hitY, pandora::FloatVector &hitZ) const;
+    void SetClusterSubDetectorEnergies(const pandora::StringVector &subDetectorNames, IMPL::ClusterImpl *const pLcioCluster,
+        const pandora::CaloHitList &pandoraCaloHitList, pandora::FloatVector &hitE, pandora::FloatVector &hitX, pandora::FloatVector &hitY,
+        pandora::FloatVector &hitZ) const;
 
     /**
      *  @brief  Set cluster energies and errors
@@ -108,20 +112,6 @@ private:
         IMPL::ClusterImpl *const pLcioCluster, float &clusterCorrectEnergy) const;
 
     /**
-     *  @brief  Calculate cluster shape from number of hits, energies and positions
-     * 
-     *  @param  nHitsInCluster number of hits in cluster
-     *  @param  hitE the vector of the energy of hits
-     *  @param  hitX the vector of the x position of hits
-     *  @param  hitY the vector of the y position of hits
-     *  @param  hitZ the vector of the z position of hits
-     *
-     *  @return address of the cluster shape object
-     */
-    ClusterShapes *const CalculateClusterShape(const unsigned int nHitsInCluster, pandora::FloatVector &hitE, pandora::FloatVector &hitX, 
-        pandora::FloatVector &hitY, pandora::FloatVector &hitZ) const;
-        
-    /**
      *  @brief  Set cluster position, errors and other shape info, by calculating culster shape first
      * 
      *  @param  nHitsInCluster number of hits in cluster
@@ -134,7 +124,7 @@ private:
      */
     void SetClusterPositionAndError(const unsigned int nHitsInCluster, pandora::FloatVector &hitE, pandora::FloatVector &hitX, 
         pandora::FloatVector &hitY, pandora::FloatVector &hitZ, IMPL::ClusterImpl *const pLcioCluster, pandora::CartesianVector &clusterPositionVec) const;
-    
+
     /**
      *  @brief  Calculate reference point for pfo with tracks
      * 
@@ -156,9 +146,9 @@ private:
      * 
      *  @param  pPandoraPfo the address of the pandora pfo
      *  @param  pReconstructedParticle the address of the reconstructed particle to be added tracks
-     */     
+     */
     void AddTracksToRecoParticle(const pandora::ParticleFlowObject *const pPandoraPfo, IMPL::ReconstructedParticleImpl *const pReconstructedParticle) const;
-    
+
     /**
      *  @brief  Set properties of reconstructed particle from pandora pfo
      * 
@@ -169,7 +159,6 @@ private:
 
     const Settings              m_settings;                         ///< The pfo creator settings
     const pandora::Pandora      *m_pPandora;                        ///< Address of the pandora object from which to extract the pfos
-    pandora::StringVector       m_subDetectorNames;                 ///< String of sub detector names
 };
 
 #endif // #ifndef PFO_CREATOR_H
