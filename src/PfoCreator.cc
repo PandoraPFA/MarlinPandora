@@ -216,9 +216,9 @@ void PfoCreator::SetClusterPositionAndError(const unsigned int nHitsInCluster, p
         pLcioCluster->setIPhi(std::atan2(pClusterShapes->getEigenVecInertia()[1], pClusterShapes->getEigenVecInertia()[0]));
         pLcioCluster->setITheta(std::acos(pClusterShapes->getEigenVecInertia()[2]));
         pLcioCluster->setPosition(pClusterShapes->getCentreOfGravity());
-        //ATTN these two lines below would only compile with ilcsoft V01-17-08 and above
-        pLcioCluster->setPositionError(pClusterShapes->getCenterOfGravityErrors());
-        pLcioCluster->setDirectionError(pClusterShapes->getEigenVecInertiaErrors());
+        //ATTN these two lines below would only compile with ilcsoft HEAD V2015-10-13 and above
+        //pLcioCluster->setPositionError(pClusterShapes->getCenterOfGravityErrors());
+        //pLcioCluster->setDirectionError(pClusterShapes->getEigenVecInertiaErrors());
         clusterPositionVec.SetValues(pClusterShapes->getCentreOfGravity()[0], pClusterShapes->getCentreOfGravity()[1], pClusterShapes->getCentreOfGravity()[2]);
     }
     catch (...)
