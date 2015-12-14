@@ -1,15 +1,8 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
-TAG v02-02-01
---------------------------------------------------------------------------------------------------------------------------------------------
-Comment out the lines that require new ClusterShapes class. 
-Note as of 2015-10-13, this branch conflicts with DDMarlinPandora. Hence MarlinPandora won't with v01-17-08 and above unless DMarlinPandora library is takend out.
-As for v01-17-07, this branch won't compile because the required version for MarlinUtil, 01.10 in cmakeList is different to the MarlinUtil version in v01-17-07 which is 1.8.1
-
---------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-02-00
 --------------------------------------------------------------------------------------------------------------------------------------------
 PfoCreator updates to set Cluster and ReconstructedParticle properties. Requires new functionality from MarlinUtil ClusterShapes class.
-Changed definition of some output properties and provided some new outputs, as agreed ar High Level Reconstruction Workshop in June 2015.
+Changed definition of some output properties and provided some new outputs, as agreed at High Level Reconstruction Workshop in June 2015.
 Update Track creator to calculate track time at calorimeter.
 
 --------------------------------------------------------------------------------------------------------------------------------------------
