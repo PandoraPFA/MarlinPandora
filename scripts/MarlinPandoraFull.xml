@@ -849,6 +849,8 @@
   <parameter name="V0VertexCollections" type="StringVec">V0Vertices</parameter>
   <parameter name="ClusterCollectionName" type="String">PandoraClusters</parameter>
   <parameter name="PFOCollectionName" type="String">PandoraPFOs</parameter>
+  <parameter name="StartVertexCollectionName" type="String">PandoraStartVertices</parameter>
+  <parameter name="StartVertexAlgorithmName" type="String">Pandora</parameter>  
   <!-- Calibration constants -->
   <parameter name="ECalToMipCalibration" type="float">160.0</parameter>
   <parameter name="HCalToMipCalibration" type="float">34.8</parameter>

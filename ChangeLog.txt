@@ -1,4 +1,16 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-02-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+PfoCreator updates to set Cluster and ReconstructedParticle properties. Requires new functionality from MarlinUtil ClusterShapes class.
+Changed definition of some output properties and provided some new outputs, as agreed at High Level Reconstruction Workshop in June 2015.
+Update Track creator to calculate track time at calorimeter.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v02-01-00
+--------------------------------------------------------------------------------------------------------------------------------------------
+PandoraSettings updates, switch verson control and source distribution to git.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v02-00-00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Update to reflect change to calo hit creation API.
