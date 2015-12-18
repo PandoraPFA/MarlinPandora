@@ -46,4 +46,4 @@ Also available are some PandoraSettings.xml files that use MC information to che
 
 ---------------------------
 
-The accompanying Marlin steering files are configured for use with Ilcsoft v01-17-05, with the detector model ILD_o1_v05/v06 and the physics list QGSP_BERT.
+The accompanying Marlin steering file has been configured for use with Ilcsoft v01-17-07, with the detector model ILD_o1_v06 and the physics list QGSP_BERT. The PandoraPFA calibration constants were derived using the ILDCaloDigi digitiser with semi-infinite timing cuts (10^6 ns) and a hadronic energy cell truncation of 1 GeV.
