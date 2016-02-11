@@ -243,10 +243,10 @@ pandora::StatusCode PfoCreator::CalculateTrackBasedReferencePoint(const pandora:
     {
         const pandora::Track *const pPandoraTrack(*tIter);
 
-        if (!pPandoraTrack->GetParentTrackList().empty())
+        if (!this->IsValidParentTrack(pPandoraTrack, trackList))
             continue;
 
-        if (!pPandoraTrack->GetSiblingTrackList().empty())
+        if (this->HasValidSiblingTrack(pPandoraTrack, trackList))
         {
             // Presence of sibling tracks typically represents a conversion
             const pandora::CartesianVector &trackStartPoint((pPandoraTrack->GetTrackStateAtStart()).GetPosition());
@@ -294,6 +294,111 @@ pandora::StatusCode PfoCreator::CalculateTrackBasedReferencePoint(const pandora:
     }
 
     return pandora::STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool PfoCreator::IsValidParentTrack(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const
+{
+    // Check parents of pandora track are also accoicated to same pfo
+    const pandora::TrackList &parentTrackList(pPandoraTrack->GetParentTrackList());
+
+    for (pandora::TrackList::const_iterator iter = parentTrackList.begin(), iterEnd = parentTrackList.end(); iter != iterEnd; ++iter)
+    {
+        const pandora::Track *const pParentTrack(*iter);
+
+        if (allTrackList.count(pParentTrack))
+            continue;
+
+        streamlog_out(WARNING) << "PfoCreator::IsValidParentTrack: mismatch in track relationship information, use information as available " << std::endl;
+
+        // ATTN This track must have a parent not in the all track list; still use it if it is the closest to the ip
+
+        // Define closest track to IP
+        const pandora::Track *const pClosestTrack(this->GetClosestTrackToIP(allTrackList));
+
+        // Check track with missing parent track to see if it is closest to IP 
+        if (pClosestTrack == pPandoraTrack)
+            // If it is closest to IP use the track
+            return true;
+
+        else
+            // If it isn't closest to the IP another track (with or without parent) is closer to the IP and should be used for reference calculation
+            return false;
+    }
+    // Ideal case: All parents are assocaited to the same pfo, logic not used
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const pandora::Track *const PfoCreator::GetClosestTrackToIP(const pandora::TrackList &allTrackList) const 
+{
+    // Find track closest to IP
+    float closestTrackDisplacement(std::numeric_limits<float>::max()); 
+    const pandora::Track *pClosestTrack(NULL);
+
+    for (pandora::TrackList::const_iterator iter = allTrackList.begin(), iterEnd = allTrackList.end(); iter != iterEnd; ++iter)
+    {
+        const pandora::Track *const pTrack(*iter);
+        const float trialTrackDisplacement(pTrack->GetTrackStateAtStart().GetPosition().GetMagnitude());
+
+        if (trialTrackDisplacement > closestTrackDisplacement)
+            continue;
+
+        closestTrackDisplacement = trialTrackDisplacement;
+        pClosestTrack = pTrack;
+    }
+
+    return pClosestTrack;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool PfoCreator::HasValidSiblingTrack(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const
+{
+    // Check siblings of pandora track are also accoicated to same pfo
+    const pandora::TrackList &siblingTrackList(pPandoraTrack->GetSiblingTrackList());
+
+    for (pandora::TrackList::const_iterator iter = siblingTrackList.begin(), iterEnd = siblingTrackList.end(); iter != iterEnd; ++iter)
+    {
+        const pandora::Track *const pTrack(*iter);
+
+        if (allTrackList.count(pTrack))
+            continue;
+
+        streamlog_out(WARNING) << "PfoCreator::HasValidSiblingTrack: mismatch in track relationship information, use information as available " << std::endl;
+
+        // ATTN This track must have a sibling not in the all track list; still use it if it has a second sibling that is in the list
+
+        // Is at least one sibling associated to the pfo?
+        if (this->AreAnyOtherSiblingsInList(pPandoraTrack,allTrackList))
+            // If so at least two sibling tracks are assocaited to same pfo therefore valid siblings
+            return true;
+        else
+            // If not only one track assocaited in generation and treat as single track
+            return false;
+    }
+    // Ideal case: All siblings are assocaited to the same pfo, logic not used
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool PfoCreator::AreAnyOtherSiblingsInList(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const
+{
+    // Check to see if any siblings are assocaited to pfo
+    const pandora::TrackList &siblingTrackList(pPandoraTrack->GetSiblingTrackList());
+
+    for (pandora::TrackList::const_iterator iter = siblingTrackList.begin(), iterEnd = siblingTrackList.end(); iter != iterEnd; ++iter)
+    {
+        const pandora::Track *const pTrack(*iter);
+
+        // At least one other sibling is assocaited to pfo therefore then use track
+        if (allTrackList.count(pTrack))
+            return true;
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

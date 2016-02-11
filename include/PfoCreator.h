@@ -157,6 +157,38 @@ private:
      */
     void SetRecoParticlePropertiesFromPFO(const pandora::ParticleFlowObject *const pPandoraPfo, IMPL::ReconstructedParticleImpl *const pReconstructedParticle) const;
 
+    /**
+     *  @brief  Determine if parent and daughter tracks are assocaited to the same pfo
+     *
+     *  @param  pPandoraTrack the address of the pandora track
+     *  @param  allTrackList list of all tracks associated to reconstructed particle 
+     */
+    bool IsValidParentTrack(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const;
+
+    /**
+     *  @brief  Determine if sibling tracks are assocaited to the same pfo
+     *
+     *  @param  pPandoraTrack the address of the pandora track
+     *  @param  allTrackList list of all tracks associated to reconstructed particle
+     */
+    bool HasValidSiblingTrack(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const;
+
+    /**
+     *  @brief  Determine the closest track to the impact point
+     *
+     *  @param  allTrackList list of all tracks associated to reconstructed particle
+     */ 
+    const pandora::Track *const GetClosestTrackToIP(const pandora::TrackList &allTrackList) const;
+
+    /**
+     *  @brief  Is at least one track sibling associated to the reconstructed particle 
+     *
+     *  @param  pPandoraTrack the address of the pandora track
+     *  @param  allTrackList list of all tracks associated to reconstructed particle
+     */
+    bool AreAnyOtherSiblingsInList(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const;
+
+
     const Settings              m_settings;                         ///< The pfo creator settings
     const pandora::Pandora      *m_pPandora;                        ///< Address of the pandora object from which to extract the pfos
 };
