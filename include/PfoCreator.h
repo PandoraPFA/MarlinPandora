@@ -158,36 +158,44 @@ private:
     void SetRecoParticlePropertiesFromPFO(const pandora::ParticleFlowObject *const pPandoraPfo, IMPL::ReconstructedParticleImpl *const pReconstructedParticle) const;
 
     /**
-     *  @brief  Determine if parent and daughter tracks are assocaited to the same pfo
+     *  @brief  Whether parent and daughter tracks are associated with the same pfo
      *
      *  @param  pPandoraTrack the address of the pandora track
-     *  @param  allTrackList list of all tracks associated to reconstructed particle 
+     *  @param  allTrackList list of all tracks associated with reconstructed particle
+     * 
+     *  @return boolean
      */
     bool IsValidParentTrack(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const;
 
     /**
-     *  @brief  Determine if sibling tracks are assocaited to the same pfo
+     *  @brief  Whether sibling tracks are associated with the same pfo
      *
      *  @param  pPandoraTrack the address of the pandora track
-     *  @param  allTrackList list of all tracks associated to reconstructed particle
+     *  @param  allTrackList list of all tracks associated with reconstructed particle
+     * 
+     *  @return boolean
      */
     bool HasValidSiblingTrack(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const;
 
     /**
-     *  @brief  Determine the closest track to the impact point
-     *
-     *  @param  allTrackList list of all tracks associated to reconstructed particle
-     */ 
-    const pandora::Track *const GetClosestTrackToIP(const pandora::TrackList &allTrackList) const;
-
-    /**
-     *  @brief  Is at least one track sibling associated to the reconstructed particle 
+     *  @brief  Whether the track is the closest (of those associated with the same pfo) to the interaction point
      *
      *  @param  pPandoraTrack the address of the pandora track
      *  @param  allTrackList list of all tracks associated to reconstructed particle
+     * 
+     *  @return boolean
+     */ 
+    bool IsClosestTrackToIP(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const;
+
+    /**
+     *  @brief  Whether at least one track sibling track is associated to the reconstructed particle 
+     *
+     *  @param  pPandoraTrack the address of the pandora track
+     *  @param  allTrackList list of all tracks associated to reconstructed particle
+     * 
+     *  @return boolean
      */
     bool AreAnyOtherSiblingsInList(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const;
-
 
     const Settings              m_settings;                         ///< The pfo creator settings
     const pandora::Pandora      *m_pPandora;                        ///< Address of the pandora object from which to extract the pfos
