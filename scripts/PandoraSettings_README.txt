@@ -47,4 +47,6 @@ Also available are some PandoraSettings.xml files that use MC information to che
 
 ---------------------------
 
-The accompanying Marlin steering file has been configured for use with Ilcsoft v01-17-07, with the detector model ILD_o1_v06 and the physics list QGSP_BERT. The PandoraPFA calibration constants were derived using the ILDCaloDigi digitiser with semi-infinite timing cuts (10^6 ns) and a hadronic energy cell truncation of 1 GeV.
+Two Marlin steering files, MarlinPandora.xml and MarlinPandoraValidation.xml, are included in the scripts directory.  MarlinPandora.xml demonstrates how to configure the MarlinPandora processor and MarlinPandoraValidation.xml demonstrates the setup, for both the MarlinPandora and PfoAnalysis processors, for validating changes to either the detector model or reconstruction.  MarlinPandoraValidation.xml runs several instances of Pandora with various pandora settings, which include cheating various parts of the reconstruction.  Also included in MarlinPandoraValidation.xml is the configuration of ILDCaloDigi used for the calibration procedure.
+
+The accompanying Marlin steering file has been configured for use with Ilcsoft v01-17-07, with the detector model ILD_o1_v06 and the physics list QGSP_BERT. The PandoraPFA calibration constants were derived using the ILDCaloDigi digitiser with semi-infinite timing cuts (100 ns) and a hadronic energy cell truncation of 1 GeV.
