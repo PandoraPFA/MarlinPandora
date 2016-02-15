@@ -142,7 +142,7 @@
 
 <!--########## RecoMCTruthLinker ###################################### -->
 
- <processor name="MyRecoMCTruthLinker" type="RecoMCTruthLinker">
+<processor name="MyRecoMCTruthLinker" type="RecoMCTruthLinker">
   <!--links RecontructedParticles to the MCParticle based on number of hits used-->
   <!--Name of the MCParticle input collection-->
   <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle"> MCParticle </parameter>
