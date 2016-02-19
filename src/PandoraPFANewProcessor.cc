@@ -736,6 +736,12 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "The output energy points for hadronic energy correction",
                             m_settings.m_outputEnergyCorrectionPoints,
                             FloatVector());
+
+    // Old track state calculation
+    registerProcessorParameter("UseOldTrackStateCalculation",
+                            "Whether to calculate track states manually, rather than copy stored fitter values",
+                            m_trackCreatorSettings.m_useOldTrackStateCalculation,
+                            int(0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

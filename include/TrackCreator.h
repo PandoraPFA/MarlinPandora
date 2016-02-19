@@ -100,6 +100,8 @@ public:
         float           m_maxTpcInnerRDistance;                 ///< Track cut on distance from tpc inner r to id whether track can form pfo
         float           m_minTpcHitFractionOfExpected;          ///< Minimum fraction of TPC hits compared to expected
         int             m_minFtdHitsForTpcHitFraction;          ///< Minimum number of FTD hits to ignore TPC hit fraction
+        int             m_useOldTrackStateCalculation;          ///< Whether to calculate track states manually, rather than copy stored fitter values
+
     };
 
     /**
@@ -265,6 +267,23 @@ private:
      *  @return number of hits in FTDof a track
      */
     int GetNFtdHits(const EVENT::Track *const pTrack) const;
+
+    /**
+     *  @brief  Obtain track states at start and end of track and the momentum at the dca
+     * 
+     *  @param  pTrack the lcio track
+     *  @param  trackParameters the track parameters
+     */
+    void GetTrackStatesOld(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const;
+
+    /**
+     *  @brief  Project helix to the surface of the ecal
+     * 
+     *  @param  pHelix helix fit to be projected to ecal surface
+     *  @param  signPz sign w.r.t. increasing z direction
+     *  @param  trackParameters the track parameters
+     */
+    void GetECalProjectionOld(const pandora::Helix *const pHelix, const int signPz, PandoraApi::Track::Parameters &trackParameters) const;
 
     const Settings          m_settings;                     ///< The track creator settings
     const pandora::Pandora *m_pPandora;                     ///< Address of the pandora object to create tracks and track relationships

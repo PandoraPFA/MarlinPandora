@@ -513,6 +513,9 @@ pandora::StatusCode TrackCreator::CreateTracks(EVENT::LCEvent *pLCEvent)
 
 void TrackCreator::GetTrackStates(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
 {
+    if (m_settings.m_useOldTrackStateCalculation > 0)
+        return this->GetTrackStatesOld(pTrack, trackParameters);
+
     const TrackState *pTrackState = pTrack->getTrackState(TrackState::AtIP);
 
     if (!pTrackState)
@@ -887,6 +890,109 @@ int TrackCreator::GetNFtdHits(const EVENT::Track *const pTrack) const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+void TrackCreator::GetTrackStatesOld(const EVENT::Track *const pTrack, PandoraApi::Track::Parameters &trackParameters) const
+{
+    pandora::Helix *pHelixFit = new pandora::Helix(pTrack->getPhi(), pTrack->getD0(), pTrack->getZ0(), pTrack->getOmega(), pTrack->getTanLambda(), m_bField);
+    trackParameters.m_momentumAtDca = pHelixFit->GetMomentum();
+
+    const EVENT::TrackerHitVec &trackerHitvec(pTrack->getTrackerHits());
+    float zMin(std::numeric_limits<float>::max()), zMax(-std::numeric_limits<float>::max());
+
+    for (int iz = 0, nTrackHits = trackerHitvec.size(); iz < nTrackHits - 1; ++iz)
+    {
+        const float hitZ(trackerHitvec[iz]->getPosition()[2]);
+
+        if (hitZ > zMax)
+            zMax = hitZ;
+
+        if (hitZ < zMin)
+            zMin = hitZ;
+    }
+
+    const int signPz((pHelixFit->GetMomentum().GetZ() > 0.f) ? 1 : -1);
+    const float zStart((signPz > 0) ? zMin : zMax);
+    const float zEnd((signPz > 0) ? zMax : zMin);
+
+    pandora::CartesianVector startPosition(0.f, 0.f, 0.f), startMomentum(0.f, 0.f, 0.f);
+    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, pHelixFit->GetPointInZ(zStart, pHelixFit->GetReferencePoint(), startPosition));
+    startMomentum = pHelixFit->GetExtrapolatedMomentum(startPosition);
+    trackParameters.m_trackStateAtStart = pandora::TrackState(startPosition, startMomentum);
+
+    pandora::CartesianVector endPosition(0.f, 0.f, 0.f), endMomentum(0.f, 0.f, 0.f);
+    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, pHelixFit->GetPointInZ(zEnd, pHelixFit->GetReferencePoint(), endPosition));
+    endMomentum = pHelixFit->GetExtrapolatedMomentum(endPosition);
+    trackParameters.m_trackStateAtEnd = pandora::TrackState(endPosition, endMomentum);
+
+    this->GetECalProjectionOld(pHelixFit, signPz, trackParameters);
+
+    delete pHelixFit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TrackCreator::GetECalProjectionOld(const pandora::Helix *const pHelix, const int signPz, PandoraApi::Track::Parameters &trackParameters) const
+{
+    const pandora::CartesianVector &referencePoint(pHelix->GetReferencePoint());
+
+    // First project to endcap
+    float minGenericTime(std::numeric_limits<float>::max());
+    bool isProjectedToEndCap(true);
+
+    pandora::CartesianVector bestECalProjection(0.f, 0.f, 0.f);
+    (void) pHelix->GetPointInZ(static_cast<float>(signPz) * m_eCalEndCapInnerZ, referencePoint, bestECalProjection, minGenericTime);
+
+    // Then project to barrel surface(s)
+    pandora::CartesianVector barrelProjection(0.f, 0.f, 0.f);
+
+    if (m_eCalBarrelInnerSymmetry > 0)
+    {
+        // Polygon
+        float twopi_n = 2. * M_PI / (static_cast<float>(m_eCalBarrelInnerSymmetry));
+
+        for (int i = 0; i < m_eCalBarrelInnerSymmetry; ++i)
+        {
+            float genericTime(std::numeric_limits<float>::max());
+            const float phi(twopi_n * static_cast<float>(i) + m_eCalBarrelInnerPhi0);
+
+            const pandora::StatusCode statusCode(pHelix->GetPointInXY(m_eCalBarrelInnerR * std::cos(phi), m_eCalBarrelInnerR * std::sin(phi),
+                std::cos(phi + 0.5 * M_PI), std::sin(phi + 0.5 * M_PI), referencePoint, barrelProjection, genericTime));
+
+            if ((pandora::STATUS_CODE_SUCCESS == statusCode) && (genericTime < minGenericTime))
+            {
+                minGenericTime = genericTime;
+                isProjectedToEndCap = false;
+                bestECalProjection = barrelProjection;
+            }
+        }
+    }
+    else
+    {
+        // Cylinder
+        float genericTime(std::numeric_limits<float>::max());
+        const pandora::StatusCode statusCode(pHelix->GetPointOnCircle(m_eCalBarrelInnerR, referencePoint, barrelProjection, genericTime));
+
+        if ((pandora::STATUS_CODE_SUCCESS == statusCode) && (genericTime < minGenericTime))
+        {
+            minGenericTime = genericTime;
+            isProjectedToEndCap = false;
+            bestECalProjection = barrelProjection;
+        }
+    }
+
+    if (pandora::CartesianVector(0.f, 0.f, 0.f) == bestECalProjection)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+
+    trackParameters.m_trackStateAtCalorimeter = pandora::TrackState(bestECalProjection, pHelix->GetExtrapolatedMomentum(bestECalProjection));
+    trackParameters.m_isProjectedToEndCap = isProjectedToEndCap;
+
+    // Convert generic time (length from reference point to intersection, divided by momentum) into nanoseconds
+    const float particleMass(trackParameters.m_mass.Get());
+    const float particleEnergy(std::sqrt(particleMass * particleMass + trackParameters.m_momentumAtDca.Get().GetMagnitudeSquared()));
+    trackParameters.m_timeAtCalorimeter = minGenericTime * particleEnergy / 299.792f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TrackCreator::Settings::Settings() :
@@ -916,6 +1022,7 @@ TrackCreator::Settings::Settings() :
     m_tpcMembraneMaxZ(10.f),
     m_maxTpcInnerRDistance(50.f),
     m_minTpcHitFractionOfExpected(0.2f),
-    m_minFtdHitsForTpcHitFraction(2)
+    m_minFtdHitsForTpcHitFraction(2),
+    m_useOldTrackStateCalculation(0)
 {
 }
