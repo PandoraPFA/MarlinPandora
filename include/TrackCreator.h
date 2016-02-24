@@ -101,7 +101,7 @@ public:
         float           m_minTpcHitFractionOfExpected;          ///< Minimum fraction of TPC hits compared to expected
         int             m_minFtdHitsForTpcHitFraction;          ///< Minimum number of FTD hits to ignore TPC hit fraction
         int             m_useOldTrackStateCalculation;          ///< Whether to calculate track states manually, rather than copy stored fitter values
-
+        int             m_useOldTrackStringConvention;          ///< Whether to use old track string convention of tpc and ftd hits
     };
 
     /**

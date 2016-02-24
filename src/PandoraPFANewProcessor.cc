@@ -742,6 +742,12 @@ void PandoraPFANewProcessor::ProcessSteeringFile()
                             "Whether to calculate track states manually, rather than copy stored fitter values",
                             m_trackCreatorSettings.m_useOldTrackStateCalculation,
                             int(0));
+
+    // Old track string convention
+    registerProcessorParameter("UseOldTrackStringConvention",
+                            "Whether to use old track string convention of tpc and ftd hits",
+                            m_trackCreatorSettings.m_useOldTrackStringConvention,
+                            int(0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

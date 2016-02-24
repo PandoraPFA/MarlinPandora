@@ -874,7 +874,7 @@ int TrackCreator::GetNTpcHits(const EVENT::Track *const pTrack) const
     // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 1 ] =  hitsInFit ;  
     // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 2 ] =  hitCount ;  
     // ---- use hitsInFit :
-    return pTrack->getSubdetectorHitNumbers()[ 2 * lcio::ILDDetID::TPC - 1 ];
+    return (m_settings.m_useOldTrackStringConvention > 0) ? pTrack->getSubdetectorHitNumbers()[9] : pTrack->getSubdetectorHitNumbers()[ 2 * lcio::ILDDetID::TPC - 1 ];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -886,7 +886,7 @@ int TrackCreator::GetNFtdHits(const EVENT::Track *const pTrack) const
     // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 1 ] =  hitsInFit ;  
     // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 2 ] =  hitCount ;  
     // ---- use hitsInFit :
-    return pTrack->getSubdetectorHitNumbers()[ 2 * lcio::ILDDetID::FTD - 1 ];
+    return (m_settings.m_useOldTrackStringConvention > 0) ? pTrack->getSubdetectorHitNumbers()[7] : pTrack->getSubdetectorHitNumbers()[ 2 * lcio::ILDDetID::FTD - 1 ];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
