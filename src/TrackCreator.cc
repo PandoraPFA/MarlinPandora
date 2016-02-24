@@ -480,7 +480,7 @@ pandora::StatusCode TrackCreator::CreateTracks(EVENT::LCEvent *pLCEvent)
                         trackParameters.m_mass = pandora::PdgTable::GetParticleMass((*iter).second);
                     }
 
-                    if (0.f != signedCurvature)
+                    if (std::numeric_limits<float>::epsilon() < std::fabs(signedCurvature))
                         trackParameters.m_charge = static_cast<int>(signedCurvature / std::fabs(signedCurvature));
 
                     this->GetTrackStates(pTrack, trackParameters);
@@ -622,8 +622,6 @@ void TrackCreator::TrackReachesECAL(const EVENT::Track *const pTrack, PandoraApi
     float hitZMax(-std::numeric_limits<float>::max());
     float hitOuterR(-std::numeric_limits<float>::max());
 
-    int nTpcHits(0);
-    int nFtdHits(0);
     int maxOccupiedFtdLayer(0);
 
     const EVENT::TrackerHitVec &trackerHitVec(pTrack->getTrackerHits());
@@ -647,7 +645,6 @@ void TrackCreator::TrackReachesECAL(const EVENT::Track *const pTrack, PandoraApi
 
         if ((r > m_tpcInnerR) && (r < m_tpcOuterR) && (std::fabs(z) <= m_tpcZmax))
         {
-            nTpcHits++;
             continue;
         }
 
@@ -660,11 +657,13 @@ void TrackCreator::TrackReachesECAL(const EVENT::Track *const pTrack, PandoraApi
                 if (static_cast<int>(j) > maxOccupiedFtdLayer)
                     maxOccupiedFtdLayer = static_cast<int>(j);
 
-                nFtdHits++;
                 break;
             }
         }
     }
+
+    const int nTpcHits(this->GetNTpcHits(pTrack));
+    const int nFtdHits(this->GetNFtdHits(pTrack));
 
     // Look to see if there are hits in etd or set, implying track has reached edge of ecal
     if ((hitOuterR > m_minSetRadius) || (hitZMax > m_minEtdZPosition))
@@ -794,7 +793,7 @@ bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const Pan
     if (trackParameters.m_trackStateAtCalorimeter.Get().GetPosition().GetMagnitude() < m_settings.m_minTrackECalDistanceFromIp)
         return false;
 
-    if (pTrack->getOmega() == 0.f)
+    if (std::fabs(pTrack->getOmega()) < std::numeric_limits<float>::epsilon())
     {
         streamlog_out(ERROR) << "Track has Omega = 0 " << std::endl;
         return false;
@@ -821,7 +820,7 @@ bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const Pan
         const float pT(std::sqrt(pX * pX + pY * pY));
         const float rInnermostHit(pTrack->getRadiusOfInnermostHit());
 
-        if ((0.f == pT) || (0.f == pZ) || (rInnermostHit == m_tpcOuterR))
+        if ((std::numeric_limits<float>::epsilon() > std::fabs(pT)) || (std::numeric_limits<float>::epsilon() > std::fabs(pZ)) || (rInnermostHit == m_tpcOuterR))
         {
             streamlog_out(ERROR) << "Invalid track parameter, pT " << pT << ", pZ " << pZ << ", rInnermostHit " << rInnermostHit << std::endl;
             return false;
@@ -847,14 +846,8 @@ bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const Pan
         if (std::fabs(pZ) / momentumAtDca.GetMagnitude() < m_settings.m_tpcMembraneMaxZ / m_tpcInnerR)
             nExpectedTpcHits = 0;
 
-        const EVENT::IntVec &hitsBySubdetector(pTrack->getSubdetectorHitNumbers());
-
-        //fg: hit numbers are now given in different order wrt LOI:  
-        // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 1 ] =  hitsInFit ;  
-        // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 2 ] =  hitCount ;  
-        // ---- use hitsInFit :
-        const int nTpcHits = hitsBySubdetector[ 2 * lcio::ILDDetID::TPC - 1 ];
-        const int nFtdHits = hitsBySubdetector[ 2 * lcio::ILDDetID::FTD - 1 ];
+        const int nTpcHits(this->GetNTpcHits(pTrack));
+        const int nFtdHits(this->GetNFtdHits(pTrack));
 
         const int minTpcHits = static_cast<int>(nExpectedTpcHits * m_settings.m_minTpcHitFractionOfExpected);
 
@@ -867,6 +860,30 @@ bool TrackCreator::PassesQualityCuts(const EVENT::Track *const pTrack, const Pan
     }
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int TrackCreator::GetNTpcHits(const EVENT::Track *const pTrack) const
+{
+    // ATTN
+    //fg: hit numbers are now given in different order wrt LOI:  
+    // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 1 ] =  hitsInFit ;  
+    // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 2 ] =  hitCount ;  
+    // ---- use hitsInFit :
+    return pTrack->getSubdetectorHitNumbers()[ 2 * lcio::ILDDetID::TPC - 1 ];
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int TrackCreator::GetNFtdHits(const EVENT::Track *const pTrack) const
+{
+    // ATTN
+    //fg: hit numbers are now given in different order wrt LOI:  
+    // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 1 ] =  hitsInFit ;  
+    // trk->subdetectorHitNumbers()[ 2 * ILDDetID::TPC - 2 ] =  hitCount ;  
+    // ---- use hitsInFit :
+    return pTrack->getSubdetectorHitNumbers()[ 2 * lcio::ILDDetID::FTD - 1 ];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

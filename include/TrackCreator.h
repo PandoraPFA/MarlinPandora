@@ -248,6 +248,24 @@ private:
      */
     bool PassesQualityCuts(const EVENT::Track *const pTrack, const PandoraApi::Track::Parameters &trackParameters) const;
 
+    /**
+     *  @brief  Get number of hits in TPC of a track
+     * 
+     *  @param  pTrack the lcio track
+     * 
+     *  @return number of hits in TPC of a track
+     */
+    int GetNTpcHits(const EVENT::Track *const pTrack) const;
+
+    /**
+     *  @brief  Get number of hits in FTD of a track
+     * 
+     *  @param  pTrack the lcio track
+     * 
+     *  @return number of hits in FTDof a track
+     */
+    int GetNFtdHits(const EVENT::Track *const pTrack) const;
+
     const Settings          m_settings;                     ///< The track creator settings
     const pandora::Pandora *m_pPandora;                     ///< Address of the pandora object to create tracks and track relationships
 
