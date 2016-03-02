@@ -169,6 +169,12 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
                         caloHitParameters.m_hadronicEnergy = eCalToHadGeVEndCap * pCaloHit->getEnergy();
                     }
 
+                    if (caloHitParameters.m_nCellRadiationLengths.Get() < std::numeric_limits<float>::epsilon())
+                    {
+                        streamlog_out(WARNING) << "Calo hit has 0 radiation length: did not create Pandora calo hit. In collection " << *iter << std::endl;
+                        continue;
+                    }
+
                     caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * eCalToMip * absorberCorrection;
 
                     if (caloHitParameters.m_mipEquivalentEnergy.Get() < eCalMipThreshold)
@@ -256,6 +262,12 @@ pandora::StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *con
                     else
                     {
                         this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
+                    }
+
+                    if (caloHitParameters.m_nCellRadiationLengths.Get() < std::numeric_limits<float>::epsilon())
+                    {
+                        streamlog_out(WARNING) << "Calo hit has 0 radiation length: did not create Pandora calo hit. In collection " << *iter << std::endl;
+                        continue;
                     }
 
                     caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_hCalToMip * absorberCorrection;
@@ -569,10 +581,10 @@ void CaloHitCreator::GetEndCapCaloHitProperties(const EVENT::CalorimeterHit *con
     {
         const float absorberThickness(layerLayout.getAbsorberThickness(i));
 
-        if (absorberThickness <= 0.)
+        if (absorberThickness < std::numeric_limits<float>::epsilon())
             continue;
 
-        if (layerAbsorberThickness > 0.)
+        if (layerAbsorberThickness > std::numeric_limits<float>::epsilon())
             absorberCorrection = absorberThickness / layerAbsorberThickness;
 
         break;
@@ -609,10 +621,10 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
     {
         const float absorberThickness(layerLayout.getAbsorberThickness(i));
 
-        if (absorberThickness <= 0.)
+        if (absorberThickness < std::numeric_limits<float>::epsilon())
             continue;
 
-        if (layerAbsorberThickness > 0.)
+        if (layerAbsorberThickness > std::numeric_limits<float>::epsilon())
             absorberCorrection = absorberThickness / layerAbsorberThickness;
 
         break;
