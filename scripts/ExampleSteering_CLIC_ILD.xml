@@ -1,0 +1,198 @@
+<marlin>
+   
+  <execute>
+    <processor name="MyAIDAProcessor"/>
+	<processor name="MyILDCaloDigi"/>
+	<processor name="MyMarlinPandoraDefault"/>
+	<processor name="MyRecoMCTruthLinker">
+  </execute>
+
+  <global>
+    <parameter name="LCIOInputFiles">
+    </parameter>
+    <parameter name="GearXMLFile" value=""/>
+    <parameter name="MaxRecordNumber" value="-1"/>
+    <parameter name="SkipNEvents" value="0"/>
+    <parameter name="SupressCheck" value="false"/>
+    <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> MESSAGE </parameter>
+    <parameter name="RandomSeed" value="1234567890" />
+  </global>
+
+ 
+ <processor name="MyAIDAProcessor" type="AIDAProcessor">
+ <!--Processor that handles AIDA files. Creates on directory per processor.  Processors only need to create and fill the histograms, clouds and tuples. Needs to be the first ActiveProcessor-->
+  <!-- compression of output file 0: false >0: true (default) -->
+  <parameter name="Compress" type="int" value="1"/>
+  <!-- filename without extension-->
+  <parameter name="FileName" type="string" value="bbudsc_3evt_stdreco"/>
+  <!-- type of output file xml (default) or root ( only OpenScientist)-->
+  <parameter name="FileType" type="string" value="root "/>
+</processor>
+
+<!--######  ILDCaloDigi ##########################################-->
+
+<processor name="MyILDCaloDigi" type="ILDCaloDigi">
+  <!--ILD digitizer...-->
+  <!--Calibration coefficients for ECAL-->
+  <parameter name="CalibrECAL" type="FloatVec">40.0257868804 80.0515737608</parameter>
+  <!--Calibration coefficients for HCAL barrel, endcap, other-->
+  <parameter name="CalibrHCALBarrel" type="FloatVec">29.6637098849</parameter>
+  <parameter name="CalibrHCALEndcap" type="FloatVec">36.1880814584</parameter>
+  <parameter name="CalibrHCALOther" type="FloatVec">42.6725655784</parameter>
+  <!--ECAL Collection Names-->
+  <!--parameter name="ECALCollections" type="StringVec">EcalBarrelSiliconCollection EcalEndcapSiliconCollection  EcalEndcapRingCollection </parameter-->
+  <parameter name="ECALCollections" type="StringVec">EcalBarrelCollection EcalEndcapCollection EcalEndcapRingCollection</parameter>
+  <!--Index of ECal Layers-->
+  <parameter name="ECALLayers" type="IntVec">20 100 </parameter>
+  <!--Threshold for ECAL Hits in GeV-->
+  <parameter name="ECALThreshold" type="float">5e-05 </parameter>
+  <!--HCAL Collection Names-->
+  <parameter name="HCALCollections" type="StringVec">HcalBarrelRegCollection  HcalEndCapsCollection HcalEndCapRingsCollection</parameter>
+  <!--Index of HCal Layers-->
+  <parameter name="HCALLayers" type="IntVec">100  </parameter>
+  <!--Threshold for HCAL Hits in MIPs - given HCALThresholdUnit is specified-->
+  <parameter name="HCALThreshold" type="float">0.5 </parameter>
+  <!--Digital Ecal-->
+  <parameter name="IfDigitalEcal" type="int">0 </parameter>
+  <!--Digital Hcal-->
+  <parameter name="IfDigitalHcal" type="int">0 </parameter>
+  <!--name for the new collection -->
+  <parameter name="ECALOutputCollection0" type="stringVec">ECALBarrel_Reprocess </parameter>
+  <parameter name="ECALOutputCollection1" type="stringVec">ECALEndcap_Reprocess </parameter>
+  <parameter name="ECALOutputCollection2" type="stringVec">ECALOther_Reprocess </parameter>
+  <parameter name="HCALOutputCollection0" type="stringVec">HCALBarrel_Reprocess </parameter>
+  <parameter name="HCALOutputCollection1" type="stringVec">HCALEndcap_Reprocess </parameter>
+  <parameter name="HCALOutputCollection2" type="stringVec">HCALOther_Reprocess </parameter>
+  <!--CaloHit Relation Collection-->
+  <parameter name="RelationOutputCollection" type="string"> RelationCaloHit_Reprocess</parameter>
+  <!--Gap Correction-->
+  <parameter name="ECALGapCorrection" type="int"> 1 </parameter>
+  <!--Gap Correction Fudge Factor-->
+  <parameter name="ECALGapCorrectionFactor" type="float">1.0</parameter>
+  <parameter name="ECALModuleGapCorrectionFactor" type="int"> 0.0 </parameter>
+  <!-- Timing -->
+  <parameter name="UseEcalTiming" type="int">1</parameter>
+  <parameter name="UseHcalTiming" type="int">1</parameter>
+  <parameter name="ECALBarrelTimeWindowMax" type="float">10.0</parameter>
+  <parameter name="HCALBarrelTimeWindowMax" type="float">100.0</parameter>
+  <parameter name="ECALEndcapTimeWindowMax" type="float">10.0</parameter>
+  <parameter name="HCALEndcapTimeWindowMax" type="float">10.0</parameter>
+  <parameter name="ECALTimeWindowMin" type="float"> -1.0 </parameter>
+  <parameter name="HCALTimeWindowMin" type="float"> -1.0 </parameter>
+  <parameter name="ECALCorrectTimesForPropagation" type="int">1</parameter>
+  <parameter name="HCALCorrectTimesForPropagation" type="int">1</parameter>
+  <parameter name="ECALDeltaTimeHitResolution" type="float"> 20.0 </parameter>
+  <parameter name="HCALDeltaTimeHitResolution" type="float"> 20.0 </parameter>
+  <!-- Realistic ECal -->
+  <parameter name="ECAL_apply_realistic_digi" type="int">0</parameter>
+  <parameter name="CalibECALMIP" type="float">0.0001475</parameter>
+  <parameter name="ECAL_maxDynamicRange_MIP" type="float">0.0</parameter>
+  <parameter name="ECAL_elec_noise_mips" type="float">0.07</parameter>
+  <parameter name="ECAL_deadCellRate" type="float">0</parameter>
+  <parameter name="ECAL_miscalibration_uncorrel" type="float">0</parameter>
+  <parameter name="ECAL_miscalibration_uncorrel_memorise" type="bool">false</parameter>
+  <parameter name="ECAL_miscalibration_correl" type="float">0</parameter>
+  <parameter name="energyPerEHpair" type="float">3.6</parameter>
+  <parameter name="ECAL_PPD_PE_per_MIP" type="float">7</parameter>
+  <parameter name="ECAL_PPD_N_Pixels" type="int">10000</parameter>
+  <parameter name="ECAL_PPD_N_Pixels_uncertainty" type="float">0.05</parameter>
+  <parameter name="ECAL_pixel_spread" type="float">0.05</parameter>
+  <!-- Realistic HCal -->
+  <parameter name="HCAL_apply_realistic_digi" type="int">0</parameter>
+  <parameter name="HCALThresholdUnit" type="string">MIP</parameter>
+  <parameter name="CalibHCALMIP" type="float">0.0008375</parameter>
+  <parameter name="HCAL_maxDynamicRange_MIP" type="float">0.0</parameter>
+  <parameter name="HCAL_elec_noise_mips" type="float">0.06</parameter>
+  <parameter name="HCAL_deadCellRate" type="float">0</parameter>
+  <parameter name="HCAL_PPD_N_Pixels" type="int">2000</parameter>
+  <parameter name="HCAL_PPD_PE_per_MIP" type="float">15</parameter>
+  <parameter name="HCAL_pixel_spread" type="float">0.05</parameter>
+  <parameter name="HCAL_PPD_N_Pixels_uncertainty" type="float">0</parameter>
+  <parameter name="HCAL_miscalibration_uncorrel" type="float">0</parameter>
+  <parameter name="HCAL_miscalibration_correl" type="float">0</parameter>
+  <!-- Histograms-->
+  <parameter name="Histograms" type="int"> 0 </parameter>
+</processor>
+
+
+<!--########## MarlinPandora ###################################### -->
+
+
+<processor name="MyMarlinPandoraDefault" type="PandoraPFANewProcessor">
+  <parameter name="PandoraSettingsXmlFile" type="String"></parameter>
+  <!-- Collection names -->
+  <parameter name="TrackCollections" type="StringVec">LDCTracks</parameter>
+  <parameter name="ECalCaloHitCollections" type="StringVec">ECALBarrel_Reprocess ECALEndcap_Reprocess ECALOther_Reprocess</parameter>
+  <parameter name="HCalCaloHitCollections" type="StringVec">HCALBarrel_Reprocess HCALEndcap_Reprocess HCALOther_Reprocess</parameter>
+  <parameter name="LCalCaloHitCollections" type="StringVec">LCAL</parameter>
+  <parameter name="LHCalCaloHitCollections" type="StringVec">LHCAL</parameter>
+  <parameter name="MuonCaloHitCollections" type="StringVec">MUON</parameter>
+  <parameter name="MCParticleCollections" type="StringVec">MCParticle</parameter>
+  <parameter name="RelCaloHitCollections" type="StringVec">RelationCaloHit_Reprocess RelationMuonHit</parameter>
+  <parameter name="RelTrackCollections" type="StringVec">LDCTracksMCP</parameter>
+  <parameter name="KinkVertexCollections" type="StringVec">KinkVertices</parameter>
+  <parameter name="ProngVertexCollections" type="StringVec">ProngVertices</parameter>
+  <parameter name="SplitVertexCollections" type="StringVec">SplitVertices</parameter>
+  <parameter name="V0VertexCollections" type="StringVec">V0Vertices</parameter>
+  <parameter name="ClusterCollectionName" type="String">PandoraClustersDefault_Reprocess</parameter>
+  <parameter name="PFOCollectionName" type="String">PandoraPFOsDefault_Reprocess</parameter>
+  <parameter name="StartVertexCollectionName" type="String">StartVerticesDefault_Reprocess</parameter>
+  <!-- Calibration constants -->
+  <parameter name="ECalToMipCalibration" type="float">158.73</parameter>
+  <parameter name="HCalToMipCalibration" type="float">39.8406</parameter>
+  <parameter name="ECalMipThreshold" type="float">0.5</parameter>
+  <parameter name="HCalMipThreshold" type="float">0.3</parameter>
+  <parameter name="ECalToEMGeVCalibration" type="float">1.0081819197</parameter>
+  <parameter name="HCalToEMGeVCalibration" type="float">1.11211071663</parameter>
+  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.13717509555</parameter>
+  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.13717509555</parameter>
+  <parameter name="HCalToHadGeVCalibration" type="float">1.11211071663</parameter>
+  <parameter name="MuonToMipCalibration" type="float">12.987</parameter>
+  <parameter name="DigitalMuonHits" type="int">0</parameter>
+  <parameter name="MaxHCalHitHadronicEnergy" type="float">10000</parameter>
+  <parameter name="AbsorberRadLengthECal" type="float">0.2854</parameter>
+  <parameter name="AbsorberIntLengthECal" type="float">0.0101</parameter>
+  <parameter name="AbsorberRadLengthHCal" type="float">0.0569</parameter>
+  <parameter name="AbsorberIntLengthHCal" type="float">0.0060</parameter>
+  <parameter name="AbsorberRadLengthOther" type="float">0.0569</parameter>
+  <parameter name="AbsorberIntLengthOther" type="float">0.0060</parameter>
+  <!--Whether to calculate track states manually, rather than copy stored fitter values-->
+  <parameter name="UseOldTrackStateCalculation" type="int">1</parameter>
+  <parameter name="UseOldTrackStringConvention" type="int">1</parameter>
+</processor> 
+
+
+<processor name="MyRecoMCTruthLinker" type="RecoMCTruthLinker">
+ <!--links RecontructedParticles to the MCParticle based on number of hits used-->
+  <!--Name of the MCParticle input collection-->
+  <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle"> MCParticle </parameter>
+  <!--Name of the Cluster input collection-->
+  <parameter name="ClusterCollection" type="string" lcioInType="Cluster"> PandoraClusters_Reprocess </parameter>
+  <!--Name of the Track input collection-->
+  <parameter name="TrackCollection" type="string" lcioInType="Track"> LDCTracks2 </parameter>
+  <!--Name of the ReconstructedParticles input collection-->
+  <parameter name="RecoParticleCollection" type="string" lcioInType="ReconstructedParticle"> PandoraPFOs_Reprocess </parameter>
+  <!--Name of the  SimCalorimeterHit - CalorimeterHit relation-->
+  <parameter name="SimCalorimeterHitRelationName" type="string" lcioInType="LCRelation"> RelationCaloHit_Reprocess </parameter>
+  <!--Name of the  SimTrackerHit - TrackerHit relation-->
+  <parameter name="SimTrackerHitRelationName" type="string" lcioInType="LCRelation"> LDCTracksMCP </parameter>
+  <!--Name of the skimmed MCParticle  output collection-->
+  <parameter name="MCParticlesSkimmedName" type="string" lcioOutType="MCParticle"> MCParticlesSkimmed_Reprocess </parameter>
+  <!--Name of the RecoMCTruthLink output collection-->
+  <parameter name="RecoMCTruthLinkName" type="string" lcioOutType="LCRelation"> RecoMCTruthLink_Reprocess </parameter>
+  <!--PDG codes of particles of which the daughters will be kept in the skimmmed MCParticle collection -->
+  <parameter name="KeepDaughtersPDG" type="IntVec">22 111 310 13 211 321 3122 3112 3312 3212 </parameter>
+  <parameter name="CalohitMCTruthLinkName" type="string" lcioOutType="LCRelation"> CalohitMCTruthLink_Reprocess </parameter>
+  <parameter name="ClusterMCTruthLinkName" type="string" lcioOutType="LCRelation"> ClusterMCTruthLink_Reprocess </parameter>
+  <parameter name="TrackMCTruthLinkName" type="string" lcioOutType="LCRelation"> TrackMCTruthLink_Reprocess </parameter>
+  <!-- Default values -->
+  <parameter name="OutputCalohitRelation" type="bool" value="false"/>
+  <parameter name="OutputClusterRelation" type="bool" value="true"/>
+  <parameter name="OutputTrackRelation" type="bool" value="false"/>
+  <parameter name="FullRecoRelation" type="bool" value="false"/>
+  <parameter name="daughtersECutMeV" type="float" value="10"/>
+</processor>
+
+
+
+</marlin>
