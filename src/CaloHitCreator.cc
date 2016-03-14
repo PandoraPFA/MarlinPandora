@@ -169,12 +169,6 @@ pandora::StatusCode CaloHitCreator::CreateECalCaloHits(const EVENT::LCEvent *con
                         caloHitParameters.m_hadronicEnergy = eCalToHadGeVEndCap * pCaloHit->getEnergy();
                     }
 
-                    if (caloHitParameters.m_nCellRadiationLengths.Get() < std::numeric_limits<float>::epsilon())
-                    {
-                        streamlog_out(WARNING) << "Calo hit has 0 radiation length: did not create Pandora calo hit. In collection " << *iter << std::endl;
-                        continue;
-                    }
-
                     caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * eCalToMip * absorberCorrection;
 
                     if (caloHitParameters.m_mipEquivalentEnergy.Get() < eCalMipThreshold)
@@ -262,12 +256,6 @@ pandora::StatusCode CaloHitCreator::CreateHCalCaloHits(const EVENT::LCEvent *con
                     else
                     {
                         this->GetEndCapCaloHitProperties(pCaloHit, endcapLayerLayout, caloHitParameters, absorberCorrection);
-                    }
-
-                    if (caloHitParameters.m_nCellRadiationLengths.Get() < std::numeric_limits<float>::epsilon())
-                    {
-                        streamlog_out(WARNING) << "Calo hit has 0 radiation length: did not create Pandora calo hit. In collection " << *iter << std::endl;
-                        continue;
                     }
 
                     caloHitParameters.m_mipEquivalentEnergy = pCaloHit->getEnergy() * m_settings.m_hCalToMip * absorberCorrection;
@@ -572,6 +560,13 @@ void CaloHitCreator::GetEndCapCaloHitProperties(const EVENT::CalorimeterHit *con
     const float interactionLength((pandora::ECAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberIntLengthECal :
         (pandora::HCAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberIntLengthHCal : m_settings.m_absorberIntLengthOther);
 
+    if (radiationLength < std::numeric_limits<float>::epsilon() || interactionLength < std::numeric_limits<float>::epsilon())
+    {
+        streamlog_out(WARNING) << "CaloHitCreator::GetEndCapCaloHitProperties Calo hit has 0 radiation length or interaction length: \
+            not creating a Pandora calo hit." << std::endl;
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    }
+
     const float layerAbsorberThickness(layerLayout.getAbsorberThickness(physicalLayer));
     caloHitParameters.m_nCellRadiationLengths = radiationLength * layerAbsorberThickness;
     caloHitParameters.m_nCellInteractionLengths = interactionLength * layerAbsorberThickness;
@@ -611,6 +606,13 @@ void CaloHitCreator::GetBarrelCaloHitProperties(const EVENT::CalorimeterHit *con
         (pandora::HCAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberRadLengthHCal : m_settings.m_absorberRadLengthOther);
     const float interactionLength((pandora::ECAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberIntLengthECal :
         (pandora::HCAL == caloHitParameters.m_hitType.Get()) ? m_settings.m_absorberIntLengthHCal : m_settings.m_absorberIntLengthOther);
+
+    if (radiationLength < std::numeric_limits<float>::epsilon() || interactionLength < std::numeric_limits<float>::epsilon())
+    {
+        streamlog_out(WARNING) << "CaloHitCreator::GetBarrelCaloHitProperties Calo hit has 0 radiation length or interaction length: \
+            not creating a Pandora calo hit." << std::endl;
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    }
 
     const float layerAbsorberThickness(layerLayout.getAbsorberThickness(physicalLayer));
     caloHitParameters.m_nCellRadiationLengths = radiationLength * layerAbsorberThickness;
