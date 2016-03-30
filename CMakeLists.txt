@@ -11,7 +11,7 @@ PROJECT( MarlinPandora )
 
 # project version
 SET( MarlinPandora_VERSION_MAJOR 02 )
-SET( MarlinPandora_VERSION_MINOR 02 )
+SET( MarlinPandora_VERSION_MINOR 03 )
 SET( MarlinPandora_VERSION_PATCH 00 )
 
 
