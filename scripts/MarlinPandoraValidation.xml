@@ -200,14 +200,14 @@
   <parameter name="HCalToMipCalibration" type="float">38.0228</parameter>
   <parameter name="ECalMipThreshold" type="float">0.5</parameter>
   <parameter name="HCalMipThreshold" type="float">0.3</parameter>
-  <parameter name="ECalToEMGeVCalibration" type="float">1.00356141304</parameter>
-  <parameter name="HCalToEMGeVCalibration" type="float">1.12083052744</parameter>
-  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.14127910463</parameter>
-  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.14127910463</parameter>
-  <parameter name="HCalToHadGeVCalibration" type="float">1.12083052744</parameter>
+  <parameter name="ECalToEMGeVCalibration" type="float">1.00326122634</parameter>
+  <parameter name="HCalToEMGeVCalibration" type="float">1.06166688118</parameter>
+  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.16376244596</parameter>
+  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.16376244596</parameter>
+  <parameter name="HCalToHadGeVCalibration" type="float">1.06166688118</parameter>
   <parameter name="MuonToMipCalibration" type="float">10.3093</parameter>
   <parameter name="DigitalMuonHits" type="int">0</parameter>
-  <parameter name="MaxHCalHitHadronicEnergy" type="float">1.0</parameter>
+  <parameter name="MaxHCalHitHadronicEnergy" type="float">1000000.0</parameter>
   <parameter name="AbsorberRadLengthECal" type="float">0.2854</parameter>
   <parameter name="AbsorberIntLengthECal" type="float">0.0101</parameter>
   <parameter name="AbsorberRadLengthHCal" type="float">0.0569</parameter>
@@ -254,14 +254,14 @@
   <parameter name="HCalToMipCalibration" type="float">38.0228</parameter>
   <parameter name="ECalMipThreshold" type="float">0.5</parameter>
   <parameter name="HCalMipThreshold" type="float">0.3</parameter>
-  <parameter name="ECalToEMGeVCalibration" type="float">1.00356141304</parameter>
-  <parameter name="HCalToEMGeVCalibration" type="float">1.12083052744</parameter>
-  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.14127910463</parameter>
-  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.14127910463</parameter>
-  <parameter name="HCalToHadGeVCalibration" type="float">1.12083052744</parameter>
+  <parameter name="ECalToEMGeVCalibration" type="float">1.00326122634</parameter>
+  <parameter name="HCalToEMGeVCalibration" type="float">1.06166688118</parameter>
+  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.16376244596</parameter>
+  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.16376244596</parameter>
+  <parameter name="HCalToHadGeVCalibration" type="float">1.06166688118</parameter>
   <parameter name="MuonToMipCalibration" type="float">10.3093</parameter>
   <parameter name="DigitalMuonHits" type="int">0</parameter>
-  <parameter name="MaxHCalHitHadronicEnergy" type="float">1.0</parameter>
+  <parameter name="MaxHCalHitHadronicEnergy" type="float">1000000.0</parameter>
   <parameter name="AbsorberRadLengthECal" type="float">0.2854</parameter>
   <parameter name="AbsorberIntLengthECal" type="float">0.0101</parameter>
   <parameter name="AbsorberRadLengthHCal" type="float">0.0569</parameter>
@@ -308,14 +308,14 @@
   <parameter name="HCalToMipCalibration" type="float">38.0228</parameter>
   <parameter name="ECalMipThreshold" type="float">0.5</parameter>
   <parameter name="HCalMipThreshold" type="float">0.3</parameter>
-  <parameter name="ECalToEMGeVCalibration" type="float">1.00356141304</parameter>
-  <parameter name="HCalToEMGeVCalibration" type="float">1.12083052744</parameter>
-  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.14127910463</parameter>
-  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.14127910463</parameter>
-  <parameter name="HCalToHadGeVCalibration" type="float">1.12083052744</parameter>
+  <parameter name="ECalToEMGeVCalibration" type="float">1.00326122634</parameter>
+  <parameter name="HCalToEMGeVCalibration" type="float">1.06166688118</parameter>
+  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.16376244596</parameter>
+  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.16376244596</parameter>
+  <parameter name="HCalToHadGeVCalibration" type="float">1.06166688118</parameter>
   <parameter name="MuonToMipCalibration" type="float">10.3093</parameter>
   <parameter name="DigitalMuonHits" type="int">0</parameter>
-  <parameter name="MaxHCalHitHadronicEnergy" type="float">1.0</parameter>
+  <parameter name="MaxHCalHitHadronicEnergy" type="float">1000000.0</parameter>
   <parameter name="AbsorberRadLengthECal" type="float">0.2854</parameter>
   <parameter name="AbsorberIntLengthECal" type="float">0.0101</parameter>
   <parameter name="AbsorberRadLengthHCal" type="float">0.0569</parameter>
@@ -362,14 +362,14 @@
   <parameter name="HCalToMipCalibration" type="float">38.0228</parameter>
   <parameter name="ECalMipThreshold" type="float">0.5</parameter>
   <parameter name="HCalMipThreshold" type="float">0.3</parameter>
-  <parameter name="ECalToEMGeVCalibration" type="float">1.00356141304</parameter>
-  <parameter name="HCalToEMGeVCalibration" type="float">1.12083052744</parameter>
-  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.14127910463</parameter>
-  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.14127910463</parameter>
-  <parameter name="HCalToHadGeVCalibration" type="float">1.12083052744</parameter>
+  <parameter name="ECalToEMGeVCalibration" type="float">1.00326122634</parameter>
+  <parameter name="HCalToEMGeVCalibration" type="float">1.06166688118</parameter>
+  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.16376244596</parameter>
+  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.16376244596</parameter>
+  <parameter name="HCalToHadGeVCalibration" type="float">1.06166688118</parameter>
   <parameter name="MuonToMipCalibration" type="float">10.3093</parameter>
   <parameter name="DigitalMuonHits" type="int">0</parameter>
-  <parameter name="MaxHCalHitHadronicEnergy" type="float">1.0</parameter>
+  <parameter name="MaxHCalHitHadronicEnergy" type="float">1000000.0</parameter>
   <parameter name="AbsorberRadLengthECal" type="float">0.2854</parameter>
   <parameter name="AbsorberIntLengthECal" type="float">0.0101</parameter>
   <parameter name="AbsorberRadLengthHCal" type="float">0.0569</parameter>
@@ -416,14 +416,14 @@
   <parameter name="HCalToMipCalibration" type="float">38.0228</parameter>
   <parameter name="ECalMipThreshold" type="float">0.5</parameter>
   <parameter name="HCalMipThreshold" type="float">0.3</parameter>
-  <parameter name="ECalToEMGeVCalibration" type="float">1.00356141304</parameter>
-  <parameter name="HCalToEMGeVCalibration" type="float">1.12083052744</parameter>
-  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.14127910463</parameter>
-  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.14127910463</parameter>
-  <parameter name="HCalToHadGeVCalibration" type="float">1.12083052744</parameter>
+  <parameter name="ECalToEMGeVCalibration" type="float">1.00326122634</parameter>
+  <parameter name="HCalToEMGeVCalibration" type="float">1.06166688118</parameter>
+  <parameter name="ECalToHadGeVCalibrationBarrel" type="float">1.16376244596</parameter>
+  <parameter name="ECalToHadGeVCalibrationEndCap" type="float">1.16376244596</parameter>
+  <parameter name="HCalToHadGeVCalibration" type="float">1.06166688118</parameter>
   <parameter name="MuonToMipCalibration" type="float">10.3093</parameter>
   <parameter name="DigitalMuonHits" type="int">0</parameter>
-  <parameter name="MaxHCalHitHadronicEnergy" type="float">1.0</parameter>
+  <parameter name="MaxHCalHitHadronicEnergy" type="float">1000000.0</parameter>
   <parameter name="AbsorberRadLengthECal" type="float">0.2854</parameter>
   <parameter name="AbsorberIntLengthECal" type="float">0.0101</parameter>
   <parameter name="AbsorberRadLengthHCal" type="float">0.0569</parameter>
