@@ -31,6 +31,7 @@
 #include "PandoraPFANewProcessor.h"
 #include "PfoCreator.h"
 
+#include <algorithm>
 #include <cmath>
 
 PfoCreator::PfoCreator(const Settings &settings, const pandora::Pandora *const pPandora) :
@@ -79,8 +80,8 @@ pandora::StatusCode PfoCreator::CreateParticleFlowObjects(EVENT::LCEvent *pLCEve
         {
             const pandora::Cluster *const pPandoraCluster(*cIter);
             pandora::CaloHitList pandoraCaloHitList;
-            pPandoraCluster->GetOrderedCaloHitList().GetCaloHitList(pandoraCaloHitList);
-            pandoraCaloHitList.insert(pPandoraCluster->GetIsolatedCaloHitList().begin(), pPandoraCluster->GetIsolatedCaloHitList().end());
+            pPandoraCluster->GetOrderedCaloHitList().FillCaloHitList(pandoraCaloHitList);
+            pandoraCaloHitList.insert(pandoraCaloHitList.end(), pPandoraCluster->GetIsolatedCaloHitList().begin(), pPandoraCluster->GetIsolatedCaloHitList().end());
 
             pandora::FloatVector hitE, hitX, hitY, hitZ;
             IMPL::ClusterImpl *const pLcioCluster(new ClusterImpl());
@@ -160,7 +161,7 @@ void PfoCreator::SetClusterSubDetectorEnergies(const pandora::StringVector &subD
     for (pandora::CaloHitList::const_iterator hIter = pandoraCaloHitList.begin(), hIterEnd = pandoraCaloHitList.end(); hIter != hIterEnd; ++hIter)
     {
         const pandora::CaloHit *const pPandoraCaloHit(*hIter);
-        EVENT::CalorimeterHit *const pCalorimeterHit = (EVENT::CalorimeterHit*)(pPandoraCaloHit->GetParentCaloHitAddress());
+        EVENT::CalorimeterHit *const pCalorimeterHit = (EVENT::CalorimeterHit*)(pPandoraCaloHit->GetParentAddress());
         pLcioCluster->addHit(pCalorimeterHit, 1.f);
 
         const float caloHitEnergy(pCalorimeterHit->getEnergy());
@@ -257,7 +258,7 @@ pandora::StatusCode PfoCreator::CalculateTrackBasedReferencePoint(const pandora:
         }
         else
         {
-            const EVENT::Track *const pLcioTrack = (EVENT::Track*)(pPandoraTrack->GetParentTrackAddress());
+            const EVENT::Track *const pLcioTrack = (EVENT::Track*)(pPandoraTrack->GetParentAddress());
             const float z0(pPandoraTrack->GetZ0());
             pandora::CartesianVector intersectionPoint(0.f, 0.f, 0.f);
 
@@ -300,11 +301,11 @@ pandora::StatusCode PfoCreator::CalculateTrackBasedReferencePoint(const pandora:
 
 bool PfoCreator::IsValidParentTrack(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const
 {
-    const pandora::TrackList &parentTrackList(pPandoraTrack->GetParentTrackList());
+    const pandora::TrackList &parentTrackList(pPandoraTrack->GetParentList());
 
     for (pandora::TrackList::const_iterator iter = parentTrackList.begin(), iterEnd = parentTrackList.end(); iter != iterEnd; ++iter)
     {
-        if (allTrackList.count(*iter))
+        if (allTrackList.end() != std::find(allTrackList.begin(), allTrackList.end(), *iter))
             continue;
 
         // ATTN This track must have a parent not in the all track list; still use it if it is the closest to the ip
@@ -324,11 +325,11 @@ bool PfoCreator::IsValidParentTrack(const pandora::Track *const pPandoraTrack, c
 
 bool PfoCreator::HasValidSiblingTrack(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const
 {
-    const pandora::TrackList &siblingTrackList(pPandoraTrack->GetSiblingTrackList());
+    const pandora::TrackList &siblingTrackList(pPandoraTrack->GetSiblingList());
 
     for (pandora::TrackList::const_iterator iter = siblingTrackList.begin(), iterEnd = siblingTrackList.end(); iter != iterEnd; ++iter)
     {
-        if (allTrackList.count(*iter))
+        if (allTrackList.end() != std::find(allTrackList.begin(), allTrackList.end(), *iter))
             continue;
 
         // ATTN This track must have a sibling not in the all track list; still use it if it has a second sibling that is in the list
@@ -370,11 +371,11 @@ bool PfoCreator::IsClosestTrackToIP(const pandora::Track *const pPandoraTrack, c
 
 bool PfoCreator::AreAnyOtherSiblingsInList(const pandora::Track *const pPandoraTrack, const pandora::TrackList &allTrackList) const
 {
-    const pandora::TrackList &siblingTrackList(pPandoraTrack->GetSiblingTrackList());
+    const pandora::TrackList &siblingTrackList(pPandoraTrack->GetSiblingList());
 
     for (pandora::TrackList::const_iterator iter = siblingTrackList.begin(), iterEnd = siblingTrackList.end(); iter != iterEnd; ++iter)
     {
-        if (allTrackList.count(*iter))
+        if (allTrackList.end() != std::find(allTrackList.begin(), allTrackList.end(), *iter))
             return true;
     }
 
@@ -398,7 +399,7 @@ void PfoCreator::AddTracksToRecoParticle(const pandora::ParticleFlowObject *cons
     for (pandora::TrackList::const_iterator tIter = trackList.begin(), tIterEnd = trackList.end(); tIter != tIterEnd; ++tIter)
     {
         const pandora::Track *const pTrack(*tIter);
-        pReconstructedParticle->addTrack((EVENT::Track*)(pTrack->GetParentTrackAddress()));
+        pReconstructedParticle->addTrack((EVENT::Track*)(pTrack->GetParentAddress()));
     }
 }
 

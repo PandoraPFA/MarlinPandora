@@ -10,8 +10,8 @@ PROJECT( MarlinPandora )
 
 
 # project version
-SET( MarlinPandora_VERSION_MAJOR 02 )
-SET( MarlinPandora_VERSION_MINOR 04 )
+SET( MarlinPandora_VERSION_MAJOR 03 )
+SET( MarlinPandora_VERSION_MINOR 00 )
 SET( MarlinPandora_VERSION_PATCH 00 )
 
 
@@ -31,23 +31,17 @@ INSTALL_DIRECTORY( ./include DESTINATION . FILES_MATCHING PATTERN "*.h" )
 
 AUX_SOURCE_DIRECTORY( ./src/ MarlinPandora_SRCS )
 
-IF( NOT CMAKE_CXX_FLAGS )
-    SET( CMAKE_CXX_FLAGS "-std=c++11" )
-    SET( PROCEED_WITHOUT_CXX_FLAGS ON )
-ENDIF()
+if (NOT CMAKE_CXX_FLAGS)
+    set(CMAKE_CXX_FLAGS "-std=c++11")
+endif()
 
-INCLUDE( CheckCXXCompilerFlag )
+include(CheckCXXCompilerFlag)
+unset(COMPILER_SUPPORTS_CXX_FLAGS CACHE)
+CHECK_CXX_COMPILER_FLAG(${CMAKE_CXX_FLAGS} COMPILER_SUPPORTS_CXX_FLAGS)
 
-UNSET( COMPILER_SUPPORTS_CXX_FLAGS CACHE )
-CHECK_CXX_COMPILER_FLAG( ${CMAKE_CXX_FLAGS} COMPILER_SUPPORTS_CXX_FLAGS )
-IF( NOT COMPILER_SUPPORTS_CXX_FLAGS )
-    MESSAGE( STATUS "The compiler ${CMAKE_CXX_COMPILER} does not support cxx flags ${CMAKE_CXX_FLAGS}" )
-    IF( NOT PROCEED_WITHOUT_CXX_FLAGS )
-        MESSAGE( FATAL_ERROR "CMake abort." )
-    ENDIF()
-    MESSAGE( STATUS "Proceed without cxx flags ${CMAKE_CXX_FLAGS}" )
-    UNSET( CMAKE_CXX_FLAGS )
-ENDIF()
+if(NOT COMPILER_SUPPORTS_CXX_FLAGS)
+    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} does not support cxx flags ${CMAKE_CXX_FLAGS}")
+endif()
 
 # Ultimately would like to reinstate -Werror flag
 
