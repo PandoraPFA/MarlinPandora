@@ -48,7 +48,7 @@ StatusCode ExternalClusteringAlgorithm::Run()
         for (CaloHitList::const_iterator hitIter = pCaloHitList->begin(), hitIterEnd = pCaloHitList->end(); hitIter != hitIterEnd; ++hitIter)
         {
             const pandora::CaloHit *const pCaloHit = *hitIter;
-            parentAddressToCaloHitMap.insert(ParentAddressToCaloHitMap::value_type(pCaloHit->GetParentCaloHitAddress(), pCaloHit));
+            parentAddressToCaloHitMap.insert(ParentAddressToCaloHitMap::value_type(pCaloHit->GetParentAddress(), pCaloHit));
         }
 
         // Recreate external clusters within the pandora framework
@@ -77,14 +77,14 @@ StatusCode ExternalClusteringAlgorithm::Run()
                 if (NULL == pPandoraCluster)
                 {
                     PandoraContentApi::Cluster::Parameters parameters;
-                    parameters.m_caloHitList.insert(pPandoraCaloHit);
+                    parameters.m_caloHitList.insert(parameters.m_caloHitList.end(), pPandoraCaloHit);
                     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pPandoraCluster));
 
                     if (m_flagClustersAsPhotons)
                     {
                         PandoraContentApi::Cluster::Metadata metadata;
                         metadata.m_particleId = PHOTON;
-                        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AlterMetadata(*this, pPandoraCluster, metadata));
+                        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pPandoraCluster, metadata));
                     }
                 }
                 else

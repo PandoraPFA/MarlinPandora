@@ -197,7 +197,7 @@ void GeometryCreator::SetDefaultSubDetectorParameters(const gear::CalorimeterPar
         layerParameters.m_closestDistanceToIp = layerLayout.getDistance(i) + (0.5 * (layerLayout.getThickness(i) + layerLayout.getAbsorberThickness(i)));
         layerParameters.m_nRadiationLengths = radiationLength * layerLayout.getAbsorberThickness(i);
         layerParameters.m_nInteractionLengths = interactionLength * layerLayout.getAbsorberThickness(i);
-        parameters.m_layerParametersList.push_back(layerParameters);
+        parameters.m_layerParametersVector.push_back(layerParameters);
     }
 }
 
