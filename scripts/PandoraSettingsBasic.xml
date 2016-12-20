@@ -335,6 +335,7 @@
     </algorithm>
 
     <algorithm type = "MuonClusterAssociation">
+        <TargetClusterListName>PrimaryClusters</TargetClusterListName>
         <MuonClusterListName>MuonYokeClusters</MuonClusterListName>
     </algorithm>
 
