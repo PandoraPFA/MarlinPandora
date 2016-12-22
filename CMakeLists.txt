@@ -12,7 +12,7 @@ PROJECT( MarlinPandora )
 # project version
 SET( MarlinPandora_VERSION_MAJOR 03 )
 SET( MarlinPandora_VERSION_MINOR 00 )
-SET( MarlinPandora_VERSION_PATCH 00 )
+SET( MarlinPandora_VERSION_PATCH 01 )
 
 
 ### CMAKE ###################################################################
